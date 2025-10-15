@@ -1,7 +1,7 @@
 {
   "name": "controle-financeiro-app",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "index.tsx",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -9,11 +9,18 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@react-native-community/datetimepicker": "8.4.4",
+    "@react-native-picker/picker": "2.11.1",
     "expo": "~54.0.13",
     "expo-status-bar": "~3.0.8",
     "nativewind": "^4.2.1",
     "react": "19.1.0",
+    "react-dom": "19.1.0",
     "react-native": "0.81.4",
+    "react-native-reanimated": "~4.1.1",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-web": "^0.21.0",
+    "react-native-worklets": "0.5.1",
     "tailwindcss": "^3.4.18"
   },
   "devDependencies": {

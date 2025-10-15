@@ -1,21 +1,14 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import "./global.css";
+// App.tsx
+import React from 'react';
+import { StatusBar } from 'react-native';
+import { HomeScreen } from './src/screens/HomeScreen';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Paulo Gostoso</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaView className="flex-1 bg-gray-50"> 
+      <StatusBar barStyle="dark-content" />
+      <HomeScreen />
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

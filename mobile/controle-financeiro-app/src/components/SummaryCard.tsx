@@ -1,11 +1,10 @@
-// src/components/SummaryCard.tsx
 import React from 'react';
 import { View, Text } from 'react-native';
 
 interface SummaryCardProps {
   title: string;
   value: number;
-  valueColorClass: string; // Ex: 'text-emerald-600'
+  valueColorClass: string;
 }
 
 export const SummaryCard: React.FC<SummaryCardProps> = ({ title, value, valueColorClass }) => {

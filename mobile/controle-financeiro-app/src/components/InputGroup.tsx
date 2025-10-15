@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, Platform } from 'react-native';
-import { Picker } from '@react-native-picker/picker'; // Importação do Picker
+import { Picker } from '@react-native-picker/picker';
 
 interface InputGroupProps {
   label: string;
@@ -8,9 +8,8 @@ interface InputGroupProps {
   value?: string;
   onChangeText?: (text: string) => void;
   keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
-  
-  // Propriedades para Select (Picker)
-  isSelect?: boolean; 
+
+  isSelect?: boolean;
   options?: { label: string; value: string }[];
   currentValue?: string;
   onValueChange?: (value: string) => void;
@@ -18,65 +17,65 @@ interface InputGroupProps {
   multiline?: boolean;
 }
 
-export const InputGroup: React.FC<InputGroupProps> = ({ 
-  label, 
-  placeholder, 
-  value, 
-  onChangeText, 
+export const InputGroup: React.FC<InputGroupProps> = ({
+  label,
+  placeholder,
+  value,
+  onChangeText,
   isSelect = false,
   options = [],
   currentValue,
   onValueChange,
   keyboardType = 'default',
-  multiline = false
+  multiline = false,
 }) => {
+  const BORDER_CLASS = 'border border-gray-300 bg-white shadow-sm';
+  const CONTROL_HEIGHT = Platform.OS === 'android' ? 52 : 44;
 
-  // Classe base para input/select
-  const baseInputClass = "w-full rounded-lg border border-gray-300 bg-white shadow-sm";
-  
   const RenderInput = () => {
-    // ------------------------------------
-    // 1. RENDERIZAÇÃO DO PICKER (SELECT)
-    // ------------------------------------
     if (isSelect) {
-        // O Picker requer que o valor inicial seja definido
-        const pickerValue = currentValue || (options.length > 0 ? options[0].value : undefined);
+      const pickerValue = currentValue ?? (options.length > 0 ? options[0].value : '');
 
-        return (
-            <View className={`${baseInputClass} overflow-hidden`}>
-                <Picker
-                    selectedValue={pickerValue}
-                    onValueChange={onValueChange}
-                    // Estilos para o Picker para garantir que ele seja visível
-                    style={{ height: 40, width: '100%', color: '#1f2937' }} 
-                    itemStyle={{ height: 40 }}
-                >
-                    {/* Adiciona uma opção para "Todos" se for um filtro, ou a primeira opção */}
-                    {options.map(option => (
-                        <Picker.Item 
-                            key={option.value} 
-                            label={option.label} 
-                            value={option.value} 
-                        />
-                    ))}
-                </Picker>
-            </View>
-        );
+      return (
+        <View
+          // Aplica borda ao View para conter o Picker
+          className={`w-full rounded-lg ${BORDER_CLASS} justify-center`}
+          style={{ minHeight: CONTROL_HEIGHT, paddingHorizontal: 12 }}
+        >
+          <Picker
+            mode="dropdown"
+            selectedValue={pickerValue}
+            onValueChange={onValueChange}
+            style={{ height: CONTROL_HEIGHT, width: '100%' }}
+            dropdownIconColor="#6b7280"
+          >
+            {options.map((o) => (
+              <Picker.Item key={o.value} label={o.label} value={o.value} />
+            ))}
+          </Picker>
+        </View>
+      );
     }
-    
-    // ------------------------------------
-    // 2. RENDERIZAÇÃO DO TEXTINPUT (INPUT NORMAL / DATA)
-    // ------------------------------------
+
+    // Para TextInput, aplicamos as classes de borda e altura DIRETAMENTE no TextInput
     return (
-        <TextInput
-            className={`${baseInputClass} py-2 px-3`}
-            placeholder={placeholder}
-            value={value}
-            onChangeText={onChangeText}
-            keyboardType={keyboardType}
-            multiline={multiline}
-            style={multiline ? { minHeight: 80 } : {height: 40}}
-        />
+      <TextInput
+        className={`w-full rounded-lg ${BORDER_CLASS}`} // Borda e fundo aplicados diretamente
+        placeholder={placeholder}
+        value={value}
+        onChangeText={onChangeText}
+        keyboardType={keyboardType}
+        // Configurações de estilo para altura e padding
+        style={[
+          { height: CONTROL_HEIGHT, paddingHorizontal: 12 },
+          multiline && {
+            minHeight: CONTROL_HEIGHT * 2, // Aumenta a altura mínima para multiline
+            height: undefined,
+            paddingVertical: 8,
+            textAlignVertical: 'top',
+          },
+        ]}
+      />
     );
   };
 

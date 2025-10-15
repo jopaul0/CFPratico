@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { SummaryCard } from '../components/SummaryCard';
-import { ActionButtons } from '../components/ActionButtons';
+import { ActionButtons } from '../components/ActionFileButtons';
 import { InputGroup } from '../components/InputGroup';
+import { DatePickerInput } from '../components/DatePickerInput'; 
 import { CONTA_OPTIONS, FORMA_OPTIONS, MOCK_CATEGORIES, MovimentacaoType, PagamentoType, CondicaoType } from '../types/Finances'; 
-// Importação de @react-native-picker/picker foi removida daqui e movida para InputGroup
 
-// Componente Tabela de Movimentações (Simplificado)
+// Componente Tabela de Movimentações (Simplificado) - Mantenha este componente se você o moveu para outro arquivo
 const MockMovementsTable: React.FC = () => {
-    // Cabeçalho da Tabela (8 Colunas + 1 Ações = 9)
     const headers = ['DATA', 'TIPO', 'PAGAMENTO', 'CATEGORIA', 'HISTÓRICO', 'VALOR', 'CONDIÇÃO', 'PARCELAS', 'AÇÕES'];
     
     // Mock de dados para uma linha
@@ -76,36 +76,66 @@ const MockMovementsTable: React.FC = () => {
     );
 };
 
-export const HomeScreen: React.FC = () => {
-    // --- Mapeamento de Opções ---
-    const paymentOptions = Object.keys(CONTA_OPTIONS).map(key => ({ 
-        label: CONTA_OPTIONS[key as PagamentoType], 
-        value: key 
-    }));
-    const conditionOptions = Object.keys(FORMA_OPTIONS).map(key => ({ 
-        label: FORMA_OPTIONS[key as CondicaoType], 
-        value: key 
-    }));
-    const typeOptions = [
-        { label: 'Receita', value: 'receita' }, 
-        { label: 'Despesa', value: 'despesa' }
-    ];
 
-    // --- ESTADO DO FORMULÁRIO ---
-    const [movData, setMovData] = useState('2025-10-15');
+// --- Mapeamento de Opções ---
+const categoryOptions = MOCK_CATEGORIES.map(cat => ({ label: cat, value: cat }));
+const paymentOptions = Object.keys(CONTA_OPTIONS).map(key => ({ 
+    label: CONTA_OPTIONS[key as PagamentoType], 
+    value: key 
+}));
+const conditionOptions = Object.keys(FORMA_OPTIONS).map(key => ({ 
+    label: FORMA_OPTIONS[key as CondicaoType], 
+    value: key 
+}));
+const typeOptions = [
+    { label: 'Receita', value: 'receita' }, 
+    { label: 'Despesa', value: 'despesa' }
+];
+
+const filterCategoryOptions = [{ label: 'Todas', value: '' }, ...categoryOptions];
+const filterTypeOptions = [{ label: 'Todos', value: '' }, ...typeOptions];
+const filterPaymentOptions = [{ label: 'Todas', value: '' }, ...paymentOptions];
+const filterConditionOptions = [{ label: 'Todas', value: '' }, ...conditionOptions];
+
+
+export const HomeScreen: React.FC = () => {
+    // =========================================================
+    //               ESTADOS
+    // =========================================================
+    
+    // --- ESTADO DOS FILTROS ---
+    const [filterStartDate, setFilterStartDate] = useState('2025-10-01');
+    const [filterEndDate, setFilterEndDate] = useState('2025-10-31');
+    const [filtroTipo, setFiltroTipo] = useState<string>('');
+    const [filtroConta, setFiltroConta] = useState<string>('');
+    const [filtroCondicao, setFiltroCondicao] = useState<string>('');
+    const [filtroCategoria, setFiltroCategoria] = useState('');
+    const [filtroHistorico, setFiltroHistorico] = useState('');
+
+    // --- ESTADO DO FORMULÁRIO (NOVA MOVIMENTAÇÃO) ---
+    const [movData, setMovData] = useState('2025-10-15'); 
     const [movTipo, setMovTipo] = useState<string>('receita');
     const [movConta, setMovConta] = useState<string>('pix');
     const [movCondicao, setMovCondicao] = useState<string>('avista');
-    const [movValor, setMovValor] = useState('1500,00');
-    // Adicionar mais estados (Categoria, Histórico, Parcelas) aqui...
+    const [movValor, setMovValor] = useState('0,00'); 
+    const [movCategoria, setMovCategoria] = useState(categoryOptions[0]?.value || ''); // Usa a primeira categoria como padrão
+    const [movHistorico, setMovHistorico] = useState('');
+
 
     // --- Mocks para Resumo e Ações ---
     const mockSummary = {
         totalReceitas: 12345.67,
         totalDespesas: 5678.90,
-        saldoPeriodo: 6666.77,
+        saldoPeriodo: 6666.77, // Mock
     };
-    const handleAction = (action: string) => { alert(`Ação: ${action}`); };
+    const handleAction = (action: string) => { console.log(`Ação: ${action}`); };
+    
+    // Lista de opções de parcelas (1 a 36)
+    const parcelasOptions = Array.from({ length: 36 }, (_, i) => ({ 
+        label: String(i + 1), 
+        value: String(i + 1) 
+    }));
+    const [movParcelas, setMovParcelas] = useState(parcelasOptions[0].value);
     
     return (
         <SafeAreaView className="flex-1 bg-gray-50">
@@ -151,28 +181,69 @@ export const HomeScreen: React.FC = () => {
                     {/* FILTROS */}
                     <View className="p-5 border border-gray-200 rounded-xl shadow-lg bg-white mt-8">
                         <View className="flex-row flex-wrap gap-3">
-                            {/* Ajuste de largura para 4 colunas em mobile e 7 em desktop */}
+                            {/* Datas */}
                             <View className="w-[48%] md:w-1/7">
-                                <InputGroup label="Data Início" placeholder="YYYY-MM-DD" value={'2025-10-01'} />
+                                <DatePickerInput label="Data Início" value={filterStartDate} onChange={setFilterStartDate} />
                             </View>
                             <View className="w-[48%] md:w-1/7">
-                                <InputGroup label="Data Fim" placeholder="YYYY-MM-DD" value={'2025-10-31'} />
+                                <DatePickerInput label="Data Fim" value={filterEndDate} onChange={setFilterEndDate} />
                             </View>
+                            
+                            {/* Categorias (Agora Picker, como no formulário) */}
                             <View className="w-[48%] md:w-1/7 relative">
-                                <InputGroup label="Categoria" placeholder="Ex.: Vendas" />
+                                <InputGroup 
+                                    label="Categoria" 
+                                    isSelect
+                                    options={filterCategoryOptions}
+                                    currentValue={filtroCategoria}
+                                    onValueChange={setFiltroCategoria}
+                                />
                             </View>
+                            
+                            {/* Tipo (Select) */}
                             <View className="w-[48%] md:w-1/7">
-                                <InputGroup label="Tipo" placeholder="Todos" isSelect options={[{ label: 'Todos', value: '' }, ...typeOptions]} />
+                                <InputGroup 
+                                    label="Tipo" 
+                                    isSelect 
+                                    options={filterTypeOptions} 
+                                    currentValue={filtroTipo}
+                                    onValueChange={setFiltroTipo}
+                                />
                             </View>
+                            
+                            {/* Pagamento (Select) */}
                             <View className="w-[48%] md:w-1/7">
-                                <InputGroup label="Pagamento" placeholder="Todas" isSelect options={[{ label: 'Todas', value: '' }, ...paymentOptions]} />
+                                <InputGroup 
+                                    label="Pagamento" 
+                                    isSelect 
+                                    options={filterPaymentOptions} 
+                                    currentValue={filtroConta}
+                                    onValueChange={setFiltroConta}
+                                />
                             </View>
+                            
+                            {/* Condição (Select) */}
                             <View className="w-[48%] md:w-1/7">
-                                <InputGroup label="Condição" placeholder="Todas" isSelect options={[{ label: 'Todas', value: '' }, ...conditionOptions]} />
+                                <InputGroup 
+                                    label="Condição" 
+                                    isSelect 
+                                    options={filterConditionOptions} 
+                                    currentValue={filtroCondicao}
+                                    onValueChange={setFiltroCondicao}
+                                />
                             </View>
+                            
+                            {/* Histórico */}
                             <View className="w-[48%] md:w-1/7">
-                                <InputGroup label="Histórico" placeholder="Contém no histórico..." />
+                                <InputGroup 
+                                    label="Histórico" 
+                                    placeholder="Contém no histórico..." 
+                                    value={filtroHistorico}
+                                    onChangeText={setFiltroHistorico}
+                                />
                             </View>
+                            
+                            {/* Botão Limpar */}
                             <View className="w-[48%] md:w-1/7 self-end">
                                 <TouchableOpacity className="w-full py-2 px-4 rounded-lg border border-gray-300 bg-white active:bg-gray-50 shadow-sm">
                                     <Text className="text-sm font-semibold text-gray-700 text-center">Limpar filtros</Text>
@@ -189,7 +260,7 @@ export const HomeScreen: React.FC = () => {
                             {/* Linha 1: Data, Tipo, Pagamento */}
                             <View className="w-full flex-row flex-wrap gap-3">
                                 <View className="w-[30%]">
-                                    <InputGroup label="Data" placeholder="YYYY-MM-DD" value={movData} onChangeText={setMovData} />
+                                    <DatePickerInput label="Data" value={movData} onChange={setMovData} />
                                 </View>
                                 <View className="w-[30%]">
                                     <InputGroup 
@@ -214,17 +285,29 @@ export const HomeScreen: React.FC = () => {
                             {/* Linha 2: Categoria, Histórico */}
                             <View className="w-full flex-row flex-wrap gap-3">
                                 <View className="w-[45%]">
-                                    <InputGroup label="Categoria" placeholder="Selecione ou digite..." />
+                                    <InputGroup 
+                                        label="Categoria" 
+                                        isSelect 
+                                        options={categoryOptions} 
+                                        currentValue={movCategoria}
+                                        onValueChange={setMovCategoria}
+                                    />
                                 </View>
                                 <View className="w-[45%]">
-                                    <InputGroup label="Histórico" placeholder="Venda #123, Energia" />
+                                    <InputGroup label="Histórico" placeholder="Venda #123, Energia" value={movHistorico} onChangeText={setMovHistorico} />
                                 </View>
                             </View>
 
                             {/* Linha 3: Valor, Condição, Parcelas */}
                             <View className="w-full flex-row flex-wrap gap-3">
                                 <View className="w-[30%]">
-                                    <InputGroup label="Valor" placeholder="1500,00" keyboardType="numeric" value={movValor} onChangeText={setMovValor} />
+                                    <InputGroup 
+                                        label="Valor" 
+                                        placeholder="1500,00" 
+                                        keyboardType="numeric" 
+                                        value={movValor} 
+                                        onChangeText={setMovValor} 
+                                    />
                                 </View>
                                 <View className="w-[30%]">
                                     <InputGroup 
@@ -235,10 +318,16 @@ export const HomeScreen: React.FC = () => {
                                         onValueChange={setMovCondicao}
                                     />
                                 </View>
-                                {/* Simulação de Parcelas Wrap (hidden) - Mostra se Condição for 'parcelado' */}
+                                {/* Parcelas Wrap - Mostra se Condição for 'parcelado' */}
                                 {movCondicao === 'parcelado' && (
                                     <View className="w-[30%]">
-                                        <InputGroup label="Parcelas" placeholder="1" isSelect />
+                                        <InputGroup 
+                                            label="Parcelas" 
+                                            isSelect 
+                                            options={parcelasOptions} 
+                                            currentValue={movParcelas}
+                                            onValueChange={setMovParcelas}
+                                        />
                                     </View>
                                 )}
                             </View>

@@ -14,16 +14,9 @@ export const CustomDrawer: React.FC<DrawerContentComponentProps> = (props) => {
           <Text className="text-sm text-gray-500">Menu Principal</Text>
         </View>
 
-        {/* ITENS DE NAVEGAÇÃO PADRÃO (Dashboard, Reports, etc.) */}
-        <DrawerItemList {...props} />
-        
-        {/* EXEMPLO DE ITEM CUSTOMIZADO */}
-        <TouchableOpacity 
-          className="p-4 mt-2 border-t border-gray-100"
-          onPress={() => alert('Configurações a serem implementadas!')}
-        >
-          <Text className="text-base text-gray-600">⚙️ Configurações</Text>
-        </TouchableOpacity>
+        <View className="gap-2">
+          <DrawerItemList {...props} />
+        </View>
 
       </DrawerContentScrollView>
 

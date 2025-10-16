@@ -17,6 +17,7 @@
     "expo": "~54.0.13",
     "expo-datetimepicker": "^1.0.3",
     "expo-status-bar": "~3.0.8",
+    "lucide-react-native": "^0.546.0",
     "nativewind": "^4.2.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",

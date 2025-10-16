@@ -26,7 +26,7 @@ const MockMovementsTable: React.FC = () => {
     const formattedValue = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(mockRow.valor);
 
     return (
-        <View className="p-5 border border-gray-200 rounded-xl shadow-lg bg-white mt-6">
+        <View className="p-5 border border-gray-200 rounded-xl shadow bg-white mt-6">
             <Text className="font-semibold text-xl text-gray-800 mb-4">Movimentações</Text>
             
             <View className="rounded-lg border border-gray-200 overflow-hidden">
@@ -98,7 +98,7 @@ const filterPaymentOptions = [{ label: 'Todas', value: '' }, ...paymentOptions];
 const filterConditionOptions = [{ label: 'Todas', value: '' }, ...conditionOptions];
 
 
-export const HomeScreen: React.FC = () => {
+export const PrototypeScreen: React.FC = () => {
     // =========================================================
     //               ESTADOS
     // =========================================================
@@ -179,7 +179,7 @@ export const HomeScreen: React.FC = () => {
                     </View>
                     
                     {/* FILTROS */}
-                    <View className="p-5 border border-gray-200 rounded-xl shadow-lg bg-white mt-8">
+                    <View className="p-5 border border-gray-200 rounded-xl shadow bg-white mt-8">
                         <View className="flex-row flex-wrap gap-3">
                             {/* Datas */}
                             <View className="w-[48%] md:w-1/7">
@@ -253,7 +253,7 @@ export const HomeScreen: React.FC = () => {
                     </View>
                     
                     {/* FORMULÁRIO */}
-                    <View className="p-5 border border-gray-200 rounded-xl shadow-lg bg-white mt-6">
+                    <View className="p-5 border border-gray-200 rounded-xl shadow bg-white mt-6">
                         <Text className="font-semibold text-xl text-gray-800 mb-4">Nova movimentação</Text>
                         <View className="flex-row flex-wrap gap-3">
                             
@@ -337,7 +337,7 @@ export const HomeScreen: React.FC = () => {
                                 <TouchableOpacity className="py-2 px-4 rounded-lg border border-gray-300 bg-white active:bg-gray-50 shadow-sm">
                                     <Text className="text-sm font-semibold text-gray-700">Limpar</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity className="py-2 px-4 rounded-lg font-semibold text-white bg-blue-600 active:bg-blue-700 shadow-lg">
+                                <TouchableOpacity className="py-2 px-4 rounded-lg font-semibold text-white bg-blue-600 active:bg-blue-700 shadow">
                                     <Text className="text-sm font-semibold text-white">Salvar</Text>
                                 </TouchableOpacity>
                             </View>

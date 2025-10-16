@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { DrawerContentScrollView, DrawerItemList, DrawerContentComponentProps } from '@react-navigation/drawer';
 
 // Este componente personaliza o conteúdo da sua barra lateral
@@ -9,7 +9,7 @@ export const CustomDrawer: React.FC<DrawerContentComponentProps> = (props) => {
       <DrawerContentScrollView {...props}>
         {/* TOPO DO DRAWER: Logo e Título */}
         <View className="p-5 border-b border-gray-100 mb-4">
-          <View className="h-10 w-10 bg-gray-700 rounded-full mb-2" /> 
+          <Image  source={require('../assets/icon.png')} resizeMode="contain" style={{ width: 70, height: 70 }} /> 
           <Text className="text-xl font-bold text-gray-800">CF Prático</Text>
           <Text className="text-sm text-gray-500">Menu Principal</Text>
         </View>

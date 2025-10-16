@@ -3,9 +3,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { PrototypeScreen } from '../screens/PrototypeScreen';
 import { CustomDrawer } from '../components/CustomDrawer';
-import { DrawerParamList } from '../types/Navigation'; 
+import { DrawerParamList } from '../types/Navigation';
 import { Platform, View, Text } from 'react-native';
 import { StatementStackNavigator } from './StatementStack';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 
 // const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 const AppDrawer = createDrawerNavigator<DrawerParamList>();
@@ -30,28 +31,36 @@ export const AppNavigator: React.FC = () => {
     <AppDrawer.Navigator
       drawerContent={(props) => <CustomDrawer {...props} />}
       screenOptions={{
-        headerShown: Platform.OS!='web', // <--- HABILITA O HEADER AQUI para ter o ícone do Drawer no mobile!
-        drawerType: Platform.OS === 'web' ? 'permanent' : 'slide', 
+        headerShown: Platform.OS != 'web',
+        drawerType: Platform.OS === 'web' ? 'permanent' : 'slide',
         drawerStyle: {
           width: Platform.OS === 'web' ? 240 : '80%',
         },
       }}
     >
-      
-      <AppDrawer.Screen 
-        name="Statement" 
-        component={StatementStackNavigator} 
-        options={{ title: 'Movimentação' }} 
+
+      <AppDrawer.Screen
+        name="Statement"
+        component={StatementStackNavigator}
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'StatementMain';
+          const hideHeader = routeName !== 'StatementMain'; // se for detalhe, esconde
+
+          return {
+            title: 'Movimentação',
+            headerShown: !hideHeader, // <- mostra só na principal
+          };
+        }}
       />
 
-      <AppDrawer.Screen 
-        name="Prototype" 
-        component={PrototypeScreen} 
-        options={{ 
-            title: 'Protótipo',
-        }} 
+      <AppDrawer.Screen
+        name="Prototype"
+        component={PrototypeScreen}
+        options={{
+          title: 'Protótipo',
+        }}
       />
-      
+
     </AppDrawer.Navigator>
   );
 };

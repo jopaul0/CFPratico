@@ -8,7 +8,7 @@ const Stack = createNativeStackNavigator<StatementStackParamList>();
 
 export const StatementStackNavigator: React.FC = () => (
   <Stack.Navigator>
-    <Stack.Screen name="StatementMain" component={StatementScreen} options={{ title: 'Movimentação' }} />
+    <Stack.Screen name="StatementMain" component={StatementScreen} options={{ title: 'Movimentação', headerShown: false }} />
     <Stack.Screen name="TransactionDetail" component={TransactionDetailScreen} options={{ title: 'Detalhe da transação' }} />
   </Stack.Navigator>
 );

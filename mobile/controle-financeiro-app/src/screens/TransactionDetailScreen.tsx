@@ -18,7 +18,7 @@ export const TransactionDetailScreen: React.FC = () => {
             : DollarSign;
 
   return (
-    <MainContainer title='Detalhes da Transação'>
+    <MainContainer>
       <View className="flex-1 bg-white rounded-lg m-4 p-4 shadow">
         <View className="items-center mb-6">
         <View className="p-4 rounded-full bg-gray-800/30 mb-3">
@@ -28,7 +28,7 @@ export const TransactionDetailScreen: React.FC = () => {
           {`${isNegative ? '-' : ''}R$ ${value.toFixed(2).replace('.', ',')}`}
         </Text>
       </View>
-      
+
       <Divider colorClass="bg-gray-200" />
 
       <View className="p-4 gap-2">

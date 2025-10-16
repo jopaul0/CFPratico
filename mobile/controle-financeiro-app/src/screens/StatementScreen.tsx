@@ -200,7 +200,7 @@ export const StatementScreen: React.FC = () => {
   }, [filtered]);
 
   return (
-    <MainContainer title="Movimentação">
+    <MainContainer>
       {/* Busca */}
       <SearchBar
         value={query}

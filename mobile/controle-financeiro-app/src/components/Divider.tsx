@@ -13,7 +13,7 @@ interface DividerProps {
 export const Divider: React.FC<DividerProps> = ({
   marginVertical = 12,
   thickness = 1,
-  colorClass = 'bg-gray-200',
+  colorClass = 'bg-blue-200',
   widthClass = 'w-full',
   className,
 }) => {

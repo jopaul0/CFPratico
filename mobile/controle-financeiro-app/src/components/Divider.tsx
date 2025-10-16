@@ -9,11 +9,10 @@ interface DividerProps {
   className?: string;
 }
 
-/** Divider simples usando apenas Tailwind */
 export const Divider: React.FC<DividerProps> = ({
-  marginVertical = 12,
+  marginVertical = 10,
   thickness = 1,
-  colorClass = 'bg-blue-200',
+  colorClass = 'bg-gray-300',
   widthClass = 'w-full',
   className,
 }) => {
@@ -22,11 +21,13 @@ export const Divider: React.FC<DividerProps> = ({
       className={[
         widthClass,
         colorClass,
-        `h-[${thickness}px]`,
-        `my-[${marginVertical}px]`,
         'rounded-full',
         className,
       ].join(' ')}
+      style={{
+        height: thickness,
+        marginVertical,
+      }}
     />
   );
 };

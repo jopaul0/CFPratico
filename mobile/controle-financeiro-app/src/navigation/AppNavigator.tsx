@@ -5,7 +5,7 @@ import { PrototypeScreen } from '../screens/PrototypeScreen';
 import { CustomDrawer } from '../components/CustomDrawer';
 import { DrawerParamList } from '../types/Navigation'; 
 import { Platform, View, Text } from 'react-native';
-import { StatementScreen } from '../screens/StatementScreen';
+import { StatementStackNavigator } from './StatementStack';
 
 // const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 const AppDrawer = createDrawerNavigator<DrawerParamList>();
@@ -40,7 +40,7 @@ export const AppNavigator: React.FC = () => {
       
       <AppDrawer.Screen 
         name="Statement" 
-        component={() => <StatementScreen/>} 
+        component={StatementStackNavigator} 
         options={{ title: 'Movimentação' }} 
       />
 

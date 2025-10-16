@@ -11,6 +11,25 @@ export type DrawerParamList = {
   // Outras seções...
 };
 
+
+// types/Navigation.ts
+import type { ISODate } from './Date';
+
+export type StatementStackParamList = {
+  StatementMain: undefined;
+  TransactionDetail: {
+    id: string;
+    category: 'transporte' | 'alimentacao' | 'servico' | 'outros';
+    paymentType: string;
+    description: string;
+    value: number;
+    isNegative?: boolean;
+    date: ISODate; // <-- só string "YYYY-MM-DD"
+  };
+};
+
+
+
 // // Tipos para as rotas dentro do Stack Navigator (as telas em si)
 // export type HomeStackParamList = {
 //   Prototype: undefined; // A tela principal com Cards, Filtros e Tabela

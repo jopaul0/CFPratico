@@ -1,4 +1,4 @@
-// src/screens/StatementScreen.tsx
+// src/screens/StatementScreen.tsx (CORRIGIDO)
 
 import React from 'react';
 import { View, ScrollView } from 'react-native';
@@ -28,7 +28,7 @@ export const StatementScreen: React.FC = () => {
 
     return (
         <MainContainer>
-            {/* Busca (Apenas passa props do hook) */}
+            {/* ... JSX da Busca e Filtros ... */}
             <SearchBar
                 value={query}
                 onChangeText={setQuery}
@@ -36,8 +36,6 @@ export const StatementScreen: React.FC = () => {
                 onSubmitSearch={doSearch}
                 onClearAll={handleClearAll}
             />
-
-            {/* Filtros (Apenas passa a configuração do hook) */}
             <Filters filters={filtersConfig} />
 
             {/* Lista agrupada */}
@@ -58,6 +56,9 @@ export const StatementScreen: React.FC = () => {
                                     value: tx.value,
                                     isNegative: tx.isNegative,
                                     date: tx.date,
+                                    type: tx.type, 
+                                    condition: tx.condition,
+                                    installments: tx.installments,
                                 })
                             }
                         />

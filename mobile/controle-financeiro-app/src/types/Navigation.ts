@@ -1,38 +1,49 @@
-export type RootStackParamList = {
-  // Tela principal, que é o Drawer Navigator inteiro
-  HomeDrawer: undefined; 
-  // Futuras telas que fariam parte do Stack principal (ex: Settings)
+// types/Navigation.ts (CORRIGIDO)
+
+import type { ISODate } from './Date';
+// 🚀 Importamos os tipos de transação completos
+import type { Tx } from './Transactions'; 
+
+
+// Parâmetros para o Stack Navigator da seção Extrato/Movimentações
+export type StatementStackParamList = {
+    StatementMain: undefined;
+    
+    // 🚀 Usamos o tipo Tx (Transação) para definir todos os parâmetros 
+    // da tela de detalhes. Isso garante que todos os campos necessários 
+    // (id, category, paymentType, description, value, isNegative, date, 
+    // type, condition, installments) sejam passados.
+    TransactionDetail: Tx; 
+    
+    // Se o tipo Tx for muito grande e você só quiser os campos essenciais:
+    /*
+    TransactionDetail: {
+        id: string;
+        date: ISODate;
+        type: 'Receita' | 'Despesa'; // ou use o tipo MovementType
+        paymentType: string;
+        category: string;
+        value: number;
+        condition: 'À Vista' | 'Parcelado';
+        installments: number;
+        description: string; 
+        isNegative?: boolean;
+    };
+    */
 };
+
 
 // Parâmetros para o Drawer (Barra Lateral)
 export type DrawerParamList = {
-  Prototype: undefined; // A tela principal com Cards, Filtros e Tabela
-  Statement: undefined;  // Tela de Relatórios/Busca (Sua tela atual)
-  // Outras seções...
+    Prototype: undefined; 
+    Statement: undefined; 
 };
 
 
-// types/Navigation.ts
-import type { ISODate } from './Date';
-
-export type StatementStackParamList = {
-  StatementMain: undefined;
-  TransactionDetail: {
-    id: string;
-    category: string;
-    paymentType: string;
-    description: string;
-    value: number;
-    isNegative?: boolean;
-    date: ISODate; // <-- só string "YYYY-MM-DD"
-  };
+// Tela principal, que é o Drawer Navigator inteiro
+export type RootStackParamList = {
+    HomeDrawer: undefined; 
 };
 
-
-
-// // Tipos para as rotas dentro do Stack Navigator (as telas em si)
-// export type HomeStackParamList = {
-//   Prototype: undefined; // A tela principal com Cards, Filtros e Tabela
-//   Statement: undefined; // A tela principal com Cards, Filtros e Tabela
-//   // Futuras telas que seriam acessadas a partir da Home (ex: Detalhes da Movimentação)
-// };
+// O restante dos tipos (HomeStackParamList) não foram modificados, 
+// pois não são usados no fluxo atual.

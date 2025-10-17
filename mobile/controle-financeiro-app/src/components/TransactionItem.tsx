@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Car, Utensils, CreditCard, DollarSign } from 'lucide-react-native';
+import { getCategoryIcon } from '../utils/CategoryIcons';
 import type { ISODate } from '../types/Date';
+import { formatToBRL } from '../utils/Value';
 
 interface TransactionItemProps {
   id: string;
-  category: 'transporte' | 'alimentacao' | 'servico' | 'outros';
+  category: string;
   paymentType: string;
   description: string;
   value: number;
@@ -18,22 +19,13 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
   category, paymentType, description, value, isNegative = true, onPress,
 }) => {
   const iconColor = '#9ca3af';
-  const Icon =
-    category === 'transporte'
-      ? Car
-      : category === 'alimentacao'
-      ? Utensils
-      : category === 'servico'
-      ? CreditCard
-      : DollarSign;
+  const Icon = getCategoryIcon(category);
 
-  const formattedValue = `${isNegative ? '-' : ''}R$ ${value
-    .toFixed(2)
-    .replace('.', ',')}`;
+  const formattedValue = formatToBRL(value);
 
   return (
     <TouchableOpacity
-      activeOpacity={0.7} // opacidade ao tocar
+      activeOpacity={0.7}
       onPress={onPress}
       className="rounded-lg mb-2"
     >

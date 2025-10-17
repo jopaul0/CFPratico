@@ -2,6 +2,9 @@ import React from 'react';
 import { View, Text, TextInput, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
+// 🚀 Importa a interface Option do local centralizado (Filters/types)
+import { Option } from '../types/Filters'; 
+
 interface InputGroupProps {
   label: string;
   placeholder?: string;
@@ -10,7 +13,7 @@ interface InputGroupProps {
   keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad';
 
   isSelect?: boolean;
-  options?: { label: string; value: string }[];
+  options?: Option[];
   currentValue?: string;
   onValueChange?: (value: string) => void;
 
@@ -41,7 +44,8 @@ export const InputGroup: React.FC<InputGroupProps> = (props) => {
         dropdownIconColor="#6b7280"
       >
         {options.map(o => (
-          <Picker.Item key={o.value} label={o.label} value={o.value} />
+          // Como o tipo Option é { label: string; value: string }, isso funciona
+          <Picker.Item key={o.value} label={o.label} value={o.value} /> 
         ))}
       </Picker>
     </View>
@@ -49,7 +53,7 @@ export const InputGroup: React.FC<InputGroupProps> = (props) => {
     <TextInput
       className={`w-full rounded-lg focus:outline-none ${BORDER_CLASS}`}
       placeholder={placeholder}
-      value={value ?? ''}               // <- evita alternar controlado/não-controlado
+      value={value ?? ''}
       onChangeText={onChangeText}
       keyboardType={keyboardType}
       style={[

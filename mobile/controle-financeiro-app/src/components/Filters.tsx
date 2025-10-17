@@ -1,22 +1,15 @@
+// src/components/Filters.tsx
+
 import React, { useMemo } from 'react';
 import { View, ScrollView, useWindowDimensions } from 'react-native';
+
+// Importa os componentes de input e select
 import { InputGroup } from './InputGroup';
+import { DatePickerInput } from './DatePickerInput';
 
-export type Option = { label: string; value: string };
+// Importa os tipos centralizados
+import { FilterConfig, FilterPicker, FilterDate, FiltersProps } from '../types/Filters';
 
-export type FilterConfig = {
-  key: string;
-  label: string;
-  options: Option[];
-  selectedValue?: string;
-  onValueChange: (value: string) => void;
-  width?: number;
-};
-
-export interface FiltersProps {
-  filters: FilterConfig[];
-  className?: string;
-}
 
 export const Filters: React.FC<FiltersProps> = ({ filters, className }) => {
   const { width } = useWindowDimensions();
@@ -24,21 +17,45 @@ export const Filters: React.FC<FiltersProps> = ({ filters, className }) => {
 
   const nodes = useMemo(
     () =>
-      filters.map((f) => (
-        <View
-          key={f.key}
-          className="mr-3 mb-3"
-          style={{ width: isSmall ? Math.min(width * 0.7, 280) : f.width ?? 240 }}
-        >
-          <InputGroup
-            label={f.label}
-            isSelect
-            options={f.options}
-            currentValue={f.selectedValue}
-            onValueChange={f.onValueChange}
-          />
-        </View>
-      )),
+      filters.map((f) => {
+        const itemWidth = isSmall ? Math.min(width * 0.7, 160) : f.width ?? 240;
+
+        let inputNode;
+        
+        if (f.type === 'picker') {
+            const pickerConfig = f as FilterPicker;
+            inputNode = (
+                <InputGroup
+                    label={pickerConfig.label}
+                    isSelect
+                    options={pickerConfig.options}
+                    currentValue={pickerConfig.selectedValue}
+                    onValueChange={pickerConfig.onValueChange}
+                />
+            );
+        } else if (f.type === 'date') {
+            const dateConfig = f as FilterDate;
+            inputNode = (
+                <DatePickerInput
+                    label={dateConfig.label}
+                    value={dateConfig.value}
+                    onChange={dateConfig.onChange}
+                />
+            );
+        } else {
+            return null;
+        }
+
+        return (
+            <View
+              key={f.key}
+              className="mr-3 mb-3"
+              style={{ width: itemWidth }}
+            >
+                {inputNode}
+            </View>
+        );
+    }),
     [filters, isSmall, width]
   );
 

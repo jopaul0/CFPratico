@@ -19,7 +19,7 @@ export type StatementStackParamList = {
   StatementMain: undefined;
   TransactionDetail: {
     id: string;
-    category: 'transporte' | 'alimentacao' | 'servico' | 'outros';
+    category: string;
     paymentType: string;
     description: string;
     value: number;

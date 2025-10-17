@@ -7,9 +7,9 @@ export interface SearchBarProps {
   onChangeText: (text: string) => void;
   placeholder?: string;
   onSubmitSearch?: () => void;
-  onClearAll?: () => void; // limpa tudo (texto e/ou filtros) se desejar
+  onClearAll?: () => void;
   disabled?: boolean;
-  className?: string;      // NativeWind opcional
+  className?: string;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({

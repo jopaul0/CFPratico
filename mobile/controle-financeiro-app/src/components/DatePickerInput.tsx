@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, Platform, Pressable } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { formatDateToString, parseStringToDate } from '../utils/Date';
-
+import type { ISODate } from '../types/Date';
 interface DatePickerInputProps {
   label: string;
-  value: string;
-  onChange: (dateString: string) => void;
+  value: ISODate; // Usando o tipo correto
+  onChange: (dateString: ISODate) => void;
 }
 
 export const DatePickerInput: React.FC<DatePickerInputProps> = ({ label, value, onChange }) => {
@@ -14,9 +14,9 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({ label, value, 
   const currentDate = parseStringToDate(value);
 
   const onChangePicker = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShow(Platform.OS === 'ios'); // no iOS mantém aberto até confirmar
+    setShow(Platform.OS === 'ios');
     if (selectedDate) {
-      const newDateString = formatDateToString(selectedDate);
+      const newDateString = formatDateToString(selectedDate) as ISODate;
       onChange(newDateString);
     }
   };
@@ -26,7 +26,6 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({ label, value, 
   // Exibição formatada (DD/MM/YYYY)
   const displayValue = value ? value.split('-').reverse().join('/') : 'Selecionar data';
 
-  // Altura padrão para manter igual ao InputGroup
   const CONTROL_HEIGHT = Platform.OS === 'android' ? 52 : 44;
 
   return (
@@ -37,7 +36,7 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({ label, value, 
 
       <Pressable
         onPress={showDatePicker}
-        className="w-full rounded-lg border border-gray-300 bg-white shadow-sm px-3 justify-center"
+        className="w-full rounded-lg border border-gray-300 bg-white px-3 justify-center"
         style={{ minHeight: CONTROL_HEIGHT }}
       >
         <Text

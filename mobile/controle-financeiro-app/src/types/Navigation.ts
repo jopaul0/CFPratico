@@ -14,6 +14,8 @@ export type StatementStackParamList = {
     // (id, category, paymentType, description, value, isNegative, date, 
     // type, condition, installments) sejam passados.
     TransactionDetail: Tx; 
+
+    AddTransaction: undefined;
     
     // Se o tipo Tx for muito grande e você só quiser os campos essenciais:
     /*

@@ -1,7 +1,5 @@
-// src/screens/StatementScreen.tsx (CORRIGIDO)
-
 import React from 'react';
-import { View, ScrollView } from 'react-native';
+import { View, ScrollView, TouchableOpacity } from 'react-native';
 
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,11 +10,15 @@ import { Filters } from '../components/Filters';
 import { TransactionDayGroup } from '../components/TransactionDayGroup';
 
 import type { StatementStackParamList } from '../types/Navigation';
-import { useStatementData } from '../hooks/useStatementData'; 
+import { useStatementData } from '../hooks/useStatementData';
+
+// 🚀 Importando o ícone Plus
+import { Plus } from 'lucide-react-native';
 
 
 export const StatementScreen: React.FC = () => {
     const navigation = useNavigation<NativeStackNavigationProp<StatementStackParamList>>();
+    
     const {
         groups,
         query,
@@ -26,9 +28,14 @@ export const StatementScreen: React.FC = () => {
         doSearch,
     } = useStatementData();
 
+    const handleAddTransaction = () => {
+        navigation.navigate('AddTransaction' as any); 
+    };
+
     return (
-        <MainContainer>
-            {/* ... JSX da Busca e Filtros ... */}
+        // O MainContainer precisa envolver tudo para que o FAB seja posicionado corretamente
+        <MainContainer> 
+            {/* Busca e Filtros */}
             <SearchBar
                 value={query}
                 onChangeText={setQuery}
@@ -38,8 +45,8 @@ export const StatementScreen: React.FC = () => {
             />
             <Filters filters={filtersConfig} />
 
-            {/* Lista agrupada */}
-            <ScrollView className="mt-2">
+            {/* Lista agrupada (Scrollable Content) */}
+            <ScrollView className="mt-2 flex-1">
                 <View className="pb-8">
                     {groups.map((g) => (
                         <TransactionDayGroup
@@ -65,6 +72,20 @@ export const StatementScreen: React.FC = () => {
                     ))}
                 </View>
             </ScrollView>
+
+
+            <TouchableOpacity
+                onPress={handleAddTransaction}
+                className="absolute bottom-6 right-6 p-4 rounded-full shadow-lg"
+                style={{
+                    backgroundColor: '#3b82f6',
+                    elevation: 5,
+                }}
+                activeOpacity={0.8}
+            >
+                <Plus size={30} color="white" />
+            </TouchableOpacity>
+
         </MainContainer>
     );
 };

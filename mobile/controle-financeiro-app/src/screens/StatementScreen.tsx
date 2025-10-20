@@ -26,7 +26,7 @@ export const StatementScreen: React.FC = () => {
         filtersConfig,
         handleClearAll,
         doSearch,
-    } = useStatementData();
+    } = useStatementData();""
 
     const handleAddTransaction = () => {
         navigation.navigate('AddTransaction' as any); 
@@ -34,7 +34,7 @@ export const StatementScreen: React.FC = () => {
 
     return (
         // O MainContainer precisa envolver tudo para que o FAB seja posicionado corretamente
-        <MainContainer> 
+        <MainContainer hasButton={true} iconButton={<Plus size={30} color="white" />} onPressButton={handleAddTransaction}>
             {/* Busca e Filtros */}
             <SearchBar
                 value={query}
@@ -74,17 +74,7 @@ export const StatementScreen: React.FC = () => {
             </ScrollView>
 
 
-            <TouchableOpacity
-                onPress={handleAddTransaction}
-                className="absolute bottom-6 right-6 p-4 rounded-full shadow-lg"
-                style={{
-                    backgroundColor: '#3b82f6',
-                    elevation: 5,
-                }}
-                activeOpacity={0.8}
-            >
-                <Plus size={30} color="white" />
-            </TouchableOpacity>
+            
 
         </MainContainer>
     );

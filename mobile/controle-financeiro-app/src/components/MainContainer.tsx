@@ -1,14 +1,19 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 
 interface MainContainerProps {
+  hasButton?: boolean;
+  iconButton?: React.ReactNode;
+  onPressButton?: () => void;
   children: React.ReactNode;
 }
 
 export const MainContainer: React.FC<MainContainerProps> = ({
+  hasButton = false,
+  iconButton,
+  onPressButton,
   children
 }) => {
   return (
@@ -27,6 +32,20 @@ export const MainContainer: React.FC<MainContainerProps> = ({
             {children}
           </View>
         </ScrollView>
+
+        <TouchableOpacity
+          onPress={onPressButton}
+          className="absolute bottom-6 right-6 p-4 rounded-full shadow-lg"
+          style={{
+            backgroundColor: '#3b82f6',
+            elevation: 5,
+            display: hasButton ? 'flex' : 'none',
+          }}
+          activeOpacity={0.8}
+        >
+          {iconButton}
+        </TouchableOpacity>
+
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

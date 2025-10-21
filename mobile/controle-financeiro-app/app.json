@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./src/assets/splash-icon.png",
+      "image": "./src/assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -28,7 +28,8 @@
       "favicon": "./src/assets/favicon.png"
     },
     "plugins": [
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-splash-screen"
     ]
   }
 }

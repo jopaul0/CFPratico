@@ -4,24 +4,63 @@ import { NewTransactionData, TransactionWithNames } from '../../../types/Databas
 
 /**
  * Adiciona uma nova transação.
- * Retorna o ID da transação inserida.
  */
 export const addTransaction = async (data: NewTransactionData): Promise<number> => {
+  // ... (código existente, sem alteração)
   const db = await dbPromise;
   const { date, description, value, type, condition, installments, paymentMethodId, categoryId } = data;
 
   try {
-    // runAsync é para INSERT, UPDATE, DELETE
     const result = await db.runAsync(
       `INSERT INTO "transaction" (date, description, value, type, condition, installments, payment_method_id, category_id) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
       [date, description, value, type, condition, installments, paymentMethodId, categoryId]
     );
-    
-    // O ID está em lastInsertRowId
     return result.lastInsertRowId;
-  } catch (error) {
+  } catch (error : any) {
     console.error('Erro ao adicionar transação:', error);
+    throw error;
+  }
+};
+
+/**
+ * // NOVO
+ * Atualiza uma transação existente.
+ */
+export const updateTransaction = async (id: number, data: NewTransactionData): Promise<void> => {
+  const db = await dbPromise;
+  const { date, description, value, type, condition, installments, paymentMethodId, categoryId } = data;
+
+  try {
+    await db.runAsync(
+      `UPDATE "transaction" SET 
+         date = ?, 
+         description = ?, 
+         value = ?, 
+         type = ?, 
+         condition = ?, 
+         installments = ?, 
+         payment_method_id = ?, 
+         category_id = ?
+       WHERE id = ?;`,
+      [date, description, value, type, condition, installments, paymentMethodId, categoryId, id]
+    );
+  } catch (error : any) {
+    console.error(`Erro ao atualizar transação ${id}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * // NOVO
+ * Deleta uma transação.
+ */
+export const deleteTransaction = async (id: number): Promise<void> => {
+  const db = await dbPromise;
+  try {
+    await db.runAsync('DELETE FROM "transaction" WHERE id = ?;', [id]);
+  } catch (error : any) {
+    console.error(`Erro ao deletar transação ${id}:`, error);
     throw error;
   }
 };
@@ -30,6 +69,7 @@ export const addTransaction = async (data: NewTransactionData): Promise<number> 
  * Busca todas as transações com JOIN.
  */
 export const fetchTransactions = async (): Promise<TransactionWithNames[]> => {
+  // ... (código existente, sem alteração)
   const db = await dbPromise;
   try {
     const results = await db.getAllAsync<TransactionWithNames>(
@@ -43,8 +83,33 @@ export const fetchTransactions = async (): Promise<TransactionWithNames[]> => {
        ORDER BY t.date DESC;`
     );
     return results;
-  } catch (error) {
+  } catch (error : any) {
     console.error('Erro ao buscar transações com JOIN:', error);
+    throw error;
+  }
+};
+
+/**
+ * // NOVO (Recomendado)
+ * Busca uma transação específica pelo ID (útil para a tela de edição).
+ */
+export const fetchTransactionById = async (id: number): Promise<TransactionWithNames | null> => {
+  const db = await dbPromise;
+  try {
+    const result = await db.getFirstAsync<TransactionWithNames>(
+      `SELECT 
+         t.*, 
+         c.name AS category_name, 
+         p.name AS payment_method_name 
+       FROM "transaction" t
+       LEFT JOIN category c ON t.category_id = c.id
+       LEFT JOIN payment_method p ON t.payment_method_id = p.id
+       WHERE t.id = ?;`,
+      [id]
+    );
+    return result;
+  } catch (error : any) {
+    console.error(`Erro ao buscar transação ${id}:`, error);
     throw error;
   }
 };
@@ -53,10 +118,11 @@ export const fetchTransactions = async (): Promise<TransactionWithNames[]> => {
  * Deleta todas as transações (para testes).
  */
 export const clearAllTransactions = async (): Promise<void> => {
+  // ... (código existente, sem alteração)
   const db = await dbPromise;
   try {
     await db.runAsync('DELETE FROM "transaction";');
-  } catch (error) {
+  } catch (error : any) {
     console.error('Erro ao limpar transações:', error);
     throw error;
   }

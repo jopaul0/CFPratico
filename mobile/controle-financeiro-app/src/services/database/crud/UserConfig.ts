@@ -2,28 +2,57 @@
 import { dbPromise } from '../connection';
 import { UserConfig } from '../../../types/Database';
 
-/**
- * Busca a configuração do usuário (deve haver apenas uma).
- */
-export const fetchUserConfig = async (): Promise<UserConfig | null> => {
+export const fetchOrCreateUserConfig = async (): Promise<UserConfig> => {
   const db = await dbPromise;
   try {
-    // getFirstAsync retorna o primeiro objeto ou null se não houver
+    // Tenta buscar
+    const result = await db.getFirstAsync<UserConfig>(
+      'SELECT * FROM user_config WHERE id = 1;'
+    );
+    
+    if (result) {
+      return result; // Encontrou, retorna
+    }
+
+    // Não encontrou, cria a padrão
+    const defaultConfig: Omit<UserConfig, 'id'> = {
+      company_name: null,
+      initial_balance: 0.00
+    };
+    await saveOrUpdateUserConfig(defaultConfig);
+    
+    // Retorna a config recém-criada
+    return { id: 1, ...defaultConfig };
+
+  } catch (error: any) {
+    console.error('Erro ao buscar ou criar config do usuário:', error);
+    throw error;
+  }
+};
+
+/**
+ * Busca a configuração do usuário (pode retornar null).
+ */
+export const fetchUserConfig = async (): Promise<UserConfig | null> => {
+  // ... (código existente, sem alteração)
+  const db = await dbPromise;
+  try {
     const result = await db.getFirstAsync<UserConfig>(
       'SELECT * FROM user_config WHERE id = 1;'
     );
     return result;
-  } catch (error) {
+  } catch (error : any) {
     console.error('Erro ao buscar config do usuário:', error);
     throw error;
   }
 };
 
 /**
+ * // ATUALIZADO (Renomeado)
  * Salva ou Atualiza a configuração do usuário.
  * Usa ID=1 fixo.
  */
-export const saveUserConfig = async (config: Omit<UserConfig, 'id'>): Promise<void> => {
+export const saveOrUpdateUserConfig = async (config: Omit<UserConfig, 'id'>): Promise<void> => {
   const db = await dbPromise;
   const { company_name, initial_balance } = config;
   try {
@@ -31,7 +60,7 @@ export const saveUserConfig = async (config: Omit<UserConfig, 'id'>): Promise<vo
       'INSERT OR REPLACE INTO user_config (id, company_name, initial_balance) VALUES (1, ?, ?);',
       [company_name, initial_balance]
     );
-  } catch (error) {
+  } catch (error : any) {
     console.error('Erro ao salvar config do usuário:', error);
     throw error;
   }

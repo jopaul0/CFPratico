@@ -1,12 +1,16 @@
-// src/hooks/useStatementData.ts
-
 import { useMemo, useState } from 'react';
 
 import type { Tx, TransactionGroup } from '../types/Transactions';
 import type { FilterConfig, Option } from '../types/Filters';
+
 import { groupTransactionsByDay } from '../utils/Transactions';
-import { ALL_CATEGORY_NAMES, categoryToSlug } from '../config/categories';
+import { ALL_CATEGORY_NAMES, categoryToSlug } from '../utils/Categories';
 import { formatDateToString } from '../utils/Date';
+
+
+
+
+
 
 // =========================================================================
 // Dados mock
@@ -25,6 +29,7 @@ const INITIAL_BALANCE = 2500;
 // =========================================================================
 // Opções de Filtro Estáticas
 // =========================================================================
+
 const CATEGORY_FILTER_OPTIONS: Option[] = [
     { label: 'Todas', value: 'all' },
     ...ALL_CATEGORY_NAMES.map(name => ({
@@ -44,32 +49,38 @@ const PAYMENT_TYPE_FILTER_OPTIONS: Option[] = [
     { label: 'Outros', value: 'Outros' },
 ];
 
-// =========================================================================
-// Custom Hook useStatementData
-// =========================================================================
+/// Fim do MOCK
+
+
+
+
 export const useStatementData = () => {
-    // Calcula as datas padrão para o reset (30 dias atrás até hoje)
+
+    //STATES
     const todayISO = useMemo(() => formatDateToString(new Date()), []);
+
     const initialDateISO = useMemo(() => {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         return formatDateToString(thirtyDaysAgo);
     }, []);
 
-    // ===== 1. Estados dos Filtros =====
+
     const [query, setQuery] = useState('');
     const [category, setCategory] = useState<string>('all'); 
     const [paymentType, setPaymentType] = useState<string>('all');
+
     
-    // 🚀 Novos Estados para o Período Customizado
     const [startDate, setStartDate] = useState<string>(initialDateISO);
     const [endDate, setEndDate] = useState<string>(todayISO);
 
-    // 🚀 Novos Estados para Tipo e Parcelas
+
     const [movementType, setMovementType] = useState<'all' | 'Receita' | 'Despesa'>('all');
     const [installments, setInstallments] = useState<'all' | 'vista' | 'parcelado'>('all');
 
-    // Função de Reset (Agora reseta todos os novos filtros)
+
+
+    // Handles
     const handleClearAll = () => {
         setQuery('');
         setCategory('all');

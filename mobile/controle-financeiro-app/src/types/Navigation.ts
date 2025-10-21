@@ -39,6 +39,7 @@ export type StatementStackParamList = {
 export type DrawerParamList = {
     Prototype: undefined; 
     Statement: undefined; 
+    Test: undefined; 
 };
 
 

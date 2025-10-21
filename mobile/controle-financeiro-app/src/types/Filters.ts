@@ -1,5 +1,3 @@
-// src/components/Filters/types.ts
-
 export type Option = { label: string; value: string };
 
 // Tipos para os filtros baseados em Picker

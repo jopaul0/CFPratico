@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, Platform, Pressable } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { formatDateToString, parseStringToDate } from '../utils/Date';
-import type { ISODate } from '../types/Date';
+
 interface DatePickerInputProps {
   label: string;
-  value: ISODate; // Usando o tipo correto
-  onChange: (dateString: ISODate) => void;
+  value: string;
+  onChange: (dateString: string) => void;
 }
 
 export const DatePickerInput: React.FC<DatePickerInputProps> = ({ label, value, onChange }) => {
@@ -16,7 +16,7 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({ label, value, 
   const onChangePicker = (event: DateTimePickerEvent, selectedDate?: Date) => {
     setShow(Platform.OS === 'ios');
     if (selectedDate) {
-      const newDateString = formatDateToString(selectedDate) as ISODate;
+      const newDateString = formatDateToString(selectedDate) as string;
       onChange(newDateString);
     }
   };

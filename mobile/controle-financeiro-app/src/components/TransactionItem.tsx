@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { getCategoryIcon } from '../utils/CategoryIcons';
-import type { ISODate } from '../types/Date';
 import { formatToBRL } from '../utils/Value';
+import { Car } from 'lucide-react-native';
 
 interface TransactionItemProps {
   id: string;
@@ -11,7 +10,7 @@ interface TransactionItemProps {
   description: string;
   value: number;
   isNegative?: boolean;
-  date?: ISODate;
+  date?: string;
   onPress?: () => void;
 }
 
@@ -19,8 +18,6 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
   category, paymentType, description, value, isNegative = true, onPress,
 }) => {
   const iconColor = '#9ca3af';
-  const Icon = getCategoryIcon(category);
-
   const formattedValue = formatToBRL(value);
 
   return (
@@ -32,7 +29,7 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
       <View className="flex-row items-center justify-between py-3 bg-white rounded-lg px-3 border border-gray-300">
         <View className="flex-row items-center gap-3 flex-1">
           <View className="p-2 rounded-full bg-gray-800/20">
-            <Icon size={22} color={iconColor} />
+            <Car size={22} color={iconColor} />
           </View>
           <View className="flex-1">
             <Text className="text-gray-900 font-semibold">{paymentType}</Text>

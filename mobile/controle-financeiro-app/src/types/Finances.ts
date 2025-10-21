@@ -1,6 +1,3 @@
-// src/types/Finances.ts
-
-// Mapeamento dos novos valores de "Conta" (agora Formas de Pagamento)
 export const CONTA_OPTIONS = {
     'pix': 'Pix',
     'cartao': 'Cartão de Crédito',

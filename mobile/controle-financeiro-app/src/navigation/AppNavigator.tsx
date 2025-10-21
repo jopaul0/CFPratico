@@ -7,25 +7,11 @@ import { DrawerParamList } from '../types/Navigation';
 import { Platform, View, Text } from 'react-native';
 import { StatementStackNavigator } from './StatementStack';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import AdminScreen from '../screens/AdminScreen';
 
-// const HomeStack = createNativeStackNavigator<HomeStackParamList>();
+
 const AppDrawer = createDrawerNavigator<DrawerParamList>();
 
-// // 1. O Drawer agora mostra o header (para exibir o botão de menu no mobile)
-// const HomeStackNavigator: React.FC = () => {
-//   return (
-//     <HomeStack.Navigator 
-//       screenOptions={{
-//         headerShown: false,
-//       }}
-//     >
-//       <HomeStack.Screen name="HomeMain" component={HomeScreen} />
-//     </HomeStack.Navigator>
-//   );
-// };
-
-
-// 2. App Drawer Navigator (Barra Lateral)
 export const AppNavigator: React.FC = () => {
   return (
     <AppDrawer.Navigator
@@ -44,11 +30,11 @@ export const AppNavigator: React.FC = () => {
         component={StatementStackNavigator}
         options={({ route }) => {
           const routeName = getFocusedRouteNameFromRoute(route) ?? 'StatementMain';
-          const hideHeader = routeName !== 'StatementMain'; // se for detalhe, esconde
+          const hideHeader = routeName !== 'StatementMain';
 
           return {
             title: 'Movimentação',
-            headerShown: !hideHeader, // <- mostra só na principal
+            headerShown: !hideHeader,
           };
         }}
       />
@@ -58,6 +44,14 @@ export const AppNavigator: React.FC = () => {
         component={PrototypeScreen}
         options={{
           title: 'Protótipo',
+        }}
+      />
+
+      <AppDrawer.Screen
+        name="Test"
+        component={AdminScreen}
+        options={{
+          title: 'Teste',
         }}
       />
 

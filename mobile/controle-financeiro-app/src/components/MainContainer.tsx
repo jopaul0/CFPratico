@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 
 interface MainContainerProps {
   hasButton?: boolean;

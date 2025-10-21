@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, TextInput, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
-// 🚀 Importa a interface Option do local centralizado (Filters/types)
 import { Option } from '../types/Filters'; 
 
 interface InputGroupProps {

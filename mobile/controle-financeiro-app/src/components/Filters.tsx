@@ -1,9 +1,6 @@
-// src/components/Filters.tsx
-
 import React, { useMemo } from 'react';
 import { View, ScrollView, useWindowDimensions } from 'react-native';
 
-// Importa os componentes de input e select
 import { InputGroup } from './InputGroup';
 import { DatePickerInput } from './DatePickerInput';
 

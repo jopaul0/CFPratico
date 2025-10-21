@@ -1,25 +1,21 @@
-// Componentes/TransactionDayGroup.tsx (Atualizado)
-
 import React from 'react';
 import { View, Text } from 'react-native';
 import { TransactionItem } from './TransactionItem';
 import { Divider } from './Divider';
-// 🚀 Importa o tipo Tx do lugar correto
+
 import { Tx } from '../types/Transactions'; 
 import { formatToBRL } from '../utils/Value';
 
-// O tipo TxInGroup é substituído por Tx
 interface TransactionDayGroupProps {
   date: string;
   balance: number;
-  transactions: Tx[]; // Usa o tipo importado
+  transactions: Tx[];
   onPressItem?: (tx: Tx) => void;
 }
 
 export const TransactionDayGroup: React.FC<TransactionDayGroupProps> = ({
   date, balance, transactions, onPressItem,
 }) => {
-  // ... (JSX de renderização permanece o mesmo)
   const formattedBalance = formatToBRL(balance);
 
   return (

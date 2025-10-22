@@ -1,9 +1,9 @@
 // App.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { StatusBar } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
+import { View } from 'react-native';
 
 import { AppNavigator } from './src/navigation/AppNavigator';
 import * as DB from './src/services/database';
@@ -53,13 +53,13 @@ export default function App() {
   // Renderize o app, agora com o 'onLayout' na SafeAreaView
   return (
     <NavigationContainer>
-      <SafeAreaView 
-        className="flex-1 bg-gray-50" // Seu className original
-        onLayout={onLayoutRootView} // Adicione o onLayout aqui
+      <View 
+        className="flex-1" 
+        onLayout={onLayoutRootView}
       > 
         <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
         <AppNavigator />
-      </SafeAreaView>
+      </View>
     </NavigationContainer>
   );
 }

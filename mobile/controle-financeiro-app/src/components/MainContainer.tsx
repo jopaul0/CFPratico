@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface MainContainerProps {
   hasButton?: boolean;
@@ -16,36 +15,34 @@ export const MainContainer: React.FC<MainContainerProps> = ({
   children
 }) => {
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1 }}
+    >
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 32 }}
+        contentInsetAdjustmentBehavior="automatic"
+        keyboardShouldPersistTaps="handled"
       >
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{ paddingBottom: 32 }}
-          contentInsetAdjustmentBehavior="automatic"
-          keyboardShouldPersistTaps="handled"
-        >
-          <View className="p-4 md:p-8 max-w-6xl mx-auto w-full">
-            {children}
-          </View>
-        </ScrollView>
+        <View className="p-4 md:p-8 max-w-6xl mx-auto w-full">
+          {children}
+        </View>
+      </ScrollView>
 
-        <TouchableOpacity
-          onPress={onPressButton}
-          className="absolute bottom-6 right-6 p-4 rounded-full shadow-lg"
-          style={{
-            backgroundColor: '#3b82f6',
-            elevation: 5,
-            display: hasButton ? 'flex' : 'none',
-          }}
-          activeOpacity={0.8}
-        >
-          {iconButton}
-        </TouchableOpacity>
+      <TouchableOpacity
+        onPress={onPressButton}
+        className="absolute bottom-6 right-6 p-4 rounded-full shadow-lg"
+        style={{
+          backgroundColor: '#3b82f6',
+          elevation: 5,
+          display: hasButton ? 'flex' : 'none',
+        }}
+        activeOpacity={0.8}
+      >
+        {iconButton}
+      </TouchableOpacity>
 
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };

@@ -21,7 +21,7 @@ export const AppNavigator: React.FC = () => {
         drawerType: Platform.OS === 'web' ? 'permanent' : 'slide',
         drawerStyle: {
           width: Platform.OS === 'web' ? 240 : '80%',
-        },
+        }
       }}
     >
 

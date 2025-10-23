@@ -2,29 +2,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as DB from '../services/database';
 import type { Category, PaymentMethod, TransactionCondition } from '../services/database';
+import { parseNumberBR, toISODate } from '../utils/Date';
 
 type MovementType = 'revenue' | 'expense';
-// ✅ use o tipo do seu types.ts
-type ConditionType = TransactionCondition; // 'paid' | 'pending'
+type ConditionType = TransactionCondition;
 
 export type AddTxState = {
   dateISO: string;
   description: string;
   valueInput: string;
-  movementType: MovementType;   // 'revenue' | 'expense'
-  condition: ConditionType;     // 'paid' | 'pending'
-  installments: string;         // texto
+  movementType: MovementType;
+  condition: ConditionType;
+  installments: string;
   paymentMethodId?: number;
   categoryId?: number;
 };
 
-const toISODate = (d: Date) => d.toISOString().slice(0, 10);
-const parseNumberBR = (s: string) => {
-  if (!s?.trim()) return 0;
-  const norm = s.replace(/\./g, '').replace(',', '.');
-  const n = Number(norm);
-  return Number.isFinite(n) ? n : 0;
-};
 
 export const useAddTransaction = () => {
   const [loading, setLoading] = useState(true);
@@ -39,7 +32,7 @@ export const useAddTransaction = () => {
     description: '',
     valueInput: '',
     movementType: 'revenue',
-    condition: 'paid',   // ✅ padrão: à vista
+    condition: 'paid',
     installments: '1',
     paymentMethodId: undefined,
     categoryId: undefined,
@@ -86,7 +79,7 @@ export const useAddTransaction = () => {
     if (!state.categoryId) return 'Selecione uma categoria.';
     if (!state.paymentMethodId) return 'Selecione um método de pagamento.';
     if (state.condition === 'pending' && installmentsNumber < 2) {
-      return 'Para parcelado, informe parcelas >= 2.';
+      return 'Tenha mais de uma parcela para que seja parcelado.';
     }
     return null;
   }, [state, installmentsNumber]);
@@ -106,7 +99,7 @@ export const useAddTransaction = () => {
         description: state.description || null,
         value: signed,
         type: state.movementType,
-        condition: state.condition, // ✅ 'paid' | 'pending'
+        condition: state.condition,
         installments: state.condition === 'paid' ? 1 : installmentsNumber,
         paymentMethodId: state.paymentMethodId!,
         categoryId: state.categoryId!,

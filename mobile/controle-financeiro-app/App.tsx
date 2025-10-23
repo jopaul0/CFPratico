@@ -12,10 +12,8 @@ import * as DB from './src/services/database';
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
-  // Estado para saber se o banco de dados está pronto
   const [dbReady, setDbReady] = useState(false);
 
-  // Efeito para inicializar o banco
   useEffect(() => {
     async function prepareDatabase() {
       try {
@@ -28,29 +26,25 @@ export default function App() {
       } catch (e) {
         console.warn("APP: Erro ao preparar o banco:", e);
       } finally {
-        // Avise o React que o banco está pronto
         console.log("APP: Banco pronto.");
         setDbReady(true);
       }
     }
 
     prepareDatabase();
-  }, []); // Roda apenas uma vez
+  }, []);
+  
 
-  // Callback para esconder a splash DEPOIS que a view for renderizada
   const onLayoutRootView = useCallback(async () => {
     if (dbReady) {
-      // Esconda a splash screen
       await SplashScreen.hideAsync();
     }
-  }, [dbReady]); // Depende do 'dbReady'
-
-  // Se o banco não estiver pronto, não mostre nada (a splash ainda está visível)
+  }, [dbReady]);
   if (!dbReady) {
     return null;
   }
 
-  // Renderize o app, agora com o 'onLayout' na SafeAreaView
+
   return (
     <NavigationContainer>
       <View 

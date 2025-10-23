@@ -4,6 +4,7 @@ import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } fr
 interface MainContainerProps {
   hasButton?: boolean;
   iconButton?: React.ReactNode;
+  colorButton?: string;
   onPressButton?: () => void;
   children: React.ReactNode;
 }
@@ -11,6 +12,7 @@ interface MainContainerProps {
 export const MainContainer: React.FC<MainContainerProps> = ({
   hasButton = false,
   iconButton,
+  colorButton = '#3b82f6',
   onPressButton,
   children
 }) => {
@@ -34,7 +36,7 @@ export const MainContainer: React.FC<MainContainerProps> = ({
         onPress={onPressButton}
         className="absolute bottom-6 right-6 p-4 rounded-full shadow-lg"
         style={{
-          backgroundColor: '#3b82f6',
+          backgroundColor: colorButton,
           elevation: 5,
           display: hasButton ? 'flex' : 'none',
         }}

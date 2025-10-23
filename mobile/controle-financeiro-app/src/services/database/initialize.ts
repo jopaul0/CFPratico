@@ -132,8 +132,8 @@ export const seedInitialData = async (): Promise<void> => {
             'expense',
             'paid',
             1,
-            7, // ID 'Boleto'
-            4  // ID 'Fornecedor'
+            7,
+            4 
           ]
         );
 

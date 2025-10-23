@@ -65,6 +65,33 @@ export const deleteTransaction = async (id: number): Promise<void> => {
   }
 };
 
+
+/* // NOVO
+ * Deleta múltiplas transações de uma vez.
+ */
+export const deleteTransactions = async (ids: number[]): Promise<void> => {
+    if (ids.length === 0) return;
+
+    const db = await dbPromise;
+    try {
+        // Cria os placeholders (?) dinamicamente
+        const placeholders = ids.map(() => '?').join(',');
+        
+        // Executa dentro de uma transação para performance e segurança
+        await db.withTransactionAsync(async () => {
+            await db.runAsync(
+                `DELETE FROM "transaction" WHERE id IN (${placeholders});`,
+                [...ids] // O driver SQLite trata a passagem do array
+            );
+        });
+        console.log(`${ids.length} transações deletadas.`);
+    } catch (error : any) {
+        console.error(`Erro ao deletar transações em massa:`, error);
+        throw error;
+    }
+};
+
+
 /**
  * Busca todas as transações com JOIN.
  */

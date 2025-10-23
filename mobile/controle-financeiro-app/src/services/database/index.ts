@@ -33,5 +33,6 @@ export {
     clearAllTransactions,
     updateTransaction,
     deleteTransaction,
-    fetchTransactionById
+    fetchTransactionById,
+    deleteTransactions
 } from './crud/Transaction';

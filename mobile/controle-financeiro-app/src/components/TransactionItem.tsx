@@ -1,7 +1,9 @@
+// src/components/TransactionItem.tsx
+
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { formatToBRL } from '../utils/Value';
-import { Car } from 'lucide-react-native';
+import { Car, Circle, CheckCircle } from 'lucide-react-native'; 
 
 interface TransactionItemProps {
   id: string;
@@ -12,21 +14,44 @@ interface TransactionItemProps {
   isNegative?: boolean;
   date?: string;
   onPress?: () => void;
+  onLongPress?: () => void;
+  isSelected?: boolean;
+  isSelectionMode?: boolean;
 }
 
 export const TransactionItem: React.FC<TransactionItemProps> = ({
   category, paymentType, description, value, isNegative = true, onPress,
+  onLongPress,
+  isSelected = false,
+  isSelectionMode = false,
 }) => {
   const iconColor = '#9ca3af';
   const formattedValue = formatToBRL(value);
+
+  // NOVO: Define o estilo de seleção
+  const selectionClass = isSelected 
+    ? 'bg-blue-100 border-blue-400' 
+    : 'bg-white border-gray-300';
 
   return (
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={onPress}
+      onLongPress={isSelectionMode ? onPress : onLongPress}
       className="rounded-lg mb-2"
     >
-      <View className="flex-row items-center justify-between py-3 bg-white rounded-lg px-3 border border-gray-300">
+      <View className={`flex-row items-center justify-between py-3 px-3 rounded-lg border ${selectionClass}`}>
+        
+        {isSelectionMode && (
+            <View className="mr-3">
+                {isSelected ? (
+                    <CheckCircle size={22} color="#2563eb" />
+                ) : (
+                    <Circle size={22} color="#9ca3af" />
+                )}
+            </View>
+        )}
+
         <View className="flex-row items-center gap-3 flex-1">
           <View className="p-2 rounded-full bg-gray-800/20">
             <Car size={22} color={iconColor} />

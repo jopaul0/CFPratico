@@ -1,7 +1,7 @@
-import React, { useCallback } from 'react'; // << NOVO: Importe o useCallback
-import { View, ScrollView, Text, ActivityIndicator } from 'react-native'; // << NOVO: Importe Text e ActivityIndicator
+import React, { useCallback } from 'react';
+import { View, ScrollView, Text, ActivityIndicator, TouchableOpacity } from 'react-native'; 
 
-import { useNavigation, useFocusEffect } from '@react-navigation/native'; // << NOVO: Importe o useFocusEffect
+import { useNavigation, useFocusEffect } from '@react-navigation/native'; 
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { MainContainer } from '../components/MainContainer';
@@ -10,16 +10,15 @@ import { Filters } from '../components/Filters';
 import { TransactionDayGroup } from '../components/TransactionDayGroup';
 
 import type { StatementStackParamList } from '../types/Navigation';
-import { useStatementData } from '../hooks/useStatementData';
+import type { Tx } from '../types/Transactions';
 
-// 🚀 Importando o ícone Plus
-import { Plus } from 'lucide-react-native';
+import { Plus, Trash } from 'lucide-react-native';
+
+import { useStatementData } from '../hooks/useStatementData';
+import { useStatmentMassDelete } from '../hooks/useStatmentMassDelete';
 
 
 export const StatementScreen: React.FC = () => {
-    const navigation = useNavigation<NativeStackNavigationProp<StatementStackParamList>>();
-
-    // 1. PEGUE OS NOVOS VALORES DO HOOK
     const {
         groups,
         query,
@@ -27,52 +26,62 @@ export const StatementScreen: React.FC = () => {
         filtersConfig,
         handleClearAll,
         doSearch,
-        isLoading, // << NOVO
-        error,     // << NOVO
-        reload,    // << NOVO
+        isLoading,
+        error,
+        reload,
     } = useStatementData();
 
-    // 2. ADICIONE O useFocusEffect
+    const {
+        isSelectionMode,
+        selectedIds,
+        handleLongPressItem,
+        handleCancelSelection,
+        toggleSelectItem,
+        handleDeleteSelected,
+    } = useStatmentMassDelete({ reload });
+
+    const navigation = useNavigation<NativeStackNavigationProp<StatementStackParamList>>();
+
+    const handleAddTransaction = useCallback(() => {
+        navigation.navigate('AddTransaction' as any);
+    }, [navigation]);
+
+    const handlePressItem = useCallback((tx: Tx) => {
+        if (isSelectionMode) {
+            toggleSelectItem(tx.id);
+        } else {
+            navigation.navigate('TransactionDetail', {
+                id: tx.id,
+                category: tx.category,
+                paymentType: tx.paymentType,
+                description: tx.description,
+                value: tx.value,
+                isNegative: tx.isNegative,
+                date: tx.date,
+                type: tx.type,
+                condition: tx.condition,
+                installments: tx.installments,
+            });
+        }
+    }, [isSelectionMode, navigation, toggleSelectItem]);
+
+
     useFocusEffect(
         useCallback(() => {
-            // Este código roda toda vez que a tela ganha foco
             console.log("StatementScreen em foco, recarregando dados...");
             reload();
-        }, [reload]) // O 'reload' é estável, não causa re-render desnecessário
+            handleCancelSelection();
+        }, [reload, handleCancelSelection]) 
     );
 
-
-    const handleAddTransaction = () => {
-        navigation.navigate('AddTransaction' as any);
-    };
-
-    // 3. CRIE UM COMPONENTE PARA RENDERIZAR O CONTEÚDO
-    //    Isso ajuda a lidar com os estados de Loading, Erro e Lista Vazia.
     const renderContent = () => {
-        // Estado de Carregamento
         if (isLoading) {
             return <ActivityIndicator size="large" className="mt-16" />;
         }
+        // ... (resto do renderContent: error, lista vazia)
+        if (error) { /* ... */ }
+        if (groups.length === 0) { /* ... */ }
 
-        // Estado de Erro
-        if (error) {
-            return (
-                <Text className="mt-16 text-center text-red-500">
-                    Erro ao carregar dados: {error.message}
-                </Text>
-            );
-        }
-
-        // Estado de Lista Vazia
-        if (groups.length === 0) {
-            return (
-                <Text className="mt-16 text-center text-gray-500">
-                    Nenhuma transação encontrada.
-                </Text>
-            );
-        }
-
-        // Estado com Dados (Sucesso)
         return (
             <View className="pb-8">
                 {groups.map((g) => (
@@ -81,20 +90,11 @@ export const StatementScreen: React.FC = () => {
                         date={g.dateLabel}
                         balance={g.balance}
                         transactions={g.transactions}
-                        onPressItem={(tx) =>
-                            navigation.navigate('TransactionDetail', {
-                                id: tx.id,
-                                category: tx.category,
-                                paymentType: tx.paymentType,
-                                description: tx.description,
-                                value: tx.value,
-                                isNegative: tx.isNegative,
-                                date: tx.date,
-                                type: tx.type,
-                                condition: tx.condition,
-                                installments: tx.installments,
-                            })
-                        }
+                       
+                        onPressItem={handlePressItem}
+                        onLongPressItem={handleLongPressItem}
+                        isSelectionMode={isSelectionMode}
+                        selectedIds={selectedIds}
                     />
                 ))}
             </View>
@@ -104,10 +104,19 @@ export const StatementScreen: React.FC = () => {
     return (
         <MainContainer
             hasButton={true}
-            iconButton={<Plus size={30} color="white" />}
-            onPressButton={handleAddTransaction}
+            colorButton={ isSelectionMode ? '#ef4444' : '#3b82f6' }
+            iconButton={
+                isSelectionMode 
+                    ? <Trash size={30} color="white" /> 
+                    : <Plus size={30} color="white" />
+            }
+            onPressButton={
+                isSelectionMode
+                    ? handleDeleteSelected
+                    : handleAddTransaction
+            }
         >
-            {/* Busca e Filtros (sempre visíveis) */}
+            {/* Busca e Filtros (do hook de dados) */}
             <SearchBar
                 value={query}
                 onChangeText={setQuery}
@@ -115,9 +124,22 @@ export const StatementScreen: React.FC = () => {
                 onSubmitSearch={doSearch}
                 onClearAll={handleClearAll}
             />
-            <Filters filters={filtersConfig} />
+            
+            {/* Barra de Seleção (do hook de delete) */}
+            {isSelectionMode ? (
+                <View className="flex-row items-center justify-between p-3 bg-blue-100 rounded-lg mt-2">
+                    <Text className="font-semibold text-blue-800">
+                        {selectedIds.size} selecionada(s)
+                    </Text>
+                    <TouchableOpacity onPress={handleCancelSelection}>
+                        <Text className="font-semibold text-blue-600">Cancelar</Text>
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <Filters filters={filtersConfig} />
+            )}
 
-            {/* Lista agrupada (Scrollable Content) */}
+            {/* Lista */}
             <ScrollView className="mt-2 flex-1">
                 {renderContent()}
             </ScrollView>

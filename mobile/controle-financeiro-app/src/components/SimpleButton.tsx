@@ -5,15 +5,42 @@ interface SimpleButtonProps {
   onPress: () => void;
   title: string;
   className?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  activeBackgroundColor?: string;
 }
 
-export const SimpleButton: React.FC<SimpleButtonProps> = ({ onPress, title, className = ""}) => {
+/**
+ * Botão simples e personalizável para uso geral.
+ * Permite definir cores personalizadas de texto e fundo.
+ */
+export const SimpleButton: React.FC<SimpleButtonProps> = ({
+  onPress,
+  title,
+  className = '',
+  backgroundColor = '#ffffff',
+  textColor = '#374151', // gray-700
+  activeBackgroundColor = '#f3f4f6', // gray-100
+}) => {
+  const [isPressed, setIsPressed] = React.useState(false);
+
   return (
-    <TouchableOpacity 
-    onPress={onPress}
-    className={`py-2 px-4 rounded-lg border border-gray-300 bg-white shadow-sm hover:bg-gray-50 ${className}`}
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      onPressIn={() => setIsPressed(true)}
+      onPressOut={() => setIsPressed(false)}
+      className={`py-2 px-4 rounded-lg border border-gray-300 shadow-sm ${className}`}
+      style={{
+        backgroundColor: isPressed ? activeBackgroundColor : backgroundColor,
+      }}
     >
-        <Text className="text-sm font-semibold text-gray-700 text-center">{title}</Text>
+      <Text
+        className="text-sm font-semibold text-center"
+        style={{ color: textColor }}
+      >
+        {title}
+      </Text>
     </TouchableOpacity>
   );
 };

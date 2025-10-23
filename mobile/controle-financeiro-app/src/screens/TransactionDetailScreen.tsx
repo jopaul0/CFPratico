@@ -4,7 +4,7 @@ import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StatementStackParamList } from '../types/Navigation';
 
 import { useTransactionDetail } from '../hooks/useTransactionDetail';
-import { getCategoryIcon } from '../utils/CategoryIcons'; 
+import { getCategoryIcon } from '../utils/CategoryIcons';
 import { formatToBRL } from '../utils/Value';
 import { parseStringToDate } from '../utils/Date';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -31,7 +31,7 @@ const ViewMode: React.FC<{ tx: DB.TransactionWithNames }> = ({ tx }) => {
     const paymentConditionText = tx.condition === 'pending' // 'pending' é parcelado
         ? `Parcelado (${tx.installments}x)`
         : 'À Vista';
-    
+
     const typeText = tx.type === 'expense' ? 'Despesa' : 'Receita';
     const valueColorClass = tx.type === 'expense' ? 'text-red-400' : 'text-green-500';
 
@@ -43,7 +43,7 @@ const ViewMode: React.FC<{ tx: DB.TransactionWithNames }> = ({ tx }) => {
                     <Icon size={36} color={iconColor} />
                 </View>
                 <Text className={`text-3xl font-bold ${valueColorClass}`}>
-                    {formattedValue} 
+                    {formattedValue}
                 </Text>
                 <Text className="text-gray-600 font-semibold mt-1">
                     {tx.category_name || 'Sem Categoria'}
@@ -95,8 +95,8 @@ const EditMode: React.FC<{ hook: ReturnType<typeof useTransactionDetail> }> = ({
 
     return (
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
-            <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24, paddingTop: 16, paddingHorizontal: 16 }}>
-                
+            <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 16, paddingTop: 16, paddingHorizontal: 16 }}>
+
                 <DatePickerInput
                     label="Data"
                     value={formState.dateISO}
@@ -174,14 +174,14 @@ const EditMode: React.FC<{ hook: ReturnType<typeof useTransactionDetail> }> = ({
 // --- TELA PRINCIPAL ---
 export const TransactionDetailScreen: React.FC = () => {
     const navigation = useNavigation<NativeStackNavigationProp<StatementStackParamList>>();
-    
+
     // 1. Pega o ID da rota. (Assume que 'id' é um string)
     const { params } = useRoute<DetailRoute>();
     const txId = parseInt(params.id, 10); // Converte para número
 
     // 2. Usa o hook
     const hook = useTransactionDetail({ transactionId: txId });
-    const { 
+    const {
         isLoading, isSaving, isEditing, error, transaction,
         handleEditToggle, handleCancel, handleSave, handleDelete
     } = hook;
@@ -203,8 +203,8 @@ export const TransactionDetailScreen: React.FC = () => {
             "Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.",
             [
                 { text: 'Cancelar', style: 'cancel' },
-                { 
-                    text: 'Excluir', 
+                {
+                    text: 'Excluir',
                     style: 'destructive',
                     onPress: async () => {
                         try {
@@ -236,45 +236,53 @@ export const TransactionDetailScreen: React.FC = () => {
         if (isEditing) {
             return <EditMode hook={hook} />;
         }
-        
+
         return <ViewMode tx={transaction} />;
     };
 
     return (
         <MainContainer>
             {renderMainContent()}
-            
+
             {/* Botões de Ação */}
             {!isLoading && !error && (
-                <View className="p-4 border-t border-gray-200 bg-white">
-                    {isEditing ? (
-                        <View className="flex-row justify-center gap-3">
-                            <SimpleButton
-                                title={isSaving ? 'Salvando…' : 'Salvar'}
-                                onPress={onSave}
-                                className={isSaving ? 'opacity-60 bg-blue-50' : 'bg-blue-50'}
-                            />
-                            <SimpleButton
-                                title="Cancelar"
-                                onPress={handleCancel}
-                                className="bg-gray-50"
-                            />
-                        </View>
-                    ) : (
-                        <View className="flex-row justify-center gap-3">
-                            <SimpleButton
-                                title="Editar"
-                                onPress={handleEditToggle}
-                                className="bg-gray-50"
-                            />
-                            <SimpleButton
-                                title="Excluir"
-                                onPress={onDelete}
-                                className="bg-red-50"
-                            />
-                        </View>
-                    )}
-                </View>
+                <>
+                    <Divider colorClass="bg-gray-300" />
+                    <View className="p-2">
+                        {isEditing ? (
+                            <View className="flex-row justify-center gap-3">
+
+                                <SimpleButton
+                                    title="Cancelar"
+                                    onPress={handleCancel}
+                                    className="bg-gray-50"
+                                />
+                                <SimpleButton
+                                    title={isSaving ? 'Salvando…' : 'Salvar'}
+                                    onPress={onSave}
+                                    className={isSaving ? 'opacity-60' : ''}
+                                    backgroundColor='#3b82f6'
+                                    textColor='#fff'
+                                />
+                            </View>
+                        ) : (
+                            <View className="flex-row justify-center gap-3">
+                                <SimpleButton
+                                    title="Excluir"
+                                    onPress={onDelete}
+                                    backgroundColor='#ef4444'
+                                    textColor='#fff'
+                                />
+                                <SimpleButton
+                                    title="Editar"
+                                    onPress={handleEditToggle}
+                                    className="bg-gray-50"
+                                />
+
+                            </View>
+                        )}
+                    </View>
+                </>
             )}
         </MainContainer>
     );

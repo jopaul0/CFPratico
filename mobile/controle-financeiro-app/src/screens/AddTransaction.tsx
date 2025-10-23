@@ -108,14 +108,15 @@ export const AddTransaction: React.FC = () => {
 
           <View className="flex-row justify-center gap-3">
             <SimpleButton
+              title="Cancelar"
+              onPress={() => nav.goBack()}
+            />
+            <SimpleButton
               title={saving ? 'Salvando…' : 'Salvar'}
               onPress={onSubmit}
               className={saving || loading ? 'opacity-60' : ''}
-            />
-            <SimpleButton
-              title="Cancelar"
-              onPress={() => nav.goBack()}
-              className="bg-gray-50"
+              backgroundColor='#3b82f6'
+              textColor='#fff'
             />
           </View>
         </ScrollView>

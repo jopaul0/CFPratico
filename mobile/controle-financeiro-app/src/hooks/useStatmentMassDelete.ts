@@ -44,7 +44,7 @@ export const useStatmentMassDelete = ({ reload }: useStatmentMassDeleteProps) =>
         const idsToDelete = Array.from(selectedIds).map(id => parseInt(id, 10));
 
         Alert.alert(
-            `Excluir ${idsToDelete.length} transações?`,
+            `Excluir ${idsToDelete.length} ${ idsToDelete.length > 1 ? "transações" : "transação" }?`,
             "Esta ação não pode ser desfeita.",
             [
                 { text: 'Cancelar', style: 'cancel' },

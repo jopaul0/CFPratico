@@ -2,20 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, FlatList, StyleSheet, ScrollView, SafeAreaView, Alert } from 'react-native';
 
-// Importa TUDO de um só lugar
 import * as DB from '../services/database';
 import { TransactionWithNames } from '../types/Database';
 
 export default function AdminScreen() {
   const [log, setLog] = useState('Tela de Admin pronta.');
-  // Usa o tipo importado no useState
   const [transactions, setTransactions] = useState<TransactionWithNames[]>([]);
 
   useEffect(() => {
     handleInitDatabase();
   }, []);
   
-  // --- FUNÇÕES DE TESTE ---
   
   const handleInitDatabase = async () => {
     try {

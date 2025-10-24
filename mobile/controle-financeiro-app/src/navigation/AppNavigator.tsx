@@ -8,6 +8,7 @@ import { Platform, View, Text } from 'react-native';
 import { StatementStackNavigator } from './StatementStack';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import AdminScreen from '../screens/AdminScreen';
+import { DashboardStackNavigator } from './DashboardStack';
 
 
 const AppDrawer = createDrawerNavigator<DrawerParamList>();
@@ -24,6 +25,20 @@ export const AppNavigator: React.FC = () => {
         }
       }}
     >
+
+      <AppDrawer.Screen
+        name="Dashboard"
+        component={DashboardStackNavigator}
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'DashboardMain';
+          const hideHeader = routeName !== 'DashboardMain';
+
+          return {
+            title: 'Resumo',
+            headerShown: !hideHeader,
+          };
+        }}
+      />
 
       <AppDrawer.Screen
         name="Statement"

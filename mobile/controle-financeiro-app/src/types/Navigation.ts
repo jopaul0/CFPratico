@@ -34,9 +34,39 @@ export type StatementStackParamList = {
     */
 };
 
+export type DashboardStackParamList = {
+    DashboardMain: undefined;
+    
+    // 🚀 Usamos o tipo Tx (Transação) para definir todos os parâmetros 
+    // da tela de detalhes. Isso garante que todos os campos necessários 
+    // (id, category, paymentType, description, value, isNegative, date, 
+    // type, condition, installments) sejam passados.
+    TransactionDetail: Tx; 
+
+    AddTransaction: undefined;
+    
+    // Se o tipo Tx for muito grande e você só quiser os campos essenciais:
+    /*
+    TransactionDetail: {
+        id: string;
+        date: ISODate;
+        type: 'Receita' | 'Despesa'; // ou use o tipo MovementType
+        paymentType: string;
+        category: string;
+        value: number;
+        condition: 'À Vista' | 'Parcelado';
+        installments: number;
+        description: string; 
+        isNegative?: boolean;
+    };
+    */
+};
+
+
 
 // Parâmetros para o Drawer (Barra Lateral)
 export type DrawerParamList = {
+    Dashboard: undefined;
     Prototype: undefined; 
     Statement: undefined; 
     Test: undefined; 

@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { 
+    View, 
+    ScrollView, 
+    TouchableOpacity, 
+    KeyboardAvoidingView, 
+    Platform, 
+    RefreshControl, 
+    RefreshControlProps
+} from 'react-native'; 
 
 interface MainContainerProps {
   hasButton?: boolean;
@@ -7,6 +15,7 @@ interface MainContainerProps {
   colorButton?: string;
   onPressButton?: () => void;
   children: React.ReactNode;
+  refreshControl?: React.ReactElement<RefreshControlProps>;
 }
 
 export const MainContainer: React.FC<MainContainerProps> = ({
@@ -14,7 +23,8 @@ export const MainContainer: React.FC<MainContainerProps> = ({
   iconButton,
   colorButton = '#3b82f6',
   onPressButton,
-  children
+  children,
+  refreshControl
 }) => {
   return (
     <KeyboardAvoidingView
@@ -26,6 +36,7 @@ export const MainContainer: React.FC<MainContainerProps> = ({
         contentContainerStyle={{ paddingBottom: 32 }}
         contentInsetAdjustmentBehavior="automatic"
         keyboardShouldPersistTaps="handled"
+        refreshControl={refreshControl}
       >
         <View className="p-4 md:p-8 max-w-6xl mx-auto w-full">
           {children}

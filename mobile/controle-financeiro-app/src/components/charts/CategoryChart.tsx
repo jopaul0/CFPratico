@@ -16,7 +16,7 @@ const ChartRow: React.FC<{
   maxValue: number;
   colorClass: string;
 }> = ({ item, maxValue, colorClass }) => {
-  const Icon = getCategoryIcon(item.name);
+  const Icon = getCategoryIcon(item.iconName);
   const percentage = maxValue > 0 ? (item.total / maxValue) * 100 : 0;
   const formattedValue = formatToBRL(item.total);
 

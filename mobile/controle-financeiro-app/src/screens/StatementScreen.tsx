@@ -1,17 +1,18 @@
+// src/screens/StatementScreen.tsx
 import React, { useCallback } from 'react';
-import { View, ScrollView, Text, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native'; 
-
-import { useNavigation } from '@react-navigation/native'; // <--- REMOVIDO 'useFocusEffect'
+import { View, Text, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native'; // <--- ScrollView não é mais importado daqui
+import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-// ... (outras importações)
 import { MainContainer } from '../components/MainContainer';
 import { SearchBar } from '../components/SearchBar';
 import { Filters } from '../components/Filters';
 import { TransactionDayGroup } from '../components/TransactionDayGroup';
+
 import type { StatementStackParamList } from '../types/Navigation';
 import type { Tx } from '../types/Transactions';
 import { Plus, Trash } from 'lucide-react-native';
+
 import { useStatementData } from '../hooks/useStatementData';
 import { useStatmentMassDelete } from '../hooks/useStatmentMassDelete';
 
@@ -24,12 +25,12 @@ export const StatementScreen: React.FC = () => {
         filtersConfig,
         handleClearAll,
         doSearch,
-        isLoading, 
+        isLoading,
         error,
-        reload,     
+        reload,
     } = useStatementData();
 
-    // ... (hook useStatmentMassDelete)
+    // ... (hook de mass delete, navigation, handlers) ...
     const {
         isSelectionMode,
         selectedIds,
@@ -41,8 +42,6 @@ export const StatementScreen: React.FC = () => {
 
     const navigation = useNavigation<NativeStackNavigationProp<StatementStackParamList>>();
 
-
-    // ... (handlers handleAddTransaction, handlePressItem)
     const handleAddTransaction = useCallback(() => {
         navigation.navigate('AddTransaction' as any);
     }, [navigation]);
@@ -51,20 +50,16 @@ export const StatementScreen: React.FC = () => {
         if (isSelectionMode) {
             toggleSelectItem(tx.id);
         } else {
-            navigation.navigate('TransactionDetail', tx); 
+            navigation.navigate('TransactionDetail', tx);
         }
     }, [isSelectionMode, navigation, toggleSelectItem]);
 
 
-    // --- (BLOCO useFocusEffect REMOVIDO) ---
-
-
-    // ... (função renderContent permanece igual)
     const renderContent = () => {
         if (isLoading && groups.length === 0) {
             return <ActivityIndicator size="large" className="mt-16" />;
         }
-        // ... (resto do renderContent) ...
+        
         if (error) { 
             return <Text className="mt-16 text-center text-red-500">Erro: {error.message}</Text>;
         }
@@ -72,8 +67,9 @@ export const StatementScreen: React.FC = () => {
              return <Text className="mt-16 text-center text-gray-500">Nenhum dado encontrado.</Text>;
         }
 
+        // Retorna o JSX direto, SEM o ScrollView
         return (
-            <View className="pb-8">
+            <View className="pb-8 mt-2">
                 {groups.map((g) => (
                     <TransactionDayGroup
                         key={g.dateISO}
@@ -93,7 +89,6 @@ export const StatementScreen: React.FC = () => {
 
     return (
         <MainContainer
-            // ... (props do MainContainer)
             hasButton={true}
             colorButton={ isSelectionMode ? '#ef4444' : '#3b82f6' }
             iconButton={
@@ -106,9 +101,16 @@ export const StatementScreen: React.FC = () => {
                     ? handleDeleteSelected
                     : handleAddTransaction
             }
+            refreshControl={ // <--- PASSA O REFRESH CONTROL AQUI
+                <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={reload}
+                    colors={['#3b82f6']}
+                />
+            }
         >
-            {/* ... (SearchBar e barra de Seleção) */}
-             <SearchBar
+            {/* Busca e Filtros */}
+            <SearchBar
                 value={query}
                 onChangeText={setQuery}
                 placeholder="Buscar por descrição, valor, categoria…"
@@ -116,9 +118,10 @@ export const StatementScreen: React.FC = () => {
                 onClearAll={handleClearAll}
             />
             
+            {/* Barra de Seleção */}
             {isSelectionMode ? (
                 <View className="flex-row items-center justify-between p-3 bg-blue-100 rounded-lg mt-2">
-                    {/* ... (conteúdo da barra de seleção) ... */}
+                    {/* ... (conteúdo da barra) ... */}
                     <Text className="font-semibold text-blue-800">
                         {selectedIds.size} selecionada(s)
                     </Text>
@@ -130,20 +133,9 @@ export const StatementScreen: React.FC = () => {
                 <Filters filters={filtersConfig} />
             )}
 
+            {/* Lista (NÃO está mais em um ScrollView) */}
+            {renderContent()}
 
-            {/* Lista (Pull-to-Refresh MANTIDO) */}
-            <ScrollView 
-                className="mt-2 flex-1"
-                refreshControl={ 
-                    <RefreshControl
-                        refreshing={isLoading}
-                        onRefresh={reload}    
-                        colors={['#3b82f6']}
-                    />
-                }
-            >
-                {renderContent()}
-            </ScrollView>
         </MainContainer>
     );
 };

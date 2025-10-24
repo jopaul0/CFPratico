@@ -96,18 +96,18 @@ export const deleteTransactions = async (ids: number[]): Promise<void> => {
  * Busca todas as transações com JOIN.
  */
 export const fetchTransactions = async (): Promise<TransactionWithNames[]> => {
-  // ... (código existente, sem alteração)
   const db = await dbPromise;
   try {
     const results = await db.getAllAsync<TransactionWithNames>(
       `SELECT 
          t.*, 
          c.name AS category_name, 
+         c.icon_name AS category_icon_name, -- ADICIONADO
          p.name AS payment_method_name 
        FROM "transaction" t
        LEFT JOIN category c ON t.category_id = c.id
        LEFT JOIN payment_method p ON t.payment_method_id = p.id
-       ORDER BY t.date DESC;`
+       ORDER BY t.date DESC;` // <--- QUERY ATUALIZADA
     );
     return results;
   } catch (error : any) {
@@ -127,11 +127,12 @@ export const fetchTransactionById = async (id: number): Promise<TransactionWithN
       `SELECT 
          t.*, 
          c.name AS category_name, 
+         c.icon_name AS category_icon_name, -- ADICIONADO
          p.name AS payment_method_name 
        FROM "transaction" t
        LEFT JOIN category c ON t.category_id = c.id
        LEFT JOIN payment_method p ON t.payment_method_id = p.id
-       WHERE t.id = ?;`,
+       WHERE t.id = ?;`, // <--- QUERY ATUALIZADA
       [id]
     );
     return result;

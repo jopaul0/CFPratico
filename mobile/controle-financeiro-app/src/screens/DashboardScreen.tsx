@@ -1,7 +1,11 @@
+// src/screens/DashboardScreen.tsx
 import React from 'react';
-import { View, ScrollView, Text, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, ActivityIndicator, RefreshControl } from 'react-native';
 // --- (Importações Adicionadas) ---
-import { useNavigation } from '@react-navigation/native'; 
+import { useNavigation } from '@react-navigation/native';
+import { DrawerNavigationProp } from '@react-navigation/drawer'; // <--- 1. IMPORTAR O TIPO DO DRAWER
+import { DrawerParamList } from '../types/Navigation'; // <--- 2. IMPORTAR A LISTA DE PARÂMETROS DO DRAWER
+
 import { TransactionItem } from '../components/TransactionItem';
 import { SimpleButton } from '../components/SimpleButton';
 import { Divider } from '../components/Divider';
@@ -17,8 +21,9 @@ import { TimeChart } from '../components/charts/TimeChart';
 
 
 export const DashboardScreen: React.FC = () => {
-    // --- (Hook de Navegação) ---
-    const navigation = useNavigation();
+    // --- (Hook de Navegação Corrigido) ---
+    // 3. Tipar o useNavigation com o Drawer
+    const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
 
     const {
         isLoading,
@@ -29,29 +34,25 @@ export const DashboardScreen: React.FC = () => {
         byCategoryExpense,
         byDate,
         recentTransactions,
-        reload, 
+        reload,
     } = useDashboardData();
 
-    // --- (BLOCO useFocusEffect REMOVIDO) ---
-
-    // --- (Handlers de Navegação) ---
+    // --- (Handlers de Navegação Corrigidos) ---
     const handleViewAll = () => {
-        navigation.navigate('Statement' as any);
+        // 4. Remover o 'as any'
+        navigation.navigate('Statement');
     };
 
     const handlePressItem = (tx: Tx) => {
-        navigation.navigate('Statement', {
-            screen: 'TransactionDetail',
-            params: tx
-        } as any);
+        navigation.navigate('TransactionDetail', tx);
     };
 
-    // ... (função renderContent permanece igual)
+    // ... (função renderContent permanece a mesma) ...
     const renderContent = () => {
+        // ... (todo o seu JSX de renderContent) ...
         if (isLoading && !recentTransactions.length) { 
             return <ActivityIndicator size="large" className="mt-16" />;
         }
-        // ... (resto do renderContent) ...
         
         if (error) {
             return <Text className="mt-16 text-center text-red-500">Erro: {error.message}</Text>;
@@ -60,7 +61,6 @@ export const DashboardScreen: React.FC = () => {
         return (
             <>
                 <View className="flex-row flex-wrap mt-4 -mx-2">
-                    {/* ... SummaryCards ... */}
                     <SummaryCard
                         title="Receitas no Período"
                         value={summary.totalRevenue}
@@ -77,10 +77,7 @@ export const DashboardScreen: React.FC = () => {
                         valueColorClass={summary.netBalance >= 0 ? "text-gray-800" : "text-rose-600"}
                     />
                 </View>
-
-                {/* ... Transações Recentes ... */}
                 <View className="p-4 bg-white rounded-lg shadow mt-4">
-                    {/* ... (conteúdo das transações recentes) ... */}
                     <Text className="text-lg font-bold text-gray-800 mb-4">Transações Recentes</Text>
                     {recentTransactions.length > 0 ? (
                         <View>
@@ -105,47 +102,41 @@ export const DashboardScreen: React.FC = () => {
                         <Text className="text-gray-500">Nenhuma transação encontrada para este período.</Text>
                     )}
                 </View>
-
-                {/* ... TimeChart ... */}
                 <TimeChart
                     title="Receitas x Despesas por Dia"
                     data={byDate}
                 />
-                {/* ... CategoryChart (Despesas) ... */}
                 <CategoryChart
                     title="Despesas por Categoria"
                     data={byCategoryExpense}
                     colorClass="bg-red-500"
                 />
-                {/* ... CategoryChart (Receitas) ... */}
                 <CategoryChart
                     title="Receitas por Categoria"
                     data={byCategoryRevenue}
                     colorClass="bg-green-500"
                 />
+                <View className="h-16" />
             </>
         );
     };
 
     return (
-        <MainContainer>
+        <MainContainer
+            refreshControl={
+                <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={reload}
+                    colors={['#3b82f6']}
+                />
+            }
+        >
             {/* Filtros */}
             <Filters filters={filtersConfig} />
 
-            {/* Conteúdo (Pull-to-Refresh MANTIDO) */}
-            <ScrollView 
-                className="mt-2 flex-1"
-                refreshControl={ 
-                    <RefreshControl
-                        refreshing={isLoading}
-                        onRefresh={reload}    
-                        colors={['#3b82f6']}
-                    />
-                }
-            >
-                {renderContent()}
-                <View className="h-16" />
-            </ScrollView>
+            {/* Conteúdo */}
+            {renderContent()}
+            
         </MainContainer>
     );
 };

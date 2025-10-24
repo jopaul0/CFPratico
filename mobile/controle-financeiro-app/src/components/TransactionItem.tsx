@@ -1,13 +1,13 @@
-// src/components/TransactionItem.tsx
-
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { formatToBRL } from '../utils/Value';
-import { Car, Circle, CheckCircle } from 'lucide-react-native'; 
+import { Circle, CheckCircle } from 'lucide-react-native';
+import { getCategoryIcon } from '../utils/CategoryIcons';
 
 interface TransactionItemProps {
   id: string;
   category: string;
+  categoryIcon: string;
   paymentType: string;
   description: string;
   value: number;
@@ -20,17 +20,18 @@ interface TransactionItemProps {
 }
 
 export const TransactionItem: React.FC<TransactionItemProps> = ({
-  category, paymentType, description, value, isNegative = true, onPress,
+  category, categoryIcon, paymentType, description, value, isNegative = true, onPress,
   onLongPress,
   isSelected = false,
   isSelectionMode = false,
 }) => {
   const iconColor = '#9ca3af';
   const formattedValue = formatToBRL(value);
+  const Icon = getCategoryIcon(categoryIcon);
 
   // NOVO: Define o estilo de seleção
-  const selectionClass = isSelected 
-    ? 'bg-blue-100 border-blue-400' 
+  const selectionClass = isSelected
+    ? 'bg-blue-100 border-blue-400'
     : 'bg-white border-gray-300';
 
   return (
@@ -41,23 +42,24 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
       className="rounded-lg mb-2"
     >
       <View className={`flex-row items-center justify-between py-3 px-3 rounded-lg border ${selectionClass}`}>
-        
+
         {isSelectionMode && (
-            <View className="mr-3">
-                {isSelected ? (
-                    <CheckCircle size={22} color="#2563eb" />
-                ) : (
-                    <Circle size={22} color="#9ca3af" />
-                )}
-            </View>
+          <View className="mr-3">
+            {isSelected ? (
+              <CheckCircle size={22} color="#2563eb" />
+            ) : (
+              <Circle size={22} color="#9ca3af" />
+            )}
+          </View>
         )}
 
         <View className="flex-row items-center gap-3 flex-1">
           <View className="p-2 rounded-full bg-gray-800/20">
-            <Car size={22} color={iconColor} />
+            <Icon size={22} color={iconColor} /> {/* <--- ÍCONE DINÂMICO */}
           </View>
           <View className="flex-1">
-            <Text className="text-gray-900 font-semibold">{paymentType}</Text>
+            {/* ATUALIZADO: Mostra a categoria em vez do tipo de pagamento */}
+            <Text className="text-gray-900 font-semibold">{category}</Text>
             <Text className="text-gray-500 text-xs" numberOfLines={1}>
               {description}
             </Text>
@@ -65,9 +67,8 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
         </View>
 
         <Text
-          className={`text-sm font-semibold ${
-            isNegative ? 'text-red-400' : 'text-green-500'
-          }`}
+          className={`text-sm font-semibold ${isNegative ? 'text-red-400' : 'text-green-500'
+            }`}
         >
           {formattedValue}
         </Text>

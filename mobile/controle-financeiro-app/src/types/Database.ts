@@ -7,6 +7,7 @@ export type TransactionCondition = 'paid' | 'pending'; // Você decide quais sã
 export interface Category {
   id: number;
   name: string;
+  icon_name: string;
 }
 
 export interface PaymentMethod {
@@ -55,4 +56,5 @@ export interface NewTransactionData {
 export interface TransactionWithNames extends Transaction {
   category_name: string | null;
   payment_method_name: string | null;
+  category_icon_name: string | null; // <--- ADICIONADO
 }

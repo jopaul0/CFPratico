@@ -1,63 +1,56 @@
+// src/utils/CategoryIcons.ts
 import {
   LucideIcon,
   DollarSign, // Padrão
-  Wallet, // Saldo Inicial
-  Receipt, // Venda, Prestação de Serviço
-  Move, // Transferência
-  Truck, // Fornecedor, Transporte
-  LandPlot, // Imposto, Aluguel
-  Briefcase, // Folha de Pagamento, Honorários, Trabalhista
-  CreditCard, // Taxa Bancária, Tarifas, Despesas Pessoais
-  Plug, // Energia
-  Droplet, // Água
-  Wifi, // Internet
-  Phone, // Telefone
-  Wrench, // Manutenção
-  Megaphone, // Marketing
-  Fuel, // Combustível
-  HardHat, // Equipamentos
-  MoreHorizontal, // Outras Despesas/Receitas/Outros
+  Wallet, 
+  Receipt, 
+  Move, 
+  Truck, 
+  LandPlot, 
+  Briefcase, 
+  CreditCard, 
+  Plug, 
+  Droplet, 
+  Wifi, 
+  Phone, 
+  Wrench, 
+  Megaphone, 
+  Fuel, 
+  HardHat, 
+  MoreHorizontal,
 } from 'lucide-react-native';
 
-const categoryIconMap: Record<string, LucideIcon> = {
-    // RECEITAS/SALDO
-    "Saldo Inicial": Wallet,
-    "Venda": Receipt,
-    "Prestação de Serviço": Receipt,
-    "Outras Receitas": DollarSign,
-
-    // DESPESAS GERAIS E OPERACIONAIS
-    "Transferência": Move,
-    "Fornecedor": Truck,
-    "Imposto": LandPlot, // Ou FileText
-    "Folha de Pagamento": Briefcase, // Ou Users
-    "Honorários": Briefcase,
-
-    // SERVIÇOS E CONTAS
-    "Taxa Bancária": CreditCard,
-    "Aluguel": LandPlot,
-    "Energia": Plug,
-    "Água": Droplet,
-    "Internet": Wifi,
-    "Telefone": Phone,
-
-    // MANUTENÇÃO E RECURSOS
-    "Manutenção": Wrench,
-    "Marketing": Megaphone,
-    "Transporte": Truck,
-    "Combustível": Fuel,
-    "Equipamentos": HardHat,
-
-    // OUTROS E ESPECÍFICOS
-    "Trabalhista": Briefcase,
-    "Tarifas": CreditCard,
-    "Despesas Pessoais": CreditCard,
-    "Outras Despesas": MoreHorizontal,
-    "Outros": MoreHorizontal,
+// NOVO: Mapeia o NOME do ícone (string) para o Componente
+const iconMap: Record<string, LucideIcon> = {
+    "DollarSign": DollarSign,
+    "Wallet": Wallet,
+    "Receipt": Receipt,
+    "Move": Move,
+    "Truck": Truck,
+    "LandPlot": LandPlot,
+    "Briefcase": Briefcase,
+    "CreditCard": CreditCard,
+    "Plug": Plug,
+    "Droplet": Droplet,
+    "Wifi": Wifi,
+    "Phone": Phone,
+    "Wrench": Wrench,
+    "Megaphone": Megaphone,
+    "Fuel": Fuel,
+    "HardHat": HardHat,
+    "MoreHorizontal": MoreHorizontal,
 };
 
-export const getCategoryIcon = (category: string): LucideIcon => {
-    return categoryIconMap[category] || DollarSign;
+/**
+ * ATUALIZADO: Busca um componente de ícone Lucide pelo seu nome (string).
+ * @param iconName O nome do ícone (ex: "Wallet", "Truck")
+ * @returns O componente LucideIcon, ou DollarSign como padrão.
+ */
+export const getCategoryIcon = (iconName: string | null | undefined): LucideIcon => {
+    if (!iconName) {
+        return DollarSign; // Padrão se for nulo ou indefinido
+    }
+    return iconMap[iconName] || DollarSign; // Padrão se o nome não for encontrado
 };
 
-export const ALL_CATEGORIES = Object.keys(categoryIconMap);
+// Removemos o ALL_CATEGORIES daqui, pois agora ele vive em initialize.ts

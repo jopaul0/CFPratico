@@ -17,6 +17,7 @@ const adaptDbTransactionToTx = (dbTx: TransactionWithNames): Tx => {
     type: dbTx.type === 'revenue' ? 'Receita' : 'Despesa',
     paymentType: dbTx.payment_method_name || 'N/A',
     category: dbTx.category_name || 'Sem Categoria',
+    categoryIcon: dbTx.category_icon_name || 'DollarSign', // <--- ADICIONADO
     description: dbTx.description || '',
     value: Math.abs(dbTx.value),
     condition: dbTx.condition === 'paid' ? 'À Vista' : 'Parcelado',

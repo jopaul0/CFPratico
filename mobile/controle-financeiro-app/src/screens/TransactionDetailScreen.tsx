@@ -23,7 +23,7 @@ type DetailRoute = RouteProp<StatementStackParamList, 'TransactionDetail'>;
 
 // Componente para o MODO DE VISUALIZAÇÃO
 const ViewMode: React.FC<{ tx: DB.TransactionWithNames }> = ({ tx }) => {
-    const Icon = getCategoryIcon(tx.category_name || 'Sem Categoria');
+    const Icon = getCategoryIcon(tx.category_icon_name);
     const iconColor = '#9ca3af';
     const formattedValue = formatToBRL(tx.value); // formatToBRL lida com negativo/positivo
     const formattedDate = parseStringToDate(tx.date).toLocaleDateString('pt-BR');

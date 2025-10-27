@@ -29,7 +29,6 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
   const formattedValue = formatToBRL(value);
   const Icon = getCategoryIcon(categoryIcon);
 
-  // NOVO: Define o estilo de seleção
   const selectionClass = isSelected
     ? 'bg-blue-100 border-blue-400'
     : 'bg-white border-gray-300';
@@ -42,7 +41,6 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
       className="rounded-lg mb-2"
     >
       <View className={`flex-row items-center justify-between py-3 px-3 rounded-lg border ${selectionClass}`}>
-
         {isSelectionMode && (
           <View className="mr-3">
             {isSelected ? (
@@ -52,20 +50,17 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
             )}
           </View>
         )}
-
         <View className="flex-row items-center gap-3 flex-1">
           <View className="p-2 rounded-full bg-gray-800/20">
-            <Icon size={22} color={iconColor} /> {/* <--- ÍCONE DINÂMICO */}
+            <Icon size={22} color={iconColor} />
           </View>
           <View className="flex-1">
-            {/* ATUALIZADO: Mostra a categoria em vez do tipo de pagamento */}
             <Text className="text-gray-900 font-semibold">{category}</Text>
             <Text className="text-gray-500 text-xs" numberOfLines={1}>
               {description}
             </Text>
           </View>
         </View>
-
         <Text
           className={`text-sm font-semibold ${isNegative ? 'text-red-400' : 'text-green-500'
             }`}

@@ -1,17 +1,15 @@
-// src/screens/DashboardScreen.tsx
 import React from 'react';
 import { View, Text, ActivityIndicator, RefreshControl } from 'react-native';
-// --- (Importações Adicionadas) ---
+
 import { useNavigation } from '@react-navigation/native';
-import { DrawerNavigationProp } from '@react-navigation/drawer'; // <--- 1. IMPORTAR O TIPO DO DRAWER
-import { DrawerParamList } from '../types/Navigation'; // <--- 2. IMPORTAR A LISTA DE PARÂMETROS DO DRAWER
+import { DrawerNavigationProp } from '@react-navigation/drawer'; 
+import { DrawerParamList } from '../types/Navigation';
 
 import { TransactionItem } from '../components/TransactionItem';
 import { SimpleButton } from '../components/SimpleButton';
 import { Divider } from '../components/Divider';
 import type { Tx } from '../types/Transactions';
 
-// --- (Importações existentes) ---
 import { MainContainer } from '../components/MainContainer';
 import { Filters } from '../components/Filters';
 import { SummaryCard } from '../components/SummaryCard';
@@ -21,8 +19,6 @@ import { TimeChart } from '../components/charts/TimeChart';
 
 
 export const DashboardScreen: React.FC = () => {
-    // --- (Hook de Navegação Corrigido) ---
-    // 3. Tipar o useNavigation com o Drawer
     const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
 
     const {
@@ -37,9 +33,7 @@ export const DashboardScreen: React.FC = () => {
         reload,
     } = useDashboardData();
 
-    // --- (Handlers de Navegação Corrigidos) ---
     const handleViewAll = () => {
-        // 4. Remover o 'as any'
         navigation.navigate('Statement');
     };
 
@@ -47,9 +41,7 @@ export const DashboardScreen: React.FC = () => {
         navigation.navigate('TransactionDetail', tx);
     };
 
-    // ... (função renderContent permanece a mesma) ...
     const renderContent = () => {
-        // ... (todo o seu JSX de renderContent) ...
         if (isLoading && !recentTransactions.length) { 
             return <ActivityIndicator size="large" className="mt-16" />;
         }

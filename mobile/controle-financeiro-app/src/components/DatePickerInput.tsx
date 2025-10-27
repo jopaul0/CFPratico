@@ -33,7 +33,6 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({ label, value, 
       <Text className="block text-sm font-medium text-gray-700 mb-1">
         {label}
       </Text>
-
       <Pressable
         onPress={showDatePicker}
         className="w-full rounded-lg border border-gray-300 bg-white px-3 justify-center"

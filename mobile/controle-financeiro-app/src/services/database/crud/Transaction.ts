@@ -1,6 +1,6 @@
 // src/services/database/transactionRepository.ts
 import { dbPromise } from '../connection';
-import { NewTransactionData, TransactionWithNames } from '../../../types/Database';
+import { NewTransactionData, TransactionWithNames, Transaction } from '../../../types/Database';
 
 /**
  * Adiciona uma nova transação.
@@ -112,6 +112,19 @@ export const fetchTransactions = async (): Promise<TransactionWithNames[]> => {
     return results;
   } catch (error : any) {
     console.error('Erro ao buscar transações com JOIN:', error);
+    throw error;
+  }
+};
+
+export const fetchAllRawTransactions = async (): Promise<Transaction[]> => {
+  const db = await dbPromise;
+  try {
+    const results = await db.getAllAsync<Transaction>(
+      'SELECT * FROM "transaction";'
+    );
+    return results;
+  } catch (error : any) {
+    console.error('Erro ao buscar transações puras:', error);
     throw error;
   }
 };

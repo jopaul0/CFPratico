@@ -1,7 +1,9 @@
+// src/services/database/index.ts
 export * from '../../types/Database';
 
 // Exporta as funções de inicialização
-export { initDatabase, seedInitialData } from './initialize';
+// --- (MODIFICADO) ---
+export { initDatabase, seedInitialData, resetDatabaseToDefaults } from './initialize';
 
 // Exporta as funções do repositório de Categoria
 export {
@@ -27,6 +29,7 @@ export {
 } from './crud/UserConfig';
 
 // Exporta as funções do repositório de Transação
+// --- (MODIFICADO) ---
 export {
     addTransaction,
     fetchTransactions,
@@ -34,5 +37,10 @@ export {
     updateTransaction,
     deleteTransaction,
     fetchTransactionById,
-    deleteTransactions
+    deleteTransactions,
+    fetchAllRawTransactions // <-- Adicionado
 } from './crud/Transaction';
+
+// --- (NOVO) ---
+// Exporta as funções de Sincronização
+export { exportDataAsJson, importDataFromJson } from '../dataSync';

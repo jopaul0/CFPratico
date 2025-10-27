@@ -8,6 +8,7 @@ export type DrawerParamList = {
     Statement: NavigatorScreenParams<StatementStackParamList> | undefined; 
     Test: undefined; 
     ManageCategories: undefined;
+    ManagePaymentMethods: undefined;
 };
 
 export type StatementStackParamList = {

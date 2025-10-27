@@ -7,6 +7,7 @@ import { Platform } from 'react-native';
 import { StatementStackNavigator } from './StatementStack';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import AdminScreen from '../screens/AdminScreen';
+import { ManagePaymentMethodsScreen } from '../screens/ManagePaymentMethodsScreen';
 import { ManageCategoriesScreen } from '../screens/ManageCategoriesScreen';
 import { DashboardStackNavigator } from './DashboardStack';
 
@@ -60,6 +61,14 @@ export const AppNavigator: React.FC = () => {
         component={ManageCategoriesScreen}
         options={{
           title: 'Categorias',
+        }}
+      />
+
+      <AppDrawer.Screen
+        name="ManagePaymentMethods"
+        component={ManagePaymentMethodsScreen}
+        options={{
+          title: 'Formas de Pagamento',
         }}
       />
 

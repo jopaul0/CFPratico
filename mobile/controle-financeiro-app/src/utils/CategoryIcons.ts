@@ -20,8 +20,8 @@ import {
   MoreHorizontal,
 } from 'lucide-react-native';
 
-// NOVO: Mapeia o NOME do ícone (string) para o Componente
-const iconMap: Record<string, LucideIcon> = {
+// Mapeia o NOME do ícone (string) para o Componente
+export const iconMap: Record<string, LucideIcon> = {
     "DollarSign": DollarSign,
     "Wallet": Wallet,
     "Receipt": Receipt,
@@ -41,10 +41,30 @@ const iconMap: Record<string, LucideIcon> = {
     "MoreHorizontal": MoreHorizontal,
 };
 
+// --- NOVO: Mapa de Traduções para o Picker ---
+export const ICON_TRANSLATIONS: Record<string, string> = {
+    "DollarSign": "Dinheiro / Padrão",
+    "Wallet": "Carteira",
+    "Receipt": "Recibo / Venda",
+    "Move": "Transferência",
+    "Truck": "Caminhão / Transporte",
+    "LandPlot": "Terreno / Aluguel",
+    "Briefcase": "Maleta / Honorários",
+    "CreditCard": "Cartão de Crédito",
+    "Plug": "Energia / Eletricidade",
+    "Droplet": "Água",
+    "Wifi": "Internet",
+    "Phone": "Telefone",
+    "Wrench": "Manutenção / Ferramenta",
+    "Megaphone": "Marketing",
+    "Fuel": "Combustível",
+    "HardHat": "Equipamentos / Obras",
+    "MoreHorizontal": "Outros",
+};
+
 /**
- * ATUALIZADO: Busca um componente de ícone Lucide pelo seu nome (string).
- * @param iconName O nome do ícone (ex: "Wallet", "Truck")
- * @returns O componente LucideIcon, ou DollarSign como padrão.
+ * Busca um componente de ícone Lucide pelo seu nome (string).
+ * (Sem alteração)
  */
 export const getCategoryIcon = (iconName: string | null | undefined): LucideIcon => {
     if (!iconName) {
@@ -52,5 +72,3 @@ export const getCategoryIcon = (iconName: string | null | undefined): LucideIcon
     }
     return iconMap[iconName] || DollarSign; // Padrão se o nome não for encontrado
 };
-
-// Removemos o ALL_CATEGORIES daqui, pois agora ele vive em initialize.ts

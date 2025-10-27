@@ -3,6 +3,7 @@ import { Text, TouchableOpacity } from 'react-native';
 
 interface SimpleButtonProps {
   onPress: () => void;
+  disabled?: boolean;
   title: string;
   className?: string;
   backgroundColor?: string;
@@ -16,6 +17,7 @@ interface SimpleButtonProps {
  */
 export const SimpleButton: React.FC<SimpleButtonProps> = ({
   onPress,
+  disabled = false,
   title,
   className = '',
   backgroundColor = '#ffffff',
@@ -30,6 +32,7 @@ export const SimpleButton: React.FC<SimpleButtonProps> = ({
       activeOpacity={0.8}
       onPressIn={() => setIsPressed(true)}
       onPressOut={() => setIsPressed(false)}
+      disabled={disabled}
       className={`py-2 px-4 rounded-lg border border-gray-300 shadow-sm ${className}`}
       style={{
         backgroundColor: isPressed ? activeBackgroundColor : backgroundColor,

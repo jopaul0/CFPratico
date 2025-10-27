@@ -1,14 +1,15 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { PrototypeScreen } from '../screens/PrototypeScreen';
 import { CustomDrawer } from '../components/CustomDrawer';
 import { DrawerParamList } from '../types/Navigation';
-import { Platform, View, Text } from 'react-native';
+import { Platform } from 'react-native';
 import { StatementStackNavigator } from './StatementStack';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import AdminScreen from '../screens/AdminScreen';
+import { ManageCategoriesScreen } from '../screens/ManageCategoriesScreen';
 import { DashboardStackNavigator } from './DashboardStack';
+
 
 
 const AppDrawer = createDrawerNavigator<DrawerParamList>();
@@ -51,6 +52,14 @@ export const AppNavigator: React.FC = () => {
             title: 'Movimentação',
             headerShown: !hideHeader,
           };
+        }}
+      />
+
+      <AppDrawer.Screen
+        name="ManageCategories"
+        component={ManageCategoriesScreen}
+        options={{
+          title: 'Categorias',
         }}
       />
 

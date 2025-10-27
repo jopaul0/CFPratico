@@ -7,6 +7,7 @@ export type DrawerParamList = {
     Prototype: undefined; 
     Statement: NavigatorScreenParams<StatementStackParamList> | undefined; 
     Test: undefined; 
+    ManageCategories: undefined;
 };
 
 export type StatementStackParamList = {

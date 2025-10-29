@@ -1,15 +1,16 @@
 // src/screens/StatementScreen.tsx
 import React, { useCallback } from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native'; // <--- ScrollView não é mais importado daqui
+import { View, Text, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+// Tipos corretos para a pilha de Statement
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { StatementStackParamList } from '../types/Navigation'; 
 
 import { MainContainer } from '../components/MainContainer';
 import { SearchBar } from '../components/SearchBar';
 import { Filters } from '../components/Filters';
 import { TransactionDayGroup } from '../components/TransactionDayGroup';
 
-import type { StatementStackParamList } from '../types/Navigation';
 import type { Tx } from '../types/Transactions';
 import { Plus, Trash } from 'lucide-react-native';
 
@@ -30,7 +31,6 @@ export const StatementScreen: React.FC = () => {
         reload,
     } = useStatementData();
 
-    // ... (hook de mass delete, navigation, handlers) ...
     const {
         isSelectionMode,
         selectedIds,
@@ -40,19 +40,24 @@ export const StatementScreen: React.FC = () => {
         handleDeleteSelected,
     } = useStatmentMassDelete({ reload });
 
+    // --- CORREÇÃO DE NAVEGAÇÃO ---
+    // Este hook (corretamente) usa o tipo da SUA PRÓPRIA pilha
     const navigation = useNavigation<NativeStackNavigationProp<StatementStackParamList>>();
 
     const handleAddTransaction = useCallback(() => {
-        navigation.navigate('AddTransaction' as any);
+        // Navega para 'AddTransaction' DENTRO da StatementStack
+        navigation.navigate('AddTransaction');
     }, [navigation]);
 
     const handlePressItem = useCallback((tx: Tx) => {
         if (isSelectionMode) {
             toggleSelectItem(tx.id);
         } else {
+            // Navega para 'TransactionDetail' DENTRO da StatementStack
             navigation.navigate('TransactionDetail', tx);
         }
     }, [isSelectionMode, navigation, toggleSelectItem]);
+    // --- FIM DA CORREÇÃO ---
 
 
     const renderContent = () => {
@@ -101,7 +106,7 @@ export const StatementScreen: React.FC = () => {
                     ? handleDeleteSelected
                     : handleAddTransaction
             }
-            refreshControl={ // <--- PASSA O REFRESH CONTROL AQUI
+            refreshControl={
                 <RefreshControl
                     refreshing={isLoading}
                     onRefresh={reload}
@@ -121,7 +126,6 @@ export const StatementScreen: React.FC = () => {
             {/* Barra de Seleção */}
             {isSelectionMode ? (
                 <View className="flex-row items-center justify-between p-3 bg-blue-100 rounded-lg mt-2">
-                    {/* ... (conteúdo da barra) ... */}
                     <Text className="font-semibold text-blue-800">
                         {selectedIds.size} selecionada(s)
                     </Text>

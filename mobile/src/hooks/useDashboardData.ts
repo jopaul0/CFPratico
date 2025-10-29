@@ -1,14 +1,15 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+// src/hooks/useDashboardData.ts
+import { useMemo, useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native'; // Importa o hook de foco
 import * as DB from '../services/database';
+// Importar todos os tipos necessários
 import { TransactionWithNames, Category, PaymentMethod, UserConfig } from '../services/database';
 import type { FilterConfig, Option } from '../types/Filters';
 import { categoryToSlug } from '../utils/Categories';
 import { formatDateToString } from '../utils/Date';
+import type { Tx } from '../types/Transactions';
 
-// --- (Importações de tipo) ---
-import type { Tx } from '../types/Transactions'; // <--- ADICIONAR
-
-// Tipos para os dados agregados
+// --- (Tipos de dados para agregação) ---
 export interface SummaryData {
     totalRevenue: number;
     totalExpense: number;
@@ -28,17 +29,24 @@ export interface AggregatedDataByDate {
     totalExpense: number;
 }
 
-// O tipo de retorno do hook (agora inclui transações recentes)
+// --- (Tipo de Retorno do Hook - ATUALIZADO) ---
+// Este tipo agora inclui tudo que a tela e o exportador precisam
 export interface DashboardData {
     summary: SummaryData;
     byCategoryRevenue: AggregatedData[];
     byCategoryExpense: AggregatedData[];
     byDate: AggregatedDataByDate[];
     recentTransactions: Tx[];
-    filteredTransactions: TransactionWithNames[];
+    filteredTransactions: TransactionWithNames[]; // <-- Lista completa para UI e exportação
+    
+    // Adicionados para o hook de exportação
+    rawTransactions: TransactionWithNames[];
+    userConfig: UserConfig | null;
+    startDate: string;
+    endDate: string;
 }
 
-// --- (Helper de adaptação - copiado de useStatementData.ts) ---
+// --- (Helper de adaptação - sem alteração) ---
 const adaptDbTransactionToTx = (dbTx: TransactionWithNames): Tx => {
     return {
         id: dbTx.id.toString(),
@@ -55,17 +63,24 @@ const adaptDbTransactionToTx = (dbTx: TransactionWithNames): Tx => {
     };
 };
 
+
+/**
+ * Hook para buscar e agregar dados para o Dashboard.
+ */
 export const useDashboardData = () => {
+    // --- (Estados de Dados) ---
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const [rawTransactions, setRawTransactions] = useState<TransactionWithNames[]>([]);
     const [rawCategories, setRawCategories] = useState<Category[]>([]);
     const [userConfig, setUserConfig] = useState<UserConfig | null>(null);
 
+    // --- (Carregamento de Dados) ---
     const loadAllData = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
+            // Busca os dados essenciais
             const [transactions, categories, config] = await Promise.all([
                 DB.fetchTransactions(),
                 DB.fetchCategories(),
@@ -81,22 +96,31 @@ export const useDashboardData = () => {
         }
     }, []);
 
-    useEffect(() => {
+    // --- (ATUALIZAÇÃO DE FOCO) ---
+    // Substitui o useEffect para recarregar os dados toda vez
+    // que a tela do Dashboard ganha foco.
+    useFocusEffect(
+      useCallback(() => {
+        // Esta função wrapper (síncrona) chama a função async
         loadAllData();
-    }, [loadAllData]);
+      }, [loadAllData]) // A dependência é o loadAllData (que já está em useCallback)
+    );
 
 
-    // ... (Estados de filtro - sem alteração)
+    // --- (Estados de Filtro) ---
     const todayISO = useMemo(() => formatDateToString(new Date()), []);
     const initialDateISO = useMemo(() => {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         return formatDateToString(thirtyDaysAgo);
     }, []);
+
     const [category, setCategory] = useState<string>('all');
     const [startDate, setStartDate] = useState<string>(initialDateISO);
     const [endDate, setEndDate] = useState<string>(todayISO);
     const [movementType, setMovementType] = useState<'all' | 'revenue' | 'expense'>('all');
+
+    // Opções para o picker de categoria
     const categoryFilterOptions: Option[] = useMemo(() => {
         const options = rawCategories.map(c => ({
             label: c.name,
@@ -106,31 +130,40 @@ export const useDashboardData = () => {
         return [{ label: 'Todas', value: 'all' }, ...options];
     }, [rawCategories]);
 
-    // ... (Lógica de Filtragem - sem alteração)
+
+    // --- (Lógica de Filtragem) ---
     const filteredTransactions = useMemo(() => {
         let filteredTxs = rawTransactions;
+        
+        // 1. Filtro por Data
         const start = new Date(`${startDate}T00:00:00`);
         const end = new Date(`${endDate}T23:59:59`);
         filteredTxs = filteredTxs.filter(t => {
             const d = new Date(t.date);
             return d >= start && d <= end;
         });
+
+        // 2. Filtro por Tipo
         filteredTxs = filteredTxs.filter(t => {
             if (movementType === 'all') return true;
             return t.type === movementType;
         });
+
+        // 3. Filtro por Categoria
         filteredTxs = filteredTxs.filter(t => {
             if (category === 'all') return true;
             return categoryToSlug(t.category_name || 'Sem Categoria') === category;
         });
+
         return filteredTxs;
     }, [startDate, endDate, movementType, category, rawTransactions]);
 
 
-    // --- Lógica de Agregação (MODIFICADA) ---
-
-    const aggregatedData: DashboardData = useMemo(() => {
+    // --- (Lógica de Agregação) ---
+    // (Esta lógica é a mesma do arquivo original, mas agora retorna a lista completa)
+    const aggregatedData = useMemo(() => {
         const summary: SummaryData = { totalRevenue: 0, totalExpense: 0, netBalance: 0 };
+
         const catRevenueMap = new Map<string, { total: number; count: number; iconName: string }>();
         const catExpenseMap = new Map<string, { total: number; count: number; iconName: string }>();
         const dateMap = new Map<string, { totalRevenue: number; totalExpense: number }>();
@@ -138,29 +171,24 @@ export const useDashboardData = () => {
         for (const tx of filteredTransactions) {
             const value = tx.value;
             const categoryName = tx.category_name || 'Sem Categoria';
-            const iconName = tx.category_icon_name || 'DollarSign'; // <--- Pega o ícone
-
+            const iconName = tx.category_icon_name || 'DollarSign';
             const dateISO = tx.date.split('T')[0];
             const currentDayData = dateMap.get(dateISO) || { totalRevenue: 0, totalExpense: 0 };
 
             if (tx.type === 'revenue') {
                 summary.totalRevenue += value;
-                // Busca ou cria o agregado, INCLUINDO o iconName
                 const currentCat = catRevenueMap.get(categoryName) || { total: 0, count: 0, iconName: iconName };
                 currentCat.total += value;
                 currentCat.count += 1;
                 catRevenueMap.set(categoryName, currentCat);
-
                 currentDayData.totalRevenue += value;
 
             } else if (tx.type === 'expense') {
                 summary.totalExpense += value;
-                // Busca ou cria o agregado, INCLUINDO o iconName
                 const currentCat = catExpenseMap.get(categoryName) || { total: 0, count: 0, iconName: iconName };
                 currentCat.total += value;
                 currentCat.count += 1;
                 catExpenseMap.set(categoryName, currentCat);
-
                 currentDayData.totalExpense += value;
             }
             dateMap.set(dateISO, currentDayData);
@@ -168,47 +196,44 @@ export const useDashboardData = () => {
 
         summary.netBalance = summary.totalRevenue + summary.totalExpense;
 
-        // ... (conversão de maps para arrays - sem alteração)
         const byCategoryRevenue = Array.from(catRevenueMap.entries()).map(([name, data]) => ({ name, ...data })).sort((a, b) => b.total - a.total);
+        
         const byCategoryExpense = Array.from(catExpenseMap.entries())
             .map(([name, data]) => ({
                 name,
                 total: Math.abs(data.total),
                 count: data.count,
-                iconName: data.iconName // <--- Passa o iconName
+                iconName: data.iconName
             }))
             .sort((a, b) => b.total - a.total);
-        const byDate = Array.from(dateMap.entries()).map(([date, data]) => ({ date, totalRevenue: data.totalRevenue, totalExpense: Math.abs(data.totalExpense) })).sort((a, b) => a.date.localeCompare(b.date));
 
+        const byDate = Array.from(dateMap.entries())
+            .map(([date, data]) => ({ date, totalRevenue: data.totalRevenue, totalExpense: Math.abs(data.totalExpense) }))
+            .sort((a, b) => a.date.localeCompare(b.date));
 
-        // --- (SEÇÃO ADICIONADA) ---
         // Pega as 5 transações mais recentes (já filtradas)
-
-        // 1. Ordena as transações filtradas pela data (mais recente primeiro)
         const sortedTxs = [...filteredTransactions].sort((a, b) =>
             new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
-        // 2. Pega as 5 primeiras e adapta para o formato Tx
         const recentTransactions = sortedTxs
             .slice(0, 5) // Pega as 5 primeiras
             .map(adaptDbTransactionToTx); // Converte para o formato <TransactionItem>
-        // --- (FIM DA SEÇÃO ADICIONADA) ---
-
-
+        
+        // Retorna os dados agregados
         return {
             summary,
             byCategoryRevenue,
             byCategoryExpense,
             byDate,
             recentTransactions,
-            filteredTransactions: filteredTransactions
+            filteredTransactions: filteredTransactions // <-- Retorna a lista completa
         };
 
-    }, [filteredTransactions, userConfig]);
+    }, [filteredTransactions]); // Depende apenas das transações já filtradas
 
 
-    // ... (Configuração dos Filtros - sem alteração)
+    // --- (Configuração dos Filtros para a UI) ---
     const filtersConfig: FilterConfig[] = [
         {
             key: 'dateStart',
@@ -250,11 +275,20 @@ export const useDashboardData = () => {
         },
     ];
 
+    // --- (Retorno Final do Hook) ---
     return {
         isLoading,
         error,
-        reload: loadAllData,
+        // reload: loadAllData, // <-- REMOVIDO
         filtersConfig,
+        
+        // Dados agregados (summary, byCategory..., recentTransactions, filteredTransactions)
         ...aggregatedData,
+
+        // Dados brutos e de filtro necessários para o exportador
+        rawTransactions,
+        userConfig,
+        startDate,
+        endDate,
     };
 };

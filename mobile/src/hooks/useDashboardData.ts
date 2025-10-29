@@ -1,4 +1,3 @@
-// src/hooks/useDashboardData.ts
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import * as DB from '../services/database';
 import { TransactionWithNames, Category, PaymentMethod, UserConfig } from '../services/database';
@@ -35,7 +34,8 @@ export interface DashboardData {
     byCategoryRevenue: AggregatedData[];
     byCategoryExpense: AggregatedData[];
     byDate: AggregatedDataByDate[];
-    recentTransactions: Tx[]; // <--- ADICIONAR
+    recentTransactions: Tx[];
+    filteredTransactions: TransactionWithNames[];
 }
 
 // --- (Helper de adaptação - copiado de useStatementData.ts) ---
@@ -55,19 +55,13 @@ const adaptDbTransactionToTx = (dbTx: TransactionWithNames): Tx => {
     };
 };
 
-
-/**
- * Hook para buscar e agregar dados para o Dashboard.
- */
 export const useDashboardData = () => {
-    // ... (Estados de loading, error, etc. - sem alteração)
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const [rawTransactions, setRawTransactions] = useState<TransactionWithNames[]>([]);
     const [rawCategories, setRawCategories] = useState<Category[]>([]);
     const [userConfig, setUserConfig] = useState<UserConfig | null>(null);
 
-    // ... (loadAllData - sem alteração)
     const loadAllData = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -137,11 +131,8 @@ export const useDashboardData = () => {
 
     const aggregatedData: DashboardData = useMemo(() => {
         const summary: SummaryData = { totalRevenue: 0, totalExpense: 0, netBalance: 0 };
-
-        // O valor do Map agora armazena o iconName
         const catRevenueMap = new Map<string, { total: number; count: number; iconName: string }>();
         const catExpenseMap = new Map<string, { total: number; count: number; iconName: string }>();
-
         const dateMap = new Map<string, { totalRevenue: number; totalExpense: number }>();
 
         for (const tx of filteredTransactions) {
@@ -210,7 +201,8 @@ export const useDashboardData = () => {
             byCategoryRevenue,
             byCategoryExpense,
             byDate,
-            recentTransactions // <--- RETORNA O NOVO DADO
+            recentTransactions,
+            filteredTransactions: filteredTransactions
         };
 
     }, [filteredTransactions, userConfig]);
@@ -263,6 +255,6 @@ export const useDashboardData = () => {
         error,
         reload: loadAllData,
         filtersConfig,
-        ...aggregatedData, // Retorna summary, byCategory..., byDate, e recentTransactions
+        ...aggregatedData,
     };
 };

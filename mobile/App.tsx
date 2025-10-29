@@ -1,4 +1,3 @@
-// App.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';

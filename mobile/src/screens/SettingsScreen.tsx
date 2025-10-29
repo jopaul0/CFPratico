@@ -157,7 +157,6 @@ export const SettingsScreen: React.FC = () => {
         <RefreshControl refreshing={isLoading} onRefresh={reload} colors={['#3b82f6']} />
       }
     >
-      <Text className="text-2xl font-bold text-gray-800 mb-6">Configurações</Text>
 
       {/* Dados da Empresa */}
       <View className="p-4 bg-white rounded-lg shadow mb-6">
@@ -229,11 +228,6 @@ export const SettingsScreen: React.FC = () => {
         icon={<DownloadCloud size={22} color="#ca8a04" />}
         onPress={handleImportData}
       />
-
-      <Divider />
-
-      {/* Zona de Perigo */}
-      <Text className="text-xl font-bold text-gray-800 mb-4 mt-4">Zona de Perigo</Text>
 
       <NavLink
         title="Resetar Aplicativo"

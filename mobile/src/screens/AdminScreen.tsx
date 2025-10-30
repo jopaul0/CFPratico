@@ -1,6 +1,9 @@
 // src/screens/AdminScreen.tsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, FlatList, StyleSheet, ScrollView, SafeAreaView, Alert } from 'react-native';
+// --- (INÍCIO DA CORREÇÃO) ---
+import { View, Text, Button, FlatList, StyleSheet, ScrollView, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context'; // <-- Importado do lugar certo
+// --- (FIM DA CORREÇÃO) ---
 
 import * as DB from '../services/database';
 import { TransactionWithNames } from '../types/Database';

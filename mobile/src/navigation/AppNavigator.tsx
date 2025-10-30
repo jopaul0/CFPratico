@@ -1,9 +1,8 @@
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { PrototypeScreen } from '../screens/PrototypeScreen';
 import { CustomDrawer } from '../components/CustomDrawer';
 import { DrawerParamList } from '../types/Navigation';
-import { Platform, View, Text } from 'react-native';
+import { Platform } from 'react-native';
 import { StatementStackNavigator } from './StatementStack';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import AdminScreen from '../screens/AdminScreen';
@@ -69,15 +68,6 @@ export const AppNavigator: React.FC = () => {
         }}
       />
 
-      <AppDrawer.Screen
-        name="Prototype"
-        component={PrototypeScreen}
-        options={{
-          title: 'Protótipo',
-        }}
-      />
-
-     
 
       <AppDrawer.Screen
         name="Test"

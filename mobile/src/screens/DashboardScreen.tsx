@@ -1,21 +1,17 @@
 // src/screens/DashboardScreen.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ActivityIndicator, Platform } from 'react-native';
-// ViewShot é necessário para capturar os gráficos
-import ViewShot from 'react-native-view-shot';
+// --- REMOVIDO: ViewShot não é mais necessário ---
+// import ViewShot from 'react-native-view-shot';
 
-// Imports para carregar a logo (Base64) - NOVA API
 import { Asset } from 'expo-asset';
 import { File } from 'expo-file-system';
 
-// --- (INÍCIO DA MUDANÇA) ---
-// Imports de Navegação
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { DrawerNavigationProp } from '@react-navigation/drawer'; // <-- Importado para o getParent
-import { DrawerParamList, DashboardStackParamList } from '../types/Navigation'; // <-- Adicionado DashboardStackParamList
+import type { DrawerNavigationProp } from '@react-navigation/drawer';
+import { DrawerParamList, DashboardStackParamList } from '../types/Navigation';
 import type { Tx } from '../types/Transactions';
-// --- (FIM DA MUDANÇA) ---
 
 // Imports de Componentes
 import { TransactionItem } from '../components/TransactionItem';
@@ -36,25 +32,18 @@ import { Plus } from 'lucide-react-native';
 
 
 export const DashboardScreen: React.FC = () => {
-    // --- (MUDANÇA NO HOOK) ---
-    // Agora usa a Pilha (Stack) interna do Dashboard
     const navigation = useNavigation<NativeStackNavigationProp<DashboardStackParamList>>();
-
-    // --- 1. Estado para a logo em Base64 ---
     const [logoBase64, setLogoBase64] = useState<string | null>(null);
 
-    // --- 2. Carregar a logo "onvale.png" ao iniciar a tela (NOVA API) ---
+    // 2. Carregar a logo (sem mudanças)
     useEffect(() => {
         let cancelled = false;
-
         (async () => {
             try {
-                // 1) Resolve e baixa o asset (preenche localUri no native)
                 const asset = Asset.fromModule(require('../assets/onvale.png'));
-                await asset.downloadAsync(); // garante o arquivo local
+                await asset.downloadAsync(); 
 
                 if (Platform.OS === 'web') {
-                    // WEB: pegue via fetch e converta para Base64
                     const res = await fetch(asset.uri);
                     const blob = await res.blob();
                     const base64 = await new Promise<string>((resolve, reject) => {
@@ -67,20 +56,18 @@ export const DashboardScreen: React.FC = () => {
                     return;
                 }
 
-                // 2) NATIVE: crie um File a partir do URI do asset e leia Base64
-                const uri = asset.localUri ?? asset.uri; // após downloadAsync, localUri é file://
+                const uri = asset.localUri ?? asset.uri;
                 const logoFile = new File(uri);
-                const base64 = await logoFile.base64(); // API nova do SDK 54
+                const base64 = await logoFile.base64();
                 if (!cancelled) setLogoBase64(base64);
             } catch (e) {
                 console.error("Erro ao carregar logo 'onvale.png':", e);
             }
         })();
-
         return () => { cancelled = true; };
     }, []);
 
-    // --- 3. Hook de Dados ---
+    // 3. Hook de Dados (sem mudanças)
     const dashboardData = useDashboardData();
     const {
         isLoading,
@@ -91,40 +78,31 @@ export const DashboardScreen: React.FC = () => {
         byCategoryExpense,
         byDate,
         recentTransactions,
-        // reload, <-- REMOVIDO
     } = dashboardData;
 
-    // --- 4. Hook de Exportação ---
+    // --- 4. MUDANÇA: Hook de Exportação atualizado ---
     const {
         isExporting,
         handleExportExcel,
-        handleExportPdfSimple,
-        handleExportPdfWithCharts,
-        timeChartRef,
-        expenseChartRef,
-        revenueChartRef,
+        handleExportPdf, // <-- Renomeado
+        // Refs removidos
     } = useReportExporter({
         data: dashboardData,
         logoBase64: logoBase64,
     });
 
-    // --- (MUDANÇA NOS HANDLERS) ---
-    // --- 5. Handlers de Navegação ---
+    // 5. Handlers de Navegação (sem mudanças)
     const handleViewAll = () => {
-        // Pega o "Pai" (Drawer) para trocar de aba
         navigation.getParent<DrawerNavigationProp<DrawerParamList>>()?.navigate('Statement');
     };
 
     const handlePressItem = (tx: Tx) => {
-        // Navega DENTRO da pilha do Dashboard
         navigation.navigate('TransactionDetail', tx);
     };
 
     const handleAddTransaction = useCallback(() => {
-        // Navega DENTRO da pilha do Dashboard
         navigation.navigate('AddTransaction');
     }, [navigation]);
-    // --- (FIM DA MUDANÇA NOS HANDLERS) ---
 
 
     // --- 6. Renderização do Conteúdo ---
@@ -139,8 +117,6 @@ export const DashboardScreen: React.FC = () => {
 
         return (
             <>
-
-
                 {/* Cards de Resumo */}
                 <View className="flex-row flex-wrap mt-4 -mx-2">
                     <SummaryCard
@@ -187,34 +163,27 @@ export const DashboardScreen: React.FC = () => {
                     )}
                 </View>
 
-                {/* Gráficos envolvidos com ViewShot para captura */}
-                <ViewShot ref={timeChartRef} options={{ format: 'png', quality: 0.9 }}>
-                    <TimeChart
-                        title="Receitas x Despesas por Dia"
-                        data={byDate}
-                    />
-                </ViewShot>
+                {/* --- MUDANÇA: Gráficos sem ViewShot e sem ref --- */}
+                <TimeChart
+                    title="Receitas x Despesas por Dia"
+                    data={byDate}
+                />
 
-                <ViewShot ref={expenseChartRef} options={{ format: 'png', quality: 0.9 }}>
-                    <CategoryChart
-                        title="Despesas por Categoria"
-                        data={byCategoryExpense}
-                        colorClass="bg-red-500"
-                    />
-                </ViewShot>
+                <CategoryChart
+                    title="Despesas por Categoria"
+                    data={byCategoryExpense}
+                    colorClass="bg-red-500"
+                />
 
-                <ViewShot ref={revenueChartRef} options={{ format: 'png', quality: 0.9 }}>
-                    <CategoryChart
-                        title="Receitas por Categoria"
-                        data={byCategoryRevenue}
-                        colorClass="bg-green-500"
-                    />
-                </ViewShot>
+                <CategoryChart
+                    title="Receitas por Categoria"
+                    data={byCategoryRevenue}
+                    colorClass="bg-green-500"
+                />
 
-                {/* Botão de Exportação */}
+                {/* --- MUDANÇA: Botão de Exportação com props atualizadas --- */}
                 <DashboardExportButton
-                    onExportPDFCharts={handleExportPdfWithCharts}
-                    onExportPDFSimple={handleExportPdfSimple}
+                    onExportPDF={handleExportPdf}
                     onExportExcel={handleExportExcel}
                     isLoading={isLoading || isExporting || !logoBase64}
                 />
@@ -222,7 +191,7 @@ export const DashboardScreen: React.FC = () => {
         );
     };
 
-    // --- 7. Renderização Principal ---
+    // 7. Renderização Principal (sem mudanças)
     return (
         <MainContainer
             hasButton={true}

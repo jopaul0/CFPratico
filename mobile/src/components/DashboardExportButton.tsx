@@ -3,17 +3,16 @@ import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-na
 import { UploadCloud } from 'lucide-react-native';
 
 interface DashboardExportButtonProps {
-  onExportPDFCharts: () => void;
-  onExportPDFSimple: () => void;
+  // --- MUDANÇA: Props simplificadas ---
+  onExportPDF: () => void;
   onExportExcel: () => void;
-  isLoading?: boolean; // <-- Adicionado
+  isLoading?: boolean;
 }
 
 export const DashboardExportButton: React.FC<DashboardExportButtonProps> = ({
-  onExportPDFCharts,
-  onExportPDFSimple,
+  onExportPDF, // <-- Prop atualizada
   onExportExcel,
-  isLoading = false, // <-- Adicionado
+  isLoading = false,
 }) => {
   
   const showExportOptions = () => {
@@ -21,8 +20,8 @@ export const DashboardExportButton: React.FC<DashboardExportButtonProps> = ({
       "Exportar Relatório",
       "Selecione o formato desejado para o período filtrado:",
       [
-        { text: "PDF (Completo, com gráficos)", onPress: onExportPDFCharts },
-        { text: "PDF (Extrato simples)", onPress: onExportPDFSimple },
+        // --- MUDANÇA: Opções simplificadas ---
+        { text: "PDF (Extrato + Resumo)", onPress: onExportPDF },
         { text: "Excel (Dados Completos)", onPress: onExportExcel },
         { text: "Cancelar", style: "cancel" }
       ],
@@ -31,14 +30,14 @@ export const DashboardExportButton: React.FC<DashboardExportButtonProps> = ({
   };
 
   const buttonClass = isLoading
-    ? 'bg-gray-400' // Cor quando desabilitado
+    ? 'bg-gray-400'
     : 'bg-blue-600 active:bg-blue-700';
 
   return (
     <View className="p-4 bg-white rounded-lg shadow mt-4">
       <TouchableOpacity
         onPress={showExportOptions}
-        disabled={isLoading} // <-- Adicionado
+        disabled={isLoading}
         className={`flex-row items-center justify-center p-3 rounded-lg shadow-md ${buttonClass}`}
         activeOpacity={0.8}
       >

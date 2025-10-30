@@ -11,10 +11,11 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Updates from 'expo-updates';
 
 import * as DB from '../services/database';
-// --- (INÍCIO DA CORREÇÃO) ---
-// Importa as funções de sync DIRETAMENTE, e não mais pelo barril 'DB'
+
+import { useRefresh } from '../contexts/RefreshContext';
+
+
 import { exportDataAsJson, importDataFromJson } from '../services/dataSync';
-// --- (FIM DA CORREÇÃO) ---
 
 import { MainContainer } from '../components/MainContainer';
 import { InputGroup } from '../components/InputGroup';
@@ -23,7 +24,6 @@ import { Divider } from '../components/Divider';
 import { useSettings } from '../hooks/useSettings';
 import { ChevronRight, Database, Wallet, UploadCloud, DownloadCloud, RefreshCw } from 'lucide-react-native';
 
-// Componente NavLink (Sem alterações)
 const NavLink: React.FC<{ title: string; description: string; onPress: () => void; icon: React.ReactNode; }> =
   ({ title, description, onPress, icon }) => (
     <TouchableOpacity
@@ -44,6 +44,7 @@ const NavLink: React.FC<{ title: string; description: string; onPress: () => voi
 
 export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList>>();
+  const { triggerReload } = useRefresh();
   const {
     isLoading,
     isSaving,
@@ -104,14 +105,12 @@ export const SettingsScreen: React.FC = () => {
               const pickedFile = new File(pickedUri);
               const jsonString = await pickedFile.text();
 
-              // --- (INÍCIO DA CORREÇÃO) ---
-              // Chama a função importada diretamente (sem 'DB.')
-              await importDataFromJson(jsonString);
-              // --- (FIM DA CORREÇÃO) ---
 
-              Alert.alert('Sucesso!', 'Dados restaurados. O app será reiniciado agora.', [
-                { text: 'OK', onPress: () => Updates.reloadAsync() },
-              ]);
+              await importDataFromJson(jsonString);
+
+              triggerReload();
+              Alert.alert('Sucesso!', 'Dados restaurados com sucesso.');
+
             } catch (e: any) {
               console.error(e);
               Alert.alert('Erro ao Importar', `Não foi possível restaurar o backup: ${e?.message ?? e}`);
@@ -135,10 +134,11 @@ export const SettingsScreen: React.FC = () => {
           onPress: async () => {
             try {
               // Esta função é do DB, então 'DB.' está correto
-              await DB.resetDatabaseToDefaults(); 
-              Alert.alert('Aplicativo Resetado', 'O app será reiniciado agora.', [
-                { text: 'OK', onPress: () => Updates.reloadAsync() },
-              ]);
+              await DB.resetDatabaseToDefaults();
+
+              triggerReload();
+              Alert.alert('Aplicativo Resetado', 'Os dados foram restaurados ao padrão.');
+              
             } catch (e: any) {
               console.error(e);
               Alert.alert('Erro no Reset', `Não foi possível resetar o aplicativo: ${e?.message ?? e}`);

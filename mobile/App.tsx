@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { View } from 'react-native';
 
 import { AppNavigator } from './src/navigation/AppNavigator';
+import { RefreshProvider } from './src/contexts/RefreshContext';
 import * as DB from './src/services/database';
 
 // Mantenha a tela de Splash visível enquanto o app carrega
@@ -18,10 +19,10 @@ export default function App() {
       try {
         console.log("APP: Inicializando banco de dados...");
         await DB.initDatabase();
-        
+
         console.log("APP: Populando dados iniciais (se necessário)...");
         await DB.seedInitialData();
-        
+
       } catch (e) {
         console.warn("APP: Erro ao preparar o banco:", e);
       } finally {
@@ -32,7 +33,7 @@ export default function App() {
 
     prepareDatabase();
   }, []);
-  
+
 
   const onLayoutRootView = useCallback(async () => {
     if (dbReady) {
@@ -46,12 +47,12 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <View 
-        className="flex-1" 
+      <View
+        className="flex-1"
         onLayout={onLayoutRootView}
-      > 
+      >
         <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
-        <AppNavigator />
+        <RefreshProvider><AppNavigator /></RefreshProvider>
       </View>
     </NavigationContainer>
   );

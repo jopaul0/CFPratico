@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
 import * as DB from '../services/database';
+import { useRefresh } from '../contexts/RefreshContext';
 
 
 interface useStatmentMassDeleteProps {
@@ -11,6 +12,8 @@ interface useStatmentMassDeleteProps {
 export const useStatmentMassDelete = ({ reload }: useStatmentMassDeleteProps) => {
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+    const { triggerReload } = useRefresh();
 
     const handleLongPressItem = useCallback((txId: string) => {
         setIsSelectionMode(true);
@@ -56,7 +59,7 @@ export const useStatmentMassDelete = ({ reload }: useStatmentMassDeleteProps) =>
                             await DB.deleteTransactions(idsToDelete);
                             
                             handleCancelSelection();
-                            reload();
+                            triggerReload();
                         } catch (e) {
                             console.error("Erro ao deletar em massa", e);
                             Alert.alert("Erro", "Não foi possível excluir as transações.");
@@ -65,7 +68,7 @@ export const useStatmentMassDelete = ({ reload }: useStatmentMassDeleteProps) =>
                 }
             ]
         );
-    }, [selectedIds, reload, handleCancelSelection]);
+    }, [selectedIds, triggerReload, handleCancelSelection]);
 
     return {
         isSelectionMode,

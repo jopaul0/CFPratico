@@ -1,21 +1,43 @@
 // src/screens/StatementScreen.tsx
-import React, { useCallback } from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
+import React, { useCallback, useMemo } from 'react'; // <-- Importa useMemo
+import { 
+    View, 
+    Text, 
+    ActivityIndicator, 
+    TouchableOpacity, 
+    RefreshControl,
+    SectionList // <-- Importado
+} from 'react-native';
+// (Não precisamos mais de SafeAreaView aqui)
 import { useNavigation } from '@react-navigation/native';
-// Tipos corretos para a pilha de Statement
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { StatementStackParamList } from '../types/Navigation'; 
 
-import { MainContainer } from '../components/MainContainer';
+// Componentes
+import { MainContainer } from '../components/MainContainer'; // <-- Usado novamente
 import { SearchBar } from '../components/SearchBar';
 import { Filters } from '../components/Filters';
-import { TransactionDayGroup } from '../components/TransactionDayGroup';
+import { TransactionItem } from '../components/TransactionItem';
+import { Divider } from '../components/Divider';
 
-import type { Tx } from '../types/Transactions';
+import type { Tx, TransactionGroup } from '../types/Transactions';
 import { Plus, Trash } from 'lucide-react-native';
+import { formatToBRL } from '../utils/Value';
 
 import { useStatementData } from '../hooks/useStatementData';
 import { useStatmentMassDelete } from '../hooks/useStatmentMassDelete';
+
+
+// Componente de Cabeçalho da Seção (com padding)
+const SectionHeader: React.FC<{ group: TransactionGroup }> = ({ group }) => (
+  <View className="bg-gray-100 pt-4 pb-2 px-4"> 
+    <View className="flex-row items-center justify-between">
+      <Text className="text-black-100 font-semibold">{group.dateLabel}</Text>
+      <Text className="text-gray-500 text-sm">Saldo: {formatToBRL(group.balance)}</Text>
+    </View>
+    <Divider colorClass="bg-gray-300" marginVertical={8} />
+  </View>
+);
 
 
 export const StatementScreen: React.FC = () => {
@@ -40,12 +62,9 @@ export const StatementScreen: React.FC = () => {
         handleDeleteSelected,
     } = useStatmentMassDelete({ reload });
 
-    // --- CORREÇÃO DE NAVEGAÇÃO ---
-    // Este hook (corretamente) usa o tipo da SUA PRÓPRIA pilha
     const navigation = useNavigation<NativeStackNavigationProp<StatementStackParamList>>();
 
     const handleAddTransaction = useCallback(() => {
-        // Navega para 'AddTransaction' DENTRO da StatementStack
         navigation.navigate('AddTransaction');
     }, [navigation]);
 
@@ -53,68 +72,43 @@ export const StatementScreen: React.FC = () => {
         if (isSelectionMode) {
             toggleSelectItem(tx.id);
         } else {
-            // Navega para 'TransactionDetail' DENTRO da StatementStack
             navigation.navigate('TransactionDetail', tx);
         }
     }, [isSelectionMode, navigation, toggleSelectItem]);
+    
+    const onLongPressItem = useCallback((txId: string) => {
+        handleLongPressItem(txId);
+    }, [handleLongPressItem]);
+
+
+    // --- !! A CORREÇÃO CRÍTICA !! ---
+    // Mapeia `group.transactions` para `section.data`
+    // O SectionList SÓ entende a prop "data"
+    const sections = useMemo(() => {
+        return groups.map(group => ({
+            ...group, // Copia dateISO, dateLabel, balance
+            data: group.transactions, // Mapeia 'transactions' para 'data'
+        }));
+    }, [groups]);
     // --- FIM DA CORREÇÃO ---
 
 
-    const renderContent = () => {
-        if (isLoading && groups.length === 0) {
-            return <ActivityIndicator size="large" className="mt-16" />;
-        }
-        
-        if (error) { 
-            return <Text className="mt-16 text-center text-red-500">Erro: {error.message}</Text>;
-        }
-        if (groups.length === 0) {
-             return <Text className="mt-16 text-center text-gray-500">Nenhum dado encontrado.</Text>;
-        }
+    // renderItem para SectionList (agora com padding)
+    const renderTransactionItem = ({ item }: { item: Tx }) => (
+        <View className="px-4 bg-gray-100"> 
+            <TransactionItem
+              {...item}
+              onPress={() => handlePressItem(item)}
+              onLongPress={() => onLongPressItem(item.id)}
+              isSelected={selectedIds.has(item.id)}
+              isSelectionMode={isSelectionMode}
+            />
+        </View>
+    );
 
-        // Retorna o JSX direto, SEM o ScrollView
-        return (
-            <View className="pb-8 mt-2">
-                {groups.map((g) => (
-                    <TransactionDayGroup
-                        key={g.dateISO}
-                        date={g.dateLabel}
-                        balance={g.balance}
-                        transactions={g.transactions}
-                       
-                        onPressItem={handlePressItem}
-                        onLongPressItem={handleLongPressItem}
-                        isSelectionMode={isSelectionMode}
-                        selectedIds={selectedIds}
-                    />
-                ))}
-            </View>
-        );
-    }
-
-    return (
-        <MainContainer
-            hasButton={true}
-            colorButton={ isSelectionMode ? '#ef4444' : '#3b82f6' }
-            iconButton={
-                isSelectionMode 
-                    ? <Trash size={30} color="white" /> 
-                    : <Plus size={30} color="white" />
-            }
-            onPressButton={
-                isSelectionMode
-                    ? handleDeleteSelected
-                    : handleAddTransaction
-            }
-            refreshControl={
-                <RefreshControl
-                    refreshing={isLoading}
-                    onRefresh={reload}
-                    colors={['#3b82f6']}
-                />
-            }
-        >
-            {/* Busca e Filtros */}
+    // Componente de Cabeçalho da Lista (agora com padding)
+    const ListHeader = (
+        <View className="p-4 bg-gray-100"> 
             <SearchBar
                 value={query}
                 onChangeText={setQuery}
@@ -123,7 +117,6 @@ export const StatementScreen: React.FC = () => {
                 onClearAll={handleClearAll}
             />
             
-            {/* Barra de Seleção */}
             {isSelectionMode ? (
                 <View className="flex-row items-center justify-between p-3 bg-blue-100 rounded-lg mt-2">
                     <Text className="font-semibold text-blue-800">
@@ -136,10 +129,64 @@ export const StatementScreen: React.FC = () => {
             ) : (
                 <Filters filters={filtersConfig} />
             )}
+        </View>
+    );
 
-            {/* Lista (NÃO está mais em um ScrollView) */}
-            {renderContent()}
+    // Componente para Lista Vazia ou Erro (sem alteração)
+    const ListEmpty = (
+        <View className="mt-16 items-center">
+            {isLoading && groups.length === 0 ? (
+                <ActivityIndicator size="large" />
+            ) : error ? (
+                <Text className="text-center text-red-500">Erro: {error.message}</Text>
+            ) : (
+                <Text className="text-center text-gray-500">Nenhum dado encontrado.</Text>
+            )}
+        </View>
+    );
 
+    return (
+        <MainContainer
+            scrollEnabled={false} // <-- DIZ AO MAINCONTAINER PARA NÃO USAR SCROLLVIEW
+            noPadding={true}      // <-- DIZ AO MAINCONTAINER PARA NÃO ADICIONAR PADDING
+            hasButton={true}
+            colorButton={ isSelectionMode ? '#ef4444' : '#3b82f6' }
+            iconButton={
+                isSelectionMode 
+                    ? <Trash size={30} color="white" /> 
+                    : <Plus size={30} color="white" />
+            }
+            onPressButton={
+                isSelectionMode
+                    ? handleDeleteSelected
+                    : handleAddTransaction
+            }
+            // O refreshControl NÃO é passado aqui, mas sim para o SectionList
+        >
+            <SectionList
+                sections={sections} // <-- USA O NOVO 'sections' MAPEADO
+                keyExtractor={(item) => item.id}
+                renderItem={renderTransactionItem}
+                renderSectionHeader={({ section }) => <SectionHeader group={section as TransactionGroup} />}
+                ListHeaderComponent={ListHeader}
+                ListEmptyComponent={ListEmpty}
+                // Adiciona o "Pull to Refresh"
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isLoading}
+                        onRefresh={reload}
+                        colors={['#3b82f6']}
+                        tintColor={'#3b82f6'} // para iOS
+                    />
+                }
+                // Otimizações
+                initialNumToRender={10}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+                stickySectionHeadersEnabled={false}
+                contentContainerStyle={{ paddingBottom: 96 }} // Espaço para o botão flutuante
+                className="bg-gray-100" // Cor de fundo para a lista
+            />
         </MainContainer>
     );
 };

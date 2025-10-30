@@ -1,6 +1,5 @@
-// src/screens/ManageCategoriesScreen.tsx
 import React from 'react';
-import { View, Text, Alert, TouchableOpacity, ActivityIndicator } from 'react-native'; // <-- FlatList removido
+import { View, Text, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
 import * as DB from '../services/database'; 
 
 import { MainContainer } from '../components/MainContainer';
@@ -69,6 +68,7 @@ export const ManageCategoriesScreen: React.FC = () => {
     handleSelectCategory,
     handleClearForm,
     handleSave,
+    handleDelete,
     reload, 
   } = useManageCategories();
 
@@ -91,11 +91,7 @@ export const ManageCategoriesScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await DB.deleteCategory(item.id);
-              if (selectedCategory?.id === item.id) {
-                handleClearForm();
-              }
-              reload(); 
+              await handleDelete(item.id);
             } catch (e: any) {
               Alert.alert('Erro ao excluir', e.message);
             }

@@ -1,7 +1,7 @@
-// src/hooks/useManageCategories.ts
 import { useState, useCallback, useEffect } from 'react';
 import * as DB from '../services/database';
 import type { Category } from '../services/database';
+import { useRefresh } from '../contexts/RefreshContext';
 
 export const useManageCategories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -13,6 +13,8 @@ export const useManageCategories = () => {
   const [formName, setFormName] = useState('');
   const [formIcon, setFormIcon] = useState('DollarSign'); // Ícone padrão
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+
+  const { triggerReload } = useRefresh();
 
   const loadCategories = useCallback(async () => {
     setIsLoading(true);
@@ -60,24 +62,27 @@ export const useManageCategories = () => {
         await DB.addCategory(formName, formIcon);
       }
       handleClearForm();
-      await loadCategories(); // Recarrega a lista
+      await loadCategories();
+      triggerReload();
     } finally {
       setIsSaving(false);
     }
-  }, [selectedCategory, formName, formIcon, loadCategories, handleClearForm]);
+  }, [selectedCategory, formName, formIcon, loadCategories, handleClearForm, triggerReload]);
 
   // Deleta
-  const handleDelete = useCallback(async () => {
-    if (!selectedCategory) return;
-    setIsSaving(true);
+  const handleDelete = useCallback(async (id: number) => {
+    if (!id) return;
+    // (A tela vai chamar este)
     try {
-      await DB.deleteCategory(selectedCategory.id);
+      await DB.deleteCategory(id);
       handleClearForm();
-      await loadCategories(); // Recarrega a lista
-    } finally {
-      setIsSaving(false);
+      await loadCategories(); // Recarrega a lista local
+      triggerReload(); // <-- DISPARA O GATILHO GLOBAL
+    } catch (e) {
+      console.error("Erro no hook handleDelete:", e);
+      throw e; // Lança o erro para a tela tratar
     }
-  }, [selectedCategory, loadCategories, handleClearForm]);
+  }, [loadCategories, handleClearForm, triggerReload]);
 
   return {
     categories,

@@ -11,9 +11,11 @@ import { SimpleButton } from '../components/SimpleButton';
 
 import { useAddTransaction } from '../hooks/useAddTransaction';
 import type { StatementStackParamList } from '../types/Navigation';
+import { useRefresh } from '../contexts/RefreshContext';
 
 export const AddTransaction: React.FC = () => {
   const nav = useNavigation<NativeStackNavigationProp<StatementStackParamList>>();
+  const { triggerReload } = useRefresh();
   const {
     loading, saving, error,
     categories, paymentMethods,
@@ -24,11 +26,12 @@ export const AddTransaction: React.FC = () => {
     try {
       await save();
       Alert.alert('Sucesso', 'Transação adicionada!');
+      triggerReload();
       nav.goBack();
     } catch (e: any) {
       Alert.alert('Erro', e?.message ?? 'Falha ao salvar.');
     }
-  }, [save, nav]);
+  }, [save, nav, triggerReload]);
 
   return (
     <MainContainer>

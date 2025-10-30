@@ -1,16 +1,16 @@
 // src/screens/ManagePaymentMethodsScreen.tsx
 import React from 'react';
 import { View, Text, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
-import * as DB from '../services/database'; 
+// (imports do DB não são mais necessários para deletar)
 import { MainContainer } from '../components/MainContainer';
 import { InputGroup } from '../components/InputGroup';
 import { SimpleButton } from '../components/SimpleButton';
 import { Divider } from '../components/Divider';
 import { useManagePaymentMethods } from '../hooks/useManagePaymentMethods';
 import { PaymentMethod } from '../services/database';
-import { Trash, Edit, Wallet } from 'lucide-react-native'; // Usando 'Wallet' como ícone genérico
+import { Trash, Edit, Wallet } from 'lucide-react-native';
 
-// Componente de item da lista
+// Componente de item da lista (Sem alterações)
 const PaymentMethodItem: React.FC<{
   item: PaymentMethod;
   onSelect: (item: PaymentMethod) => void;
@@ -23,7 +23,6 @@ const PaymentMethodItem: React.FC<{
     <View className={`p-3 border border-gray-200 rounded-lg mb-2 ${selectionClass}`}>
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-3 flex-1">
-          {/* Ícone fixo, já que eles não têm ícones customizáveis */}
           <Wallet size={20} color="#4b5563" /> 
           <Text className="text-base text-gray-800" numberOfLines={1}>{item.name}</Text>
         </View>
@@ -53,6 +52,7 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
     handleSelectMethod,
     handleClearForm,
     handleSave,
+    handleDelete, // <-- PEGA A FUNÇÃO DO HOOK
     reload, 
   } = useManagePaymentMethods();
 
@@ -64,6 +64,7 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
     }
   };
 
+  // --- (INÍCIO DA CORREÇÃO) ---
   const onDelete = (item: PaymentMethod) => {
     Alert.alert(
       'Excluir Forma de Pagamento',
@@ -75,12 +76,8 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await DB.deletePaymentMethod(item.id);
-              // Se o item deletado era o que estava em edição, limpa o form
-              if (selectedMethod?.id === item.id) {
-                handleClearForm();
-              }
-              reload(); // Recarrega a lista
+              await handleDelete(item.id); // <-- CHAMA O HOOK
+              // (O hook já limpa o form e recarrega tudo)
             } catch (e: any) {
               Alert.alert('Erro ao excluir', e.message);
             }
@@ -95,8 +92,9 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
         onDelete(selectedMethod);
      }
    }
+  // --- (FIM DA CORREÇÃO) ---
 
-  // Lógica de renderização da lista (evitando FlatList)
+  // (renderList não muda)
   const renderList = () => {
     if (isLoading) {
       return <ActivityIndicator size="large" className="my-4" />;
@@ -124,10 +122,10 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
   };
 
   return (
+    // (O JSX da tela não muda)
     <MainContainer>
       <Text className="text-2xl font-bold text-gray-800 mb-4">Gerenciar Formas de Pagamento</Text>
 
-      {/* Formulário de Edição/Criação */}
       <View className="p-4 bg-white rounded-lg shadow mb-6">
         <Text className="text-lg font-semibold text-gray-700 mb-3">
           {selectedMethod ? 'Editar Forma de Pagamento' : 'Nova Forma de Pagamento'}
@@ -139,8 +137,6 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
           onChangeText={setFormName}
         />
         
-        {/* Seção de Ícone não é necessária aqui */}
-
         <View className="flex-row justify-end gap-3 mt-2">
           {selectedMethod && (
             <SimpleButton
@@ -170,7 +166,6 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
 
       <Divider />
 
-      {/* Lista */}
       <Text className="text-xl font-bold text-gray-800 mb-4">Formas de Pagamento Existentes</Text>
       
       {renderList()}

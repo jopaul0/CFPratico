@@ -17,6 +17,8 @@ import { SimpleButton } from '../components/SimpleButton';
 import { DatePickerInput } from '../components/DatePickerInput';
 import { InputGroup } from '../components/InputGroup';
 
+import { useRefresh } from '../contexts/RefreshContext';
+
 
 // 1. O tipo da rota agora só espera o ID
 type DetailRoute = RouteProp<StatementStackParamList, 'TransactionDetail'>;
@@ -174,6 +176,7 @@ const EditMode: React.FC<{ hook: ReturnType<typeof useTransactionDetail> }> = ({
 // --- TELA PRINCIPAL ---
 export const TransactionDetailScreen: React.FC = () => {
     const navigation = useNavigation<NativeStackNavigationProp<StatementStackParamList>>();
+    const { triggerReload } = useRefresh();
 
     // 1. Pega o ID da rota. (Assume que 'id' é um string)
     const { params } = useRoute<DetailRoute>();
@@ -191,11 +194,11 @@ export const TransactionDetailScreen: React.FC = () => {
         try {
             await handleSave();
             Alert.alert('Sucesso', 'Transação atualizada!');
-            // O hook já recarrega os dados e sai do modo de edição
+            triggerReload();
         } catch (e: any) {
             Alert.alert('Erro ao Salvar', e?.message ?? 'Falha ao salvar.');
         }
-    }, [handleSave]);
+    }, [handleSave, triggerReload]);
 
     const onDelete = useCallback(async () => {
         Alert.alert(
@@ -210,6 +213,7 @@ export const TransactionDetailScreen: React.FC = () => {
                         try {
                             await handleDelete();
                             Alert.alert('Sucesso', 'Transação excluída.');
+                            triggerReload();
                             navigation.goBack();
                         } catch (e: any) {
                             Alert.alert('Erro ao Excluir', e?.message ?? 'Falha ao excluir.');
@@ -218,7 +222,7 @@ export const TransactionDetailScreen: React.FC = () => {
                 }
             ]
         );
-    }, [handleDelete, navigation]);
+    }, [handleDelete, navigation, triggerReload]);
 
     // --- RENDER ---
 

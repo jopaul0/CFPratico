@@ -1,7 +1,8 @@
-// src/hooks/useManagePaymentMethods.ts
+
 import { useState, useCallback, useEffect } from 'react';
 import * as DB from '../services/database';
 import type { PaymentMethod } from '../services/database';
+import { useRefresh } from '../contexts/RefreshContext';
 
 export const useManagePaymentMethods = () => {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
@@ -12,6 +13,8 @@ export const useManagePaymentMethods = () => {
   // Estado do formulário
   const [formName, setFormName] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+
+  const { triggerReload } = useRefresh();
 
   const loadPaymentMethods = useCallback(async () => {
     setIsLoading(true);
@@ -57,11 +60,25 @@ export const useManagePaymentMethods = () => {
         await DB.addPaymentMethod(formName);
       }
       handleClearForm();
-      await loadPaymentMethods(); // Recarrega a lista
+      await loadPaymentMethods();
+      triggerReload();
     } finally {
       setIsSaving(false);
     }
-  }, [selectedMethod, formName, loadPaymentMethods, handleClearForm]);
+  }, [selectedMethod, formName, loadPaymentMethods, handleClearForm, triggerReload]);
+
+  const handleDelete = useCallback(async (id: number) => {
+    if (!id) return;
+    try {
+      await DB.deletePaymentMethod(id);
+      handleClearForm(); // Limpa o form se o item deletado estava selecionado
+      await loadPaymentMethods(); // Recarrega a lista local
+      triggerReload(); // <-- DISPARA O GATILHO GLOBAL
+    } catch (e) {
+      console.error("Erro no hook handleDelete (PaymentMethod):", e);
+      throw e; // Lança o erro para a tela tratar
+    }
+  }, [loadPaymentMethods, handleClearForm, triggerReload]);
 
   return {
     paymentMethods,
@@ -74,6 +91,7 @@ export const useManagePaymentMethods = () => {
     handleSelectMethod,
     handleClearForm,
     handleSave,
+    handleDelete,
     reload: loadPaymentMethods,
   };
 };

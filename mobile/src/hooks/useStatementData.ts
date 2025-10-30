@@ -8,6 +8,7 @@ import type { FilterConfig, Option } from '../types/Filters';
 import { groupTransactionsByDay } from '../utils/Transactions';
 import { categoryToSlug } from '../utils/Categories';
 import { formatDateToString } from '../utils/Date';
+import { useRefresh } from '../contexts/RefreshContext';
 
 
 const adaptDbTransactionToTx = (dbTx: TransactionWithNames): Tx => {
@@ -34,6 +35,8 @@ export const useStatementData = () => {
   const [rawCategories, setRawCategories] = useState<Category[]>([]);
   const [rawPaymentMethods, setRawPaymentMethods] = useState<PaymentMethod[]>([]);
   const [userConfig, setUserConfig] = useState<UserConfig | null>(null);
+
+  const { refreshTrigger } = useRefresh();
   
 
   const loadAllData = useCallback(async () => {
@@ -61,7 +64,7 @@ export const useStatementData = () => {
 
   useEffect(() => {
     loadAllData();
-  }, [loadAllData]);
+  }, [loadAllData, refreshTrigger]);
   
 
   const adaptedTransactions: Tx[] = useMemo(

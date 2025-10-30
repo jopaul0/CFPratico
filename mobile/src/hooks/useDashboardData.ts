@@ -3,11 +3,12 @@ import { useMemo, useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native'; // Importa o hook de foco
 import * as DB from '../services/database';
 // Importar todos os tipos necessários
-import { TransactionWithNames, Category, PaymentMethod, UserConfig } from '../services/database';
+import { TransactionWithNames, Category, UserConfig } from '../services/database';
 import type { FilterConfig, Option } from '../types/Filters';
 import { categoryToSlug } from '../utils/Categories';
 import { formatDateToString } from '../utils/Date';
 import type { Tx } from '../types/Transactions';
+import { useRefresh } from '../contexts/RefreshContext';
 
 // --- (Tipos de dados para agregação) ---
 export interface SummaryData {
@@ -75,6 +76,8 @@ export const useDashboardData = () => {
     const [rawCategories, setRawCategories] = useState<Category[]>([]);
     const [userConfig, setUserConfig] = useState<UserConfig | null>(null);
 
+    const { refreshTrigger } = useRefresh();
+
     // --- (Carregamento de Dados) ---
     const loadAllData = useCallback(async () => {
         setIsLoading(true);
@@ -103,7 +106,7 @@ export const useDashboardData = () => {
       useCallback(() => {
         // Esta função wrapper (síncrona) chama a função async
         loadAllData();
-      }, [loadAllData]) // A dependência é o loadAllData (que já está em useCallback)
+      }, [loadAllData, refreshTrigger]) // A dependência é o loadAllData (que já está em useCallback)
     );
 
 

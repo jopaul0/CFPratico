@@ -1,14 +1,25 @@
+// src/components/Filters.tsx
 import React, { useMemo } from 'react';
-import { View, ScrollView, useWindowDimensions } from 'react-native';
+import { 
+    View, 
+    ScrollView, 
+    useWindowDimensions, 
+    TouchableOpacity,
+    Platform
+} from 'react-native';
+import { X } from 'lucide-react-native';
 
 import { InputGroup } from './InputGroup';
 import { DatePickerInput } from './DatePickerInput';
 
-// Importa os tipos centralizados
-import { FilterConfig, FilterPicker, FilterDate, FiltersProps } from '../types/Filters';
+import { FilterPicker, FilterDate, FiltersProps } from '../types/Filters';
 
 
-export const Filters: React.FC<FiltersProps> = ({ filters, className }) => {
+export const Filters: React.FC<FiltersProps> = ({ 
+    filters, 
+    className, 
+    onClearFilters // <-- Pega a nova prop
+}) => {
   const { width } = useWindowDimensions();
   const isSmall = width < 640;
 
@@ -56,6 +67,23 @@ export const Filters: React.FC<FiltersProps> = ({ filters, className }) => {
     [filters, isSmall, width]
   );
 
+
+  const clearButtonNode = onClearFilters && (
+      <View 
+        className=" justify-center" 
+        style={{ width: 30 }}
+      >
+          <TouchableOpacity
+              onPress={onClearFilters}
+              className="flex items-center justify-center rounded-lg bg-gray-200 active:bg-gray-300"
+              style={{ height: 30}}
+              accessibilityLabel="Limpar filtros"
+          >
+              <X size={24} color="#4b5563" />
+          </TouchableOpacity>
+      </View>
+  );
+
   return isSmall ? (
     <ScrollView
       horizontal
@@ -63,11 +91,15 @@ export const Filters: React.FC<FiltersProps> = ({ filters, className }) => {
       className={['mt-3', className].filter(Boolean).join(' ')}
       contentContainerStyle={{ paddingRight: 8 }}
     >
-      <View className="flex-row items-stretch">{nodes}</View>
+      <View className="flex-row items-stretch">
+        {nodes}
+        {clearButtonNode}
+      </View>
     </ScrollView>
   ) : (
     <View className={['mt-3 flex-row flex-wrap items-stretch', className].filter(Boolean).join(' ')}>
       {nodes}
+      {clearButtonNode}
     </View>
   );
 };

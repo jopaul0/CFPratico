@@ -1,20 +1,19 @@
 // src/screens/StatementScreen.tsx
-import React, { useCallback, useMemo } from 'react'; // <-- Importa useMemo
+import React, { useCallback, useMemo } from 'react';
 import { 
     View, 
     Text, 
     ActivityIndicator, 
     TouchableOpacity, 
     RefreshControl,
-    SectionList // <-- Importado
+    SectionList
 } from 'react-native';
-// (Não precisamos mais de SafeAreaView aqui)
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { StatementStackParamList } from '../types/Navigation'; 
 
 // Componentes
-import { MainContainer } from '../components/MainContainer'; // <-- Usado novamente
+import { MainContainer } from '../components/MainContainer';
 import { SearchBar } from '../components/SearchBar';
 import { Filters } from '../components/Filters';
 import { TransactionItem } from '../components/TransactionItem';
@@ -28,7 +27,7 @@ import { useStatementData } from '../hooks/useStatementData';
 import { useStatmentMassDelete } from '../hooks/useStatmentMassDelete';
 
 
-// Componente de Cabeçalho da Seção (com padding)
+// Componente de Cabeçalho da Seção (sem alteração)
 const SectionHeader: React.FC<{ group: TransactionGroup }> = ({ group }) => (
   <View className="bg-gray-100 pt-4 pb-2 px-4"> 
     <View className="flex-row items-center justify-between">
@@ -46,7 +45,7 @@ export const StatementScreen: React.FC = () => {
         query,
         setQuery,
         filtersConfig,
-        handleClearAll,
+        handleClearAll, // <-- Esta função já existia
         doSearch,
         isLoading,
         error,
@@ -64,10 +63,10 @@ export const StatementScreen: React.FC = () => {
 
     const navigation = useNavigation<NativeStackNavigationProp<StatementStackParamList>>();
 
+    // ... (Handlers de navegação e item (handlePressItem, etc) não mudam) ...
     const handleAddTransaction = useCallback(() => {
         navigation.navigate('AddTransaction');
     }, [navigation]);
-
     const handlePressItem = useCallback((tx: Tx) => {
         if (isSelectionMode) {
             toggleSelectItem(tx.id);
@@ -75,25 +74,17 @@ export const StatementScreen: React.FC = () => {
             navigation.navigate('TransactionDetail', tx);
         }
     }, [isSelectionMode, navigation, toggleSelectItem]);
-    
     const onLongPressItem = useCallback((txId: string) => {
         handleLongPressItem(txId);
     }, [handleLongPressItem]);
 
-
-    // --- !! A CORREÇÃO CRÍTICA !! ---
-    // Mapeia `group.transactions` para `section.data`
-    // O SectionList SÓ entende a prop "data"
+    // ... (sections e renderTransactionItem não mudam) ...
     const sections = useMemo(() => {
         return groups.map(group => ({
             ...group, // Copia dateISO, dateLabel, balance
             data: group.transactions, // Mapeia 'transactions' para 'data'
         }));
     }, [groups]);
-    // --- FIM DA CORREÇÃO ---
-
-
-    // renderItem para SectionList (agora com padding)
     const renderTransactionItem = ({ item }: { item: Tx }) => (
         <View className="px-4 bg-gray-100"> 
             <TransactionItem
@@ -106,7 +97,8 @@ export const StatementScreen: React.FC = () => {
         </View>
     );
 
-    // Componente de Cabeçalho da Lista (agora com padding)
+    // --- (ATUALIZADO) ---
+    // Componente de Cabeçalho da Lista (Filtros, etc.)
     const ListHeader = (
         <View className="p-4 bg-gray-100"> 
             <SearchBar
@@ -114,7 +106,7 @@ export const StatementScreen: React.FC = () => {
                 onChangeText={setQuery}
                 placeholder="Buscar por descrição, valor, categoria…"
                 onSubmitSearch={doSearch}
-                onClearAll={handleClearAll}
+                onClearAll={handleClearAll} // <-- Limpa a barra de busca
             />
             
             {isSelectionMode ? (
@@ -127,12 +119,16 @@ export const StatementScreen: React.FC = () => {
                     </TouchableOpacity>
                 </View>
             ) : (
-                <Filters filters={filtersConfig} />
+                <Filters 
+                    filters={filtersConfig} 
+                    onClearFilters={handleClearAll} // <-- Passa a função de limpar
+                />
             )}
         </View>
     );
+    // --- (FIM DA ATUALIZAÇÃO) ---
 
-    // Componente para Lista Vazia ou Erro (sem alteração)
+    // Componente para Lista Vazia (sem alteração)
     const ListEmpty = (
         <View className="mt-16 items-center">
             {isLoading && groups.length === 0 ? (
@@ -147,8 +143,8 @@ export const StatementScreen: React.FC = () => {
 
     return (
         <MainContainer
-            scrollEnabled={false} // <-- DIZ AO MAINCONTAINER PARA NÃO USAR SCROLLVIEW
-            noPadding={true}      // <-- DIZ AO MAINCONTAINER PARA NÃO ADICIONAR PADDING
+            scrollEnabled={false}
+            noPadding={true}
             hasButton={true}
             colorButton={ isSelectionMode ? '#ef4444' : '#3b82f6' }
             iconButton={
@@ -161,16 +157,14 @@ export const StatementScreen: React.FC = () => {
                     ? handleDeleteSelected
                     : handleAddTransaction
             }
-            // O refreshControl NÃO é passado aqui, mas sim para o SectionList
         >
             <SectionList
-                sections={sections} // <-- USA O NOVO 'sections' MAPEADO
+                sections={sections}
                 keyExtractor={(item) => item.id}
                 renderItem={renderTransactionItem}
                 renderSectionHeader={({ section }) => <SectionHeader group={section as TransactionGroup} />}
                 ListHeaderComponent={ListHeader}
                 ListEmptyComponent={ListEmpty}
-                // Adiciona o "Pull to Refresh"
                 refreshControl={
                     <RefreshControl
                         refreshing={isLoading}
@@ -179,13 +173,12 @@ export const StatementScreen: React.FC = () => {
                         tintColor={'#3b82f6'} // para iOS
                     />
                 }
-                // Otimizações
                 initialNumToRender={10}
                 maxToRenderPerBatch={10}
                 windowSize={5}
                 stickySectionHeadersEnabled={false}
                 contentContainerStyle={{ paddingBottom: 96 }} // Espaço para o botão flutuante
-                className="bg-gray-100" // Cor de fundo para a lista
+                className="bg-gray-100"
             />
         </MainContainer>
     );

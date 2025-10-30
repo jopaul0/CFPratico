@@ -27,4 +27,5 @@ export type FilterConfig = FilterPicker | FilterDate;
 export interface FiltersProps {
   filters: FilterConfig[];
   className?: string;
+  onClearFilters?: () => void;
 }

@@ -1,8 +1,6 @@
 // src/screens/DashboardScreen.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ActivityIndicator, Platform } from 'react-native';
-// --- REMOVIDO: ViewShot não é mais necessário ---
-// import ViewShot from 'react-native-view-shot';
 
 import { Asset } from 'expo-asset';
 import { File } from 'expo-file-system';
@@ -67,39 +65,38 @@ export const DashboardScreen: React.FC = () => {
         return () => { cancelled = true; };
     }, []);
 
-    // 3. Hook de Dados (sem mudanças)
+    // 3. Hook de Dados (ATUALIZADO)
     const dashboardData = useDashboardData();
     const {
         isLoading,
         error,
         filtersConfig,
+        handleClearAll, // <-- NOVO
         summary,
+        currentBalance, // <-- NOVO
         byCategoryRevenue,
         byCategoryExpense,
         byDate,
         recentTransactions,
     } = dashboardData;
 
-    // --- 4. MUDANÇA: Hook de Exportação atualizado ---
+    // 4. Hook de Exportação (sem alteração)
     const {
         isExporting,
         handleExportExcel,
-        handleExportPdf, // <-- Renomeado
-        // Refs removidos
+        handleExportPdf,
     } = useReportExporter({
         data: dashboardData,
         logoBase64: logoBase64,
     });
 
-    // 5. Handlers de Navegação (sem mudanças)
+    // 5. Handlers de Navegação (sem alteração)
     const handleViewAll = () => {
         navigation.getParent<DrawerNavigationProp<DrawerParamList>>()?.navigate('Statement');
     };
-
     const handlePressItem = (tx: Tx) => {
         navigation.navigate('TransactionDetail', tx);
     };
-
     const handleAddTransaction = useCallback(() => {
         navigation.navigate('AddTransaction');
     }, [navigation]);
@@ -117,8 +114,13 @@ export const DashboardScreen: React.FC = () => {
 
         return (
             <>
-                {/* Cards de Resumo */}
+                {/* --- (INÍCIO DA ATUALIZAÇÃO) --- */}
                 <View className="flex-row flex-wrap mt-4 -mx-2">
+                    <SummaryCard
+                        title="Saldo Atual"
+                        value={currentBalance}
+                        valueColorClass={currentBalance >= 0 ? "text-blue-600" : "text-rose-600"}
+                    />
                     <SummaryCard
                         title="Receitas no Período"
                         value={summary.totalRevenue}
@@ -129,14 +131,11 @@ export const DashboardScreen: React.FC = () => {
                         value={Math.abs(summary.totalExpense)}
                         valueColorClass="text-rose-600"
                     />
-                    <SummaryCard
-                        title="Saldo do Período"
-                        value={summary.netBalance}
-                        valueColorClass={summary.netBalance >= 0 ? "text-gray-800" : "text-rose-600"}
-                    />
                 </View>
+                {/* --- (FIM DA ATUALIZAÇÃO) --- */}
 
-                {/* Transações Recentes */}
+
+                {/* Transações Recentes (sem alteração) */}
                 <View className="p-4 bg-white rounded-lg shadow mt-4">
                     <Text className="text-lg font-bold text-gray-800 mb-4">Transações Recentes</Text>
                     {recentTransactions.length > 0 ? (
@@ -163,25 +162,23 @@ export const DashboardScreen: React.FC = () => {
                     )}
                 </View>
 
-                {/* --- MUDANÇA: Gráficos sem ViewShot e sem ref --- */}
+                {/* Gráficos (sem alteração) */}
                 <TimeChart
                     title="Receitas x Despesas por Dia"
                     data={byDate}
                 />
-
                 <CategoryChart
                     title="Despesas por Categoria"
                     data={byCategoryExpense}
                     colorClass="bg-red-500"
                 />
-
                 <CategoryChart
                     title="Receitas por Categoria"
                     data={byCategoryRevenue}
                     colorClass="bg-green-500"
                 />
 
-                {/* --- MUDANÇA: Botão de Exportação com props atualizadas --- */}
+                {/* Botão de Exportação (sem alteração) */}
                 <DashboardExportButton
                     onExportPDF={handleExportPdf}
                     onExportExcel={handleExportExcel}
@@ -191,7 +188,7 @@ export const DashboardScreen: React.FC = () => {
         );
     };
 
-    // 7. Renderização Principal (sem mudanças)
+    // 7. Renderização Principal (ATUALIZADO)
     return (
         <MainContainer
             hasButton={true}
@@ -203,7 +200,12 @@ export const DashboardScreen: React.FC = () => {
                 handleAddTransaction
             }
         >
-            <Filters filters={filtersConfig} />
+            {/* --- (INÍCIO DA ATUALIZAÇÃO) --- */}
+            <Filters 
+                filters={filtersConfig} 
+                onClearFilters={handleClearAll} // <-- Passa a função de limpar
+            />
+            {/* --- (FIM DA ATUALIZAÇÃO) --- */}
             {renderContent()}
         </MainContainer>
     );

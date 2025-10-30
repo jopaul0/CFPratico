@@ -1,7 +1,14 @@
 // src/services/dataSync.ts
-import * as DB from './database';
 import { dbPromise } from './database/connection';
 import type { Category, PaymentMethod, Transaction } from '../types/Database';
+
+// --- (CORREÇÃO) ---
+// Importa diretamente dos arquivos "crud" para quebrar o ciclo de dependência
+import { fetchCategories } from './database/crud/Category';
+import { fetchPaymentMethods } from './database/crud/PaymentMethods';
+import { fetchAllRawTransactions } from './database/crud/Transaction';
+// --- (FIM DA CORREÇÃO) ---
+
 
 /**
  * Define a estrutura do nosso arquivo de backup JSON.
@@ -17,10 +24,11 @@ interface BackupData {
  */
 export const exportDataAsJson = async (): Promise<string> => {
   try {
-    // Busca os dados puros
-    const categories = await DB.fetchCategories();
-    const paymentMethods = await DB.fetchPaymentMethods();
-    const transactions = await DB.fetchAllRawTransactions(); 
+    // --- (CORREÇÃO) ---
+    // Chama as funções importadas diretamente
+    const categories = await fetchCategories();
+    const paymentMethods = await fetchPaymentMethods();
+    const transactions = await fetchAllRawTransactions(); 
 
     const backupData: BackupData = {
       categories,

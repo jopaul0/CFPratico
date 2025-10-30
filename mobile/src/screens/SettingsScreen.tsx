@@ -11,6 +11,10 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Updates from 'expo-updates';
 
 import * as DB from '../services/database';
+// --- (INÍCIO DA CORREÇÃO) ---
+// Importa as funções de sync DIRETAMENTE, e não mais pelo barril 'DB'
+import { exportDataAsJson, importDataFromJson } from '../services/dataSync';
+// --- (FIM DA CORREÇÃO) ---
 
 import { MainContainer } from '../components/MainContainer';
 import { InputGroup } from '../components/InputGroup';
@@ -19,7 +23,7 @@ import { Divider } from '../components/Divider';
 import { useSettings } from '../hooks/useSettings';
 import { ChevronRight, Database, Wallet, UploadCloud, DownloadCloud, RefreshCw } from 'lucide-react-native';
 
-// Componente NavLink
+// Componente NavLink (Sem alterações)
 const NavLink: React.FC<{ title: string; description: string; onPress: () => void; icon: React.ReactNode; }> =
   ({ title, description, onPress, icon }) => (
     <TouchableOpacity
@@ -59,18 +63,15 @@ export const SettingsScreen: React.FC = () => {
     }
 
     try {
-      const jsonString = await DB.exportDataAsJson();
+      // --- (INÍCIO DA CORREÇÃO) ---
+      // Chama a função importada diretamente (sem 'DB.')
+      const jsonString = await exportDataAsJson();
+      // --- (FIM DA CORREÇÃO) ---
 
-      // 1) Diretório de Documentos usando Paths (não Directory)
       const documentsDir = Paths.document;
-
-      // 2) Criar arquivo usando new File() com o diretório e nome
       const backupFile = new File(documentsDir, 'backup-cfpratico.json');
-
-      // 3) Escrever conteúdo
       await backupFile.write(jsonString, { encoding: 'utf8' });
 
-      // 4) Compartilhar
       await Sharing.shareAsync(backupFile.uri, {
         mimeType: 'application/json',
         dialogTitle: 'Exportar backup de dados (JSON)',
@@ -83,7 +84,6 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
-  // ---------- IMPORTAR (NOVA API) ----------
   const handleImportData = async () => {
     Alert.alert(
       'Restaurar Dados',
@@ -95,22 +95,20 @@ export const SettingsScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              // 1) Selecionar arquivo .json
               const result = await DocumentPicker.getDocumentAsync({
                 type: ['application/json', 'public.json'],
               });
               if (result.canceled) return;
 
               const pickedUri = result.assets[0].uri;
-
-              // 2) Ler conteúdo usando new File(uri)
               const pickedFile = new File(pickedUri);
               const jsonString = await pickedFile.text();
 
-              // 3) Importar no DB
-              await DB.importDataFromJson(jsonString);
+              // --- (INÍCIO DA CORREÇÃO) ---
+              // Chama a função importada diretamente (sem 'DB.')
+              await importDataFromJson(jsonString);
+              // --- (FIM DA CORREÇÃO) ---
 
-              // 4) Reiniciar app
               Alert.alert('Sucesso!', 'Dados restaurados. O app será reiniciado agora.', [
                 { text: 'OK', onPress: () => Updates.reloadAsync() },
               ]);
@@ -124,7 +122,7 @@ export const SettingsScreen: React.FC = () => {
     );
   };
 
-  // ---------- RESET ----------
+  // Restante do arquivo (handleResetApp, render, etc.) sem alterações...
   const handleResetApp = async () => {
     Alert.alert(
       'Resetar Aplicativo',
@@ -136,7 +134,8 @@ export const SettingsScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await DB.resetDatabaseToDefaults();
+              // Esta função é do DB, então 'DB.' está correto
+              await DB.resetDatabaseToDefaults(); 
               Alert.alert('Aplicativo Resetado', 'O app será reiniciado agora.', [
                 { text: 'OK', onPress: () => Updates.reloadAsync() },
               ]);
@@ -150,7 +149,6 @@ export const SettingsScreen: React.FC = () => {
     );
   };
 
-  // ---------- RENDER ----------
   return (
     <MainContainer
       refreshControl={

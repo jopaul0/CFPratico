@@ -31,7 +31,6 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
 
   /**
    * Gera um arquivo Excel (.xlsx)
-   * (Sem alterações)
    */
   const handleExportExcel = async () => {
     if (data.filteredTransactions.length === 0) {
@@ -88,7 +87,6 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
 
   /**
    * Gera o HTML base para os relatórios PDF.
-   * --- (ATUALIZADO: Margem do body restaurada) ---
    */
   const createPdfHtml = () => {
     const { 
@@ -96,7 +94,7 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
         startDate, endDate, byCategoryRevenue, byCategoryExpense
     } = data;
     
-    // (Cálculos de Saldo Anterior - sem mudança)
+    // Cálculos de Saldo Anterior
     const initialBalance = userConfig?.initial_balance || 0;
     const filterStartDate = parseStringToDate(startDate); 
     let saldoAnterior = initialBalance;
@@ -108,7 +106,7 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
         }
     }
 
-    // (Linhas da Tabela de Extrato - sem mudança)
+    // Linhas da Tabela de Extrato
     let runningBalance = saldoAnterior;
     const transactionRows = filteredTransactions
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -130,7 +128,7 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
           `;
       }).join('');
       
-    // (Tabelas de Resumo de Categoria - sem mudança)
+    // Tabelas de Resumo de Categoria
     const generateCategoryTable = (title: string, items: AggregatedData[], colorClass: 'receita' | 'despesa') => {
         if (items.length === 0) return `<h3>${title}</h3><p>Nenhum dado no período.</p>`;
         const rows = items.map(item => `
@@ -161,7 +159,7 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
           </div>
       </div>`;
     
-    // (Logo, Nome e Período - sem mudança)
+    // Logo, Nome e Período
     const logoHtml = logoBase64 ? `<img src="data:image/png;base64,${logoBase64}" class="logo" />` : '';
     const companyName = userConfig?.company_name || 'CFPratico';
     const reportPeriod = `<p class="period"><b>Período do Relatório:</b> ${formatShortDate(startDate)} a ${formatShortDate(endDate)}</p>`;
@@ -171,10 +169,9 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
       <html>
         <head>
           <style>
-            /* --- MUDANÇA: Margem de 25px restaurada --- */
             body { 
               font-family: sans-serif; 
-              margin: 25px; /* <-- RESTAURADO */
+              margin: 25px;
               width: auto;
             }
             .header { display: flex; flex-direction: row; align-items: center; border-bottom: 2px solid #555; padding-bottom: 10px; }
@@ -249,7 +246,6 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
 
   /**
    * Gera um PDF.
-   * (Sem alterações aqui, a opção 'margins' continua)
    */
   const handleExportPdf = async () => {
     if (data.filteredTransactions.length === 0 && (data.userConfig?.initial_balance ?? 0) === 0) {
@@ -259,10 +255,10 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
     
     setIsExporting(true);
     try {
-      // 1. Gerar HTML (agora com a margem do body)
+      // 1. Gerar HTML
       const html = createPdfHtml(); 
       
-      // 2. Imprimir para arquivo temporário (mantendo as margens da impressora)
+      // 2. Imprimir para arquivo temporário (com margens da impressora)
       const { uri: tempUri } = await Print.printToFileAsync({ 
         html,
         margins: {

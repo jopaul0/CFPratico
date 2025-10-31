@@ -1,0 +1,31 @@
+/* Utilitários */
+:root { color-scheme: light dark; }
+.btn-primary { @apply bg-emerald-600 text-white rounded-lg px-4 py-2 hover:bg-emerald-700; }
+.btn-secondary { @apply px-3 py-2 rounded-lg bg-white shadow border hover:bg-gray-50; }
+.card { @apply bg-white rounded-2xl shadow p-4 border; }
+.card-k { @apply text-xs uppercase tracking-wide text-gray-500; }
+.card-v { @apply text-2xl font-semibold; }
+.lbl { @apply text-sm text-gray-600; }
+.inp { @apply w-full mt-1 border rounded-lg px-3 py-2; }
+.th { @apply text-left px-3 py-2; }
+.icon-trash { mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M9 3a1 1 0 0 0-1 1v1H5.5a1 1 0 1 0 0 2H6v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7h.5a1 1 0 1 0 0-2H16V4a1 1 0 0 0-1-1H9Zm2 2h2v1h-2V5Zm-2 4a1 1 0 1 1 2 0v9a1 1 0 1 1-2 0V9Zm6-1a1 1 0 0 0-1 1v9a1 1 0 1 0 2 0V9a1 1 0 0 0-1-1Z"/></svg>') center / contain no-repeat; background: currentColor; }
+.icon-edit { mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25ZM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82Z"/></svg>') center / contain no-repeat; background: currentColor; }
+.icon-download { mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M5 20h14v-2H5v2Zm7-18-5 5h3v6h4V7h3l-5-5Z"/></svg>') center / contain no-repeat; background: currentColor; }
+.icon-upload { mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M5 20h14v-2H5v2Zm7-16 5 5h-3v6h-4V9H7l5-5Z"/></svg>') center / contain no-repeat; background: currentColor; }
+.icon-printer { mask:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M17 3H7v4h10V3ZM5 8h14a2 2 0 0 1 2 2v6h-3v5H6v-5H3v-6a2 2 0 0 1 2-2Zm3 12h8v-5H8v5Zm10-8h2v-2h-2v2Z"/></svg>') center / contain no-repeat; background: currentColor; }
+
+/* Combobox */
+.combo { position: relative; }
+.combo-list { position: absolute; left:0; right:0; top:100%; z-index: 10; background:white; border:1px solid #e5e7eb; border-radius:0.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.06); max-height: 240px; overflow:auto; }
+.combo-item { padding: 8px 12px; cursor: pointer; }
+.combo-item:hover, .combo-item.active { background:#f3f4f6; }
+
+/* Logo placeholder (caso a imagem real não esteja disponível no ambiente) */
+img[alt='OnVale'] { background: transparent; }
+
+/* Impressão */
+@media print {
+  body { background: white; }
+  header, #btnExportCSV, #fileImport, #btnExportPDF, #btnPrint, #btnLimparFiltros { display:none !important; }
+  section { break-inside: avoid; }
+}

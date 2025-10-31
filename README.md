@@ -8,12 +8,12 @@ O CF Prático é uma suíte de controle financeiro ágil, multiplataforma e foca
 
 Este projeto está sendo construído em etapas, com o objetivo de cobrir todas as plataformas principais:
 
-### [🚧] Etapa 1: Protótipo Web
+### [✅] Etapa 1: Protótipo Web
 
 - Status: Concluído
 - Objetivo: Validar o fluxo de usuário, layout e os principais conceitos da interface em um protótipo web de alta fidelidade.
 
-### [⬜] Etapa 2: Aplicativo Mobile
+### [🚧] Etapa 2: Aplicativo Mobile
 
 - Status: Em Desenvolvimento
 - Objetivo: Construir o aplicativo móvel nativo (iOS/Android) com funcionalidade completa offline-first, usando Expo e um banco de dados SQLite local.

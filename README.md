@@ -21,12 +21,12 @@ Este projeto está sendo construído em etapas, com o objetivo de cobrir todas a
 ### [⬜] Etapa 3: Aplicativo Web
 
 - Status: Planejado
-- Objetivo: Desenvolver a versão web completa, com sincronização de dados em nuvem (permitindo que os dados do app mobile sejam acessados no navegador).
+- Objetivo: Desenvolver a versão web completa.
 
 ### [⬜] Etapa 4: Aplicativo Desktop
 
 - Status: Planejado
-- Objetivo: Empacotar a aplicação web (provavelmente usando Electron ou Tauri) para criar uma experiência de desktop instalável para Windows, macOS e Linux.
+- Objetivo: Empacotar a aplicação web (provavelmente usando Electron) para criar uma experiência de desktop instalável para Windows, macOS e Linux.
 
 ---
 

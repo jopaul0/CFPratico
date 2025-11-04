@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { formatToBRL } from '../utils/Value';
 import { Circle, CheckCircle } from 'lucide-react-native';
@@ -19,7 +19,7 @@ interface TransactionItemProps {
   isSelectionMode?: boolean;
 }
 
-export const TransactionItem: React.FC<TransactionItemProps> = ({
+export const TransactionItem: React.FC<TransactionItemProps> = memo(({
   category, categoryIcon, paymentType, description, value, isNegative = true, onPress,
   onLongPress,
   isSelected = false,
@@ -70,4 +70,4 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
       </View>
     </TouchableOpacity>
   );
-};
+});

@@ -9,7 +9,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./src/assets/icon.png",
+      "image": "./src/assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -23,7 +23,11 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.controlefinanceiroapp"
+      "package": "com.jopaul0.cfpratico"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jopaul0.cfpratico"
     },
     "web": {
       "bundler": "metro",
@@ -33,6 +37,12 @@
       "expo-sqlite",
       "expo-splash-screen",
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e702bcb3-8640-4135-ad88-ac3694d9be63"
+      }
+    },
+    "owner": "jopaul0"
   }
 }

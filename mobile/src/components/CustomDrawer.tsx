@@ -22,7 +22,7 @@ export const CustomDrawer: React.FC<DrawerContentComponentProps> = (props) => {
 
       {/* RODAPÉ DO DRAWER */}
       <View className="p-5 border-t border-gray-200">
-        <Text className="text-xs text-gray-400">Versão Protótipo 1.0</Text>
+        <Text className="text-xs text-gray-400">Versão 1.0</Text>
       </View>
     </View>
   );

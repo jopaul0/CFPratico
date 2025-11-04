@@ -1,12 +1,13 @@
-// src/services/database/transactionRepository.ts
 import { dbPromise } from '../connection';
 import { NewTransactionData, TransactionWithNames, Transaction } from '../../../types/Database';
 
-/**
- * Adiciona uma nova transação.
- */
+interface FetchTransactionsOptions {
+  startDate?: string;
+  endDate?: string;
+  type?: 'revenue' | 'expense';
+}
+
 export const addTransaction = async (data: NewTransactionData): Promise<number> => {
-  // ... (código existente, sem alteração)
   const db = await dbPromise;
   const { date, description, value, type, condition, installments, paymentMethodId, categoryId } = data;
 
@@ -23,10 +24,6 @@ export const addTransaction = async (data: NewTransactionData): Promise<number> 
   }
 };
 
-/**
- * // NOVO
- * Atualiza uma transação existente.
- */
 export const updateTransaction = async (id: number, data: NewTransactionData): Promise<void> => {
   const db = await dbPromise;
   const { date, description, value, type, condition, installments, paymentMethodId, categoryId } = data;
@@ -51,10 +48,6 @@ export const updateTransaction = async (id: number, data: NewTransactionData): P
   }
 };
 
-/**
- * // NOVO
- * Deleta uma transação.
- */
 export const deleteTransaction = async (id: number): Promise<void> => {
   const db = await dbPromise;
   try {
@@ -65,23 +58,17 @@ export const deleteTransaction = async (id: number): Promise<void> => {
   }
 };
 
-
-/* // NOVO
- * Deleta múltiplas transações de uma vez.
- */
 export const deleteTransactions = async (ids: number[]): Promise<void> => {
     if (ids.length === 0) return;
 
     const db = await dbPromise;
     try {
-        // Cria os placeholders (?) dinamicamente
         const placeholders = ids.map(() => '?').join(',');
         
-        // Executa dentro de uma transação para performance e segurança
         await db.withTransactionAsync(async () => {
             await db.runAsync(
                 `DELETE FROM "transaction" WHERE id IN (${placeholders});`,
-                [...ids] // O driver SQLite trata a passagem do array
+                [...ids]
             );
         });
         console.log(`${ids.length} transações deletadas.`);
@@ -93,29 +80,58 @@ export const deleteTransactions = async (ids: number[]): Promise<void> => {
 
 
 /**
- * Busca todas as transações com JOIN.
+ * Busca transações com JOIN e filtros dinâmicos.
  */
-export const fetchTransactions = async (): Promise<TransactionWithNames[]> => {
+export const fetchTransactions = async (
+  options?: FetchTransactionsOptions
+): Promise<TransactionWithNames[]> => {
   const db = await dbPromise;
+
+  let query = `
+    SELECT 
+      t.*, 
+      c.name AS category_name, 
+      c.icon_name AS category_icon_name,
+      p.name AS payment_method_name 
+    FROM "transaction" t
+    LEFT JOIN category c ON t.category_id = c.id
+    LEFT JOIN payment_method p ON t.payment_method_id = p.id
+  `;
+  
+  const whereClauses: string[] = [];
+  const params: any[] = [];
+
+  if (options?.startDate) {
+    whereClauses.push('t.date >= ?');
+    params.push(`${options.startDate}T00:00:00`);
+  }
+  if (options?.endDate) {
+    whereClauses.push('t.date <= ?');
+    params.push(`${options.endDate}T23:59:59`);
+  }
+  if (options?.type) {
+    whereClauses.push('t.type = ?');
+    params.push(options.type);
+  }
+
+  if (whereClauses.length > 0) {
+    query += ' WHERE ' + whereClauses.join(' AND ');
+  }
+  
+  query += ' ORDER BY t.date DESC;';
+
   try {
-    const results = await db.getAllAsync<TransactionWithNames>(
-      `SELECT 
-         t.*, 
-         c.name AS category_name, 
-         c.icon_name AS category_icon_name, -- ADICIONADO
-         p.name AS payment_method_name 
-       FROM "transaction" t
-       LEFT JOIN category c ON t.category_id = c.id
-       LEFT JOIN payment_method p ON t.payment_method_id = p.id
-       ORDER BY t.date DESC;` // <--- QUERY ATUALIZADA
-    );
+    const results = await db.getAllAsync<TransactionWithNames>(query, params);
     return results;
   } catch (error : any) {
-    console.error('Erro ao buscar transações com JOIN:', error);
+    console.error('Erro ao buscar transações com JOIN (e filtros):', error);
     throw error;
   }
 };
 
+/**
+ * Busca TODAS as transações puras, sem JOIN, para exportação ou cálculos.
+ */
 export const fetchAllRawTransactions = async (): Promise<Transaction[]> => {
   const db = await dbPromise;
   try {
@@ -129,10 +145,6 @@ export const fetchAllRawTransactions = async (): Promise<Transaction[]> => {
   }
 };
 
-/**
- * // NOVO (Recomendado)
- * Busca uma transação específica pelo ID (útil para a tela de edição).
- */
 export const fetchTransactionById = async (id: number): Promise<TransactionWithNames | null> => {
   const db = await dbPromise;
   try {
@@ -140,12 +152,12 @@ export const fetchTransactionById = async (id: number): Promise<TransactionWithN
       `SELECT 
          t.*, 
          c.name AS category_name, 
-         c.icon_name AS category_icon_name, -- ADICIONADO
+         c.icon_name AS category_icon_name,
          p.name AS payment_method_name 
        FROM "transaction" t
        LEFT JOIN category c ON t.category_id = c.id
        LEFT JOIN payment_method p ON t.payment_method_id = p.id
-       WHERE t.id = ?;`, // <--- QUERY ATUALIZADA
+       WHERE t.id = ?;`,
       [id]
     );
     return result;
@@ -155,11 +167,7 @@ export const fetchTransactionById = async (id: number): Promise<TransactionWithN
   }
 };
 
-/**
- * Deleta todas as transações (para testes).
- */
 export const clearAllTransactions = async (): Promise<void> => {
-  // ... (código existente, sem alteração)
   const db = await dbPromise;
   try {
     await db.runAsync('DELETE FROM "transaction";');

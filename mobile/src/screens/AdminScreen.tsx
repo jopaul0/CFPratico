@@ -1,9 +1,5 @@
-// src/screens/AdminScreen.tsx
-import React, { useState, useEffect } from 'react';
-// --- (INÍCIO DA CORREÇÃO) ---
+import React, { useState } from 'react';
 import { View, Text, Button, FlatList, StyleSheet, ScrollView, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // <-- Importado do lugar certo
-// --- (FIM DA CORREÇÃO) ---
 
 import * as DB from '../services/database';
 import { TransactionWithNames } from '../types/Database';
@@ -11,11 +7,6 @@ import { TransactionWithNames } from '../types/Database';
 export default function AdminScreen() {
   const [log, setLog] = useState('Tela de Admin pronta.');
   const [transactions, setTransactions] = useState<TransactionWithNames[]>([]);
-
-  useEffect(() => {
-    handleInitDatabase();
-  }, []);
-  
   
   const handleInitDatabase = async () => {
     try {
@@ -123,7 +114,6 @@ export default function AdminScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 50 }}>
         <Text style={styles.header}>Painel de Teste - SQLite (TS)</Text>
         
@@ -151,13 +141,10 @@ export default function AdminScreen() {
           ListEmptyComponent={<Text style={{textAlign: 'center', padding: 10}}>Nenhuma transação encontrada.</Text>}
         />
       </ScrollView>
-    </SafeAreaView>
   );
 }
 
-// --- ESTILOS (os mesmos de antes) ---
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f4f4f4' },
   container: { flex: 1, padding: 15 },
   header: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
   logContainer: { backgroundColor: '#fff', padding: 10, borderRadius: 5, marginBottom: 20, borderColor: '#ddd', borderWidth: 1, minHeight: 60 },

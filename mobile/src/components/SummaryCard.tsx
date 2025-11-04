@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text } from 'react-native';
 
 interface SummaryCardProps {
@@ -7,7 +7,7 @@ interface SummaryCardProps {
   valueColorClass: string;
 }
 
-export const SummaryCard: React.FC<SummaryCardProps> = ({ title, value, valueColorClass }) => {
+export const SummaryCard: React.FC<SummaryCardProps> = memo(({ title, value, valueColorClass }) => {
   const formattedValue = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
   return (
@@ -22,4 +22,4 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ title, value, valueCol
       </View>
     </View>
   );
-};
+});

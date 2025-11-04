@@ -1,4 +1,3 @@
-// src/components/MainContainer.tsx
 import React from 'react';
 import { 
     View, 

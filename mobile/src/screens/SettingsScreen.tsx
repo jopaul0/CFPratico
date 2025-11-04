@@ -5,10 +5,9 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SettingsStackParamList } from '../types/Navigation';
 
-import { Directory, File, Paths } from 'expo-file-system';
+import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
-import * as Updates from 'expo-updates';
 
 import * as DB from '../services/database';
 
@@ -22,7 +21,7 @@ import { InputGroup } from '../components/InputGroup';
 import { SimpleButton } from '../components/SimpleButton';
 import { Divider } from '../components/Divider';
 import { useSettings } from '../hooks/useSettings';
-import { ChevronRight, Database, Wallet, UploadCloud, DownloadCloud, RefreshCw } from 'lucide-react-native';
+import { ChevronRight, Database, Wallet, UploadCloud, DownloadCloud, RefreshCw, HelpCircle } from 'lucide-react-native';
 
 const NavLink: React.FC<{ title: string; description: string; onPress: () => void; icon: React.ReactNode; }> =
   ({ title, description, onPress, icon }) => (
@@ -138,7 +137,7 @@ export const SettingsScreen: React.FC = () => {
 
               triggerReload();
               Alert.alert('Aplicativo Resetado', 'Os dados foram restaurados ao padrão.');
-              
+
             } catch (e: any) {
               console.error(e);
               Alert.alert('Erro no Reset', `Não foi possível resetar o aplicativo: ${e?.message ?? e}`);
@@ -206,6 +205,18 @@ export const SettingsScreen: React.FC = () => {
         description="Adicione, edite ou remova formas de pagamento."
         icon={<Wallet size={22} color="#4b5563" />}
         onPress={() => navigation.navigate('ManagePaymentMethods')}
+      />
+
+      <Divider />
+
+      {/* --- 2. ADICIONAR ESTA SEÇÃO --- */}
+      <Text className="text-xl font-bold text-gray-800 mb-4 mt-4">Suporte</Text>
+
+      <NavLink
+        title="Ajuda e FAQ"
+        description="Tire suas dúvidas sobre o uso do aplicativo."
+        icon={<HelpCircle size={22} color="#4b5563" />}
+        onPress={() => navigation.navigate('Help')}
       />
 
       <Divider />

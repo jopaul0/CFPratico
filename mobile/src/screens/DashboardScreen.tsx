@@ -1,6 +1,6 @@
 // src/screens/DashboardScreen.tsx
-import React, { useState, useCallback } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, ActivityIndicator, RefreshControl } from 'react-native';
 
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -29,7 +29,7 @@ import { Plus } from 'lucide-react-native';
 export const DashboardScreen: React.FC = () => {
     const navigation = useNavigation<NativeStackNavigationProp<DashboardStackParamList>>();
 
-   const dashboardData = useDashboardData();
+    const dashboardData = useDashboardData();
     const {
         isLoading,
         error,
@@ -41,6 +41,7 @@ export const DashboardScreen: React.FC = () => {
         byCategoryExpense,
         byDate,
         recentTransactions,
+        reload
     } = dashboardData;
 
     // 4. Hook de Exportação (sem alteração)
@@ -161,10 +162,18 @@ export const DashboardScreen: React.FC = () => {
             onPressButton={
                 handleAddTransaction
             }
+            refreshControl={
+                <RefreshControl
+                    refreshing={isLoading}
+                    onRefresh={reload}
+                    colors={['#3b82f6']}
+                    tintColor={'#3b82f6'} // para iOS
+                />
+            }
         >
             {/* --- (INÍCIO DA ATUALIZAÇÃO) --- */}
-            <Filters 
-                filters={filtersConfig} 
+            <Filters
+                filters={filtersConfig}
                 onClearFilters={handleClearAll} // <-- Passa a função de limpar
             />
             {/* --- (FIM DA ATUALIZAÇÃO) --- */}

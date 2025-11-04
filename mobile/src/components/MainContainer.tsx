@@ -15,7 +15,7 @@ interface MainContainerProps {
   colorButton?: string;
   onPressButton?: () => void;
   children: React.ReactNode;
-  refreshControl?: React.ReactElement<RefreshControlProps>;
+  refreshControl?: React.ReactElement<RefreshControlProps> | undefined;
   scrollEnabled?: boolean; // <-- NOVA PROP
   noPadding?: boolean;     // <-- NOVA PROP
 }

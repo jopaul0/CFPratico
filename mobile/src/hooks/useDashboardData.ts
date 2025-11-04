@@ -270,5 +270,6 @@ export const useDashboardData = () => {
         startDate,
         endDate,
         currentBalance,
+        reload: loadData
     };
 };

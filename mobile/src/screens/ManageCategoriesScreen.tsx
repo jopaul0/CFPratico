@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, Text, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
-import * as DB from '../services/database'; 
+import { View, Text, Alert, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 
 import { MainContainer } from '../components/MainContainer';
 import { InputGroup } from '../components/InputGroup';
@@ -10,7 +9,7 @@ import { useManageCategories } from '../hooks/useManageCategories';
 import { Category } from '../services/database';
 
 // --- (CORREÇÃO 2: Importar ICON_TRANSLATIONS) ---
-import { iconMap, getCategoryIcon, ICON_TRANSLATIONS } from '../utils/CategoryIcons'; 
+import { iconMap, getCategoryIcon, ICON_TRANSLATIONS } from '../utils/CategoryIcons';
 import { Option } from '../types/Filters';
 import { Trash, Edit } from 'lucide-react-native';
 
@@ -69,7 +68,7 @@ export const ManageCategoriesScreen: React.FC = () => {
     handleClearForm,
     handleSave,
     handleDelete,
-    reload, 
+    reload,
   } = useManageCategories();
 
   const onSave = async () => {
@@ -100,12 +99,12 @@ export const ManageCategoriesScreen: React.FC = () => {
       ]
     );
   };
-  
-   const onDeleteFromForm = () => {
-     if(selectedCategory) {
-        onDelete(selectedCategory);
-     }
-   }
+
+  const onDeleteFromForm = () => {
+    if (selectedCategory) {
+      onDelete(selectedCategory);
+    }
+  }
 
   // --- (CORREÇÃO 1: Lógica do "ListEmptyComponent" movida para cá) ---
   const renderList = () => {
@@ -118,7 +117,7 @@ export const ManageCategoriesScreen: React.FC = () => {
     if (categories.length === 0) {
       return <Text className="text-gray-500 text-center my-4">Nenhuma categoria encontrada.</Text>;
     }
-    
+
     // --- (CORREÇÃO 1: Troca de FlatList para .map()) ---
     return (
       <View>
@@ -137,7 +136,15 @@ export const ManageCategoriesScreen: React.FC = () => {
 
   return (
     // MainContainer fornece a ScrollView, então o erro de nesting some
-    <MainContainer>
+    <MainContainer
+      refreshControl={
+        <RefreshControl
+          refreshing={isLoading}
+          onRefresh={reload}
+          colors={['#3b82f6']}
+          tintColor={'#3b82f6'} // para iOS
+        />
+      }>
       <Text className="text-2xl font-bold text-gray-800 mb-4">Gerenciar Categorias</Text>
 
       {/* Formulário de Edição/Criação */}
@@ -189,10 +196,10 @@ export const ManageCategoriesScreen: React.FC = () => {
 
       {/* Lista de Categorias */}
       <Text className="text-xl font-bold text-gray-800 mb-4">Categorias Existentes</Text>
-      
+
       {/* --- (CORREÇÃO 1: Chamada da função de renderização) --- */}
       {renderList()}
-      
+
     </MainContainer>
   );
 };

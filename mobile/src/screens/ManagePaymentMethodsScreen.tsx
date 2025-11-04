@@ -1,7 +1,7 @@
-// src/screens/ManagePaymentMethodsScreen.tsx
+
 import React from 'react';
-import { View, Text, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
-// (imports do DB não são mais necessários para deletar)
+import { View, Text, Alert, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+
 import { MainContainer } from '../components/MainContainer';
 import { InputGroup } from '../components/InputGroup';
 import { SimpleButton } from '../components/SimpleButton';
@@ -10,7 +10,6 @@ import { useManagePaymentMethods } from '../hooks/useManagePaymentMethods';
 import { PaymentMethod } from '../services/database';
 import { Trash, Edit, Wallet } from 'lucide-react-native';
 
-// Componente de item da lista (Sem alterações)
 const PaymentMethodItem: React.FC<{
   item: PaymentMethod;
   onSelect: (item: PaymentMethod) => void;
@@ -23,7 +22,7 @@ const PaymentMethodItem: React.FC<{
     <View className={`p-3 border border-gray-200 rounded-lg mb-2 ${selectionClass}`}>
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-3 flex-1">
-          <Wallet size={20} color="#4b5563" /> 
+          <Wallet size={20} color="#4b5563" />
           <Text className="text-base text-gray-800" numberOfLines={1}>{item.name}</Text>
         </View>
         <View className="flex-row gap-3">
@@ -53,7 +52,7 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
     handleClearForm,
     handleSave,
     handleDelete, // <-- PEGA A FUNÇÃO DO HOOK
-    reload, 
+    reload,
   } = useManagePaymentMethods();
 
   const onSave = async () => {
@@ -86,12 +85,12 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
       ]
     );
   };
-  
-   const onDeleteFromForm = () => {
-     if(selectedMethod) {
-        onDelete(selectedMethod);
-     }
-   }
+
+  const onDeleteFromForm = () => {
+    if (selectedMethod) {
+      onDelete(selectedMethod);
+    }
+  }
   // --- (FIM DA CORREÇÃO) ---
 
   // (renderList não muda)
@@ -105,7 +104,7 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
     if (paymentMethods.length === 0) {
       return <Text className="text-gray-500 text-center my-4">Nenhuma forma de pagamento encontrada.</Text>;
     }
-    
+
     return (
       <View>
         {paymentMethods.map((item) => (
@@ -123,7 +122,15 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
 
   return (
     // (O JSX da tela não muda)
-    <MainContainer>
+    <MainContainer
+      refreshControl={
+        <RefreshControl
+          refreshing={isLoading}
+          onRefresh={reload}
+          colors={['#3b82f6']}
+          tintColor={'#3b82f6'} // para iOS
+        />
+      }>
       <Text className="text-2xl font-bold text-gray-800 mb-4">Gerenciar Formas de Pagamento</Text>
 
       <View className="p-4 bg-white rounded-lg shadow mb-6">
@@ -136,7 +143,7 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
           value={formName}
           onChangeText={setFormName}
         />
-        
+
         <View className="flex-row justify-end gap-3 mt-2">
           {selectedMethod && (
             <SimpleButton
@@ -167,9 +174,9 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
       <Divider />
 
       <Text className="text-xl font-bold text-gray-800 mb-4">Formas de Pagamento Existentes</Text>
-      
+
       {renderList()}
-      
+
     </MainContainer>
   );
 };

@@ -6,7 +6,7 @@ import { Asset } from 'expo-asset';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
-// O 'xlsx' será importado dinamicamente
+import * as XLSX from 'xlsx'
 
 import { formatToBRL } from '../utils/Value';
 import { parseStringToDate } from '../utils/Date';
@@ -75,9 +75,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
     setIsExporting(true);
     try {
-      // --- (MODIFICADO) ---
-      // Carrega a biblioteca 'xlsx' dinamicamente
-      const XLSX = await import('xlsx');
+
 
       const header = [
         "Data", "Descrição", "Categoria", "Forma de Pagamento",

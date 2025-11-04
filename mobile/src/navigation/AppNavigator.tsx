@@ -5,7 +5,6 @@ import { DrawerParamList } from '../types/Navigation';
 import { Platform } from 'react-native';
 import { StatementStackNavigator } from './StatementStack';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
-import AdminScreen from '../screens/AdminScreen';
 import { DashboardStackNavigator } from './DashboardStack';
 import { SettingsStackNavigator } from './SettingsStack'; 
 
@@ -57,7 +56,6 @@ export const AppNavigator: React.FC = () => {
         name="Settings"
         component={SettingsStackNavigator}
         options={({ route }) => {
-          // Lógica para esconder o header do Drawer nas sub-telas
           const routeName = getFocusedRouteNameFromRoute(route) ?? 'SettingsMain';
           const hideHeader = routeName !== 'SettingsMain';
 
@@ -67,16 +65,6 @@ export const AppNavigator: React.FC = () => {
           };
         }}
       />
-
-
-      <AppDrawer.Screen
-        name="Test"
-        component={AdminScreen}
-        options={{
-          title: 'Teste',
-        }}
-      />
-
     </AppDrawer.Navigator>
   );
 };

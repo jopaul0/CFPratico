@@ -1,6 +1,13 @@
+// mobile/src/hooks/useDashboardData.ts
 import { useMemo, useState, useCallback, useEffect } from 'react';
 import * as DB from '../services/database';
-import { TransactionWithNames, Category, UserConfig, Transaction } from '../services/database';
+import { 
+    TransactionWithNames, 
+    Category, 
+    UserConfig, 
+    Transaction,
+    FetchTransactionsFilters // <-- Importa o tipo
+} from '../services/database';
 import type { FilterConfig, Option } from '../types/Filters';
 import { categoryToSlug } from '../utils/Categories';
 import { formatDateToString } from '../utils/Date';
@@ -33,7 +40,7 @@ export interface DashboardData {
     byDate: AggregatedDataByDate[];
     recentTransactions: Tx[];
     filteredTransactions: TransactionWithNames[]; 
-    rawTransactions: Transaction[]; // Atualizado para Transaction
+    rawTransactions: Transaction[]; // <-- Mantido para o exportador
     userConfig: UserConfig | null;
     startDate: string;
     endDate: string;
@@ -60,13 +67,17 @@ export const useDashboardData = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     
-    // Armazena TODAS as transações (sem join) para cálculo de saldo
+    // Armazena TODAS as transações (sem join) para cálculo de saldo E exportação
     const [rawTransactions, setRawTransactions] = useState<Transaction[]>([]);
-    // Armazena transações filtradas por (data, tipo) via DB
+    
+    // Armazena transações filtradas (com join)
     const [dbFilteredTransactions, setDbFilteredTransactions] = useState<TransactionWithNames[]>([]);
 
     const [rawCategories, setRawCategories] = useState<Category[]>([]);
     const [userConfig, setUserConfig] = useState<UserConfig | null>(null);
+    
+    // Novo estado para o saldo
+    const [currentBalance, setCurrentBalance] = useState(0);
 
     const { refreshTrigger } = useRefresh();
 
@@ -101,80 +112,61 @@ export const useDashboardData = () => {
     }, [rawCategories]);
 
 
-    // --- Carregamento de Dados Base (Saldo, Categorias, Config) ---
+    // --- LÓGICA DE CARREGAMENTO UNIFICADA ---
+    const loadData = useCallback(async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+          // 1. Busca dados base (config, categorias, e TODAS as transações raw)
+          const [allTxs, categories, config] = await Promise.all([
+              DB.fetchAllRawTransactions(),
+              DB.fetchCategories(),
+              DB.fetchOrCreateUserConfig(),
+          ]);
+          setRawTransactions(allTxs);
+          setRawCategories(categories);
+          setUserConfig(config);
+
+          // 2. Calcula o Saldo Total (Otimizado, usando os dados que já buscamos)
+          const initialBalance = config?.initial_balance ?? 0;
+          const totalFromTransactions = allTxs.reduce((sum, tx) => sum + tx.value, 0);
+          setCurrentBalance(initialBalance + totalFromTransactions);
+          
+          // 3. Constrói filtros para o SQL (incluindo categoria)
+          const categoryId = categories.find(c => categoryToSlug(c.name) === category)?.id;
+          
+          const filterOptions: FetchTransactionsFilters = {
+              startDate: startDate,
+              endDate: endDate,
+              type: movementType === 'all' ? undefined : movementType,
+              categoryId: category === 'all' ? undefined : categoryId,
+          };
+          
+          // 4. Busca transações JÁ FILTRADAS (por data, tipo E categoria)
+          const transactions = await DB.fetchTransactions(filterOptions);
+          setDbFilteredTransactions(transactions);
+
+      } catch (e) {
+          setError(e as Error);
+      } finally {
+          setIsLoading(false);
+      }
+    }, [startDate, endDate, movementType, category, refreshTrigger]);
+    
     useEffect(() => {
-      const loadBaseData = async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            const [allTxs, categories, config] = await Promise.all([
-                DB.fetchAllRawTransactions(),
-                DB.fetchCategories(),
-                DB.fetchOrCreateUserConfig(),
-            ]);
-            setRawTransactions(allTxs);
-            setRawCategories(categories);
-            setUserConfig(config);
-        } catch (e) {
-            setError(e as Error);
-        } finally {
-            setIsLoading(false);
-        }
-      };
-      loadBaseData();
-    }, [refreshTrigger]);
-
-    // --- Carregamento de Dados Filtrados (Data, Tipo) ---
-    useEffect(() => {
-        const loadFilteredData = async () => {
-            setIsLoading(true);
-            try {
-                const filterOptions = {
-                    startDate: startDate,
-                    endDate: endDate,
-                    type: movementType === 'all' ? undefined : movementType,
-                };
-                const transactions = await DB.fetchTransactions(filterOptions);
-                setDbFilteredTransactions(transactions);
-            } catch (e) {
-                setError(e as Error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        loadFilteredData();
-    }, [startDate, endDate, movementType, refreshTrigger]);
+      loadData();
+    }, [loadData]);
 
 
-    // --- Filtragem final (Categoria) em JS ---
-    const finalFilteredTransactions = useMemo(() => {
-        let filteredTxs = dbFilteredTransactions;
-        filteredTxs = filteredTxs.filter(t => {
-            if (category === 'all') return true;
-            return categoryToSlug(t.category_name || 'Sem Categoria') === category;
-        });
-        return filteredTxs;
-    }, [category, dbFilteredTransactions]);
-
-
-    // --- Cálculo do Saldo Atual Total ---
-    const currentBalance = useMemo(() => {
-        const initialBalance = userConfig?.initial_balance ?? 0;
-        const totalFromTransactions = rawTransactions.reduce((sum, tx) => {
-            return sum + tx.value;
-        }, 0);
-        return initialBalance + totalFromTransactions;
-    }, [rawTransactions, userConfig]);
-
-
-    // --- Lógica de Agregação ---
+    // --- Lógica de Agregação (agora usa 'dbFilteredTransactions') ---
     const aggregatedData = useMemo(() => {
         const summary: SummaryData = { totalRevenue: 0, totalExpense: 0, netBalance: 0 };
         const catRevenueMap = new Map<string, { total: number; count: number; iconName: string }>();
         const catExpenseMap = new Map<string, { total: number; count: number; iconName: string }>();
         const dateMap = new Map<string, { totalRevenue: number; totalExpense: number }>();
 
-        for (const tx of finalFilteredTransactions) { // Usa os dados 100% filtrados
+        // MODIFICADO: Usa 'dbFilteredTransactions'
+        for (const tx of dbFilteredTransactions) { 
             const value = tx.value;
             const categoryName = tx.category_name || 'Sem Categoria';
             const iconName = tx.category_icon_name || 'DollarSign';
@@ -208,7 +200,8 @@ export const useDashboardData = () => {
             .map(([date, data]) => ({ date, totalRevenue: data.totalRevenue, totalExpense: Math.abs(data.totalExpense) }))
             .sort((a, b) => a.date.localeCompare(b.date));
         
-        const sortedTxs = [...finalFilteredTransactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        // MODIFICADO: Usa 'dbFilteredTransactions'
+        const sortedTxs = [...dbFilteredTransactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         const recentTransactions = sortedTxs
             .slice(0, 5) 
             .map(adaptDbTransactionToTx);
@@ -219,9 +212,9 @@ export const useDashboardData = () => {
             byCategoryExpense,
             byDate,
             recentTransactions,
-            filteredTransactions: finalFilteredTransactions
+            filteredTransactions: dbFilteredTransactions // <-- MUDOU AQUI
         };
-    }, [finalFilteredTransactions]); 
+    }, [dbFilteredTransactions]); // <-- MUDOU AQUI
 
 
     // --- Configuração dos Filtros para a UI ---
@@ -272,7 +265,7 @@ export const useDashboardData = () => {
         filtersConfig,
         handleClearAll,
         ...aggregatedData,
-        rawTransactions, // Retorna os dados brutos para o exportador
+        rawTransactions,
         userConfig,
         startDate,
         endDate,

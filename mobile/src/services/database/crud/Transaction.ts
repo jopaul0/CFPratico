@@ -1,10 +1,14 @@
 import { dbPromise } from '../connection';
 import { NewTransactionData, TransactionWithNames, Transaction } from '../../../types/Database';
 
-interface FetchTransactionsOptions {
+export interface FetchTransactionsFilters {
   startDate?: string;
   endDate?: string;
   type?: 'revenue' | 'expense';
+  categoryId?: number | null;
+  paymentMethodId?: number | null;
+  condition?: 'paid' | 'pending';
+  query?: string;
 }
 
 export const addTransaction = async (data: NewTransactionData): Promise<number> => {
@@ -83,7 +87,7 @@ export const deleteTransactions = async (ids: number[]): Promise<void> => {
  * Busca transações com JOIN e filtros dinâmicos.
  */
 export const fetchTransactions = async (
-  options?: FetchTransactionsOptions
+  options?: FetchTransactionsFilters
 ): Promise<TransactionWithNames[]> => {
   const db = await dbPromise;
 
@@ -103,22 +107,47 @@ export const fetchTransactions = async (
 
   if (options?.startDate) {
     whereClauses.push('t.date >= ?');
-    params.push(`${options.startDate}T00:00:00`);
+    // Adiciona T00:00:00 para garantir que o dia inteiro seja incluído
+    params.push(`${options.startDate}T00:00:00`); 
   }
   if (options?.endDate) {
     whereClauses.push('t.date <= ?');
+     // Adiciona T23:59:59 para garantir que o dia inteiro seja incluído
     params.push(`${options.endDate}T23:59:59`);
   }
   if (options?.type) {
     whereClauses.push('t.type = ?');
     params.push(options.type);
   }
+  
+  // --- NOVOS FILTROS ---
+  if (options?.categoryId) {
+    whereClauses.push('t.category_id = ?');
+    params.push(options.categoryId);
+  }
+  if (options?.paymentMethodId) {
+    whereClauses.push('t.payment_method_id = ?');
+    params.push(options.paymentMethodId);
+  }
+  if (options?.condition) {
+    whereClauses.push('t.condition = ?');
+    params.push(options.condition);
+  }
+  if (options?.query && options.query.trim().length > 0) {
+    const q = `%${options.query.trim().toLowerCase()}%`;
+    whereClauses.push(
+      `(t.description LIKE ? OR c.name LIKE ? OR p.name LIKE ?)`
+    );
+    params.push(q, q, q);
+  }
+  // --- FIM DOS NOVOS FILTROS ---
 
   if (whereClauses.length > 0) {
     query += ' WHERE ' + whereClauses.join(' AND ');
   }
   
-  query += ' ORDER BY t.date DESC;';
+  // Mantenha a ordem para o agrupamento
+  query += ' ORDER BY t.date DESC;'; 
 
   try {
     const results = await db.getAllAsync<TransactionWithNames>(query, params);
@@ -128,6 +157,24 @@ export const fetchTransactions = async (
     throw error;
   }
 };
+
+// ... (fetchTransactionById e clearAllTransactions não mudam) ...
+
+// --- BÔNUS: Otimização de Saldo ---
+// Adicione esta função para otimizar o useDashboardData
+export const fetchCurrentBalance = async (initialBalance: number): Promise<number> => {
+    const db = await dbPromise;
+    try {
+        const result = await db.getFirstAsync<{ total: number }>(
+            'SELECT SUM(value) as total FROM "transaction";'
+        );
+        const totalFromTransactions = result?.total ?? 0;
+        return initialBalance + totalFromTransactions;
+    } catch (e) {
+        console.error("Erro ao calcular saldo total:", e);
+        return initialBalance;
+    }
+}
 
 /**
  * Busca TODAS as transações puras, sem JOIN, para exportação ou cálculos.
@@ -176,3 +223,4 @@ export const clearAllTransactions = async (): Promise<void> => {
     throw error;
   }
 };
+

@@ -1,7 +1,14 @@
+// mobile/src/hooks/useStatementData.ts
 import { useMemo, useState, useEffect, useCallback } from 'react';
-
 import * as DB from '../services/database'; 
-import { TransactionWithNames, Category, PaymentMethod, UserConfig } from '../services/database';
+// ATUALIZADO: Importe o novo tipo de filtro
+import { 
+    TransactionWithNames, 
+    Category, 
+    PaymentMethod, 
+    UserConfig, 
+    FetchTransactionsFilters 
+} from '../services/database';
 
 import type { Tx, TransactionGroup } from '../types/Transactions';
 import type { FilterConfig, Option } from '../types/Filters';
@@ -18,7 +25,7 @@ const adaptDbTransactionToTx = (dbTx: TransactionWithNames): Tx => {
     type: dbTx.type === 'revenue' ? 'Receita' : 'Despesa',
     paymentType: dbTx.payment_method_name || 'N/A',
     category: dbTx.category_name || 'Sem Categoria',
-    categoryIcon: dbTx.category_icon_name || 'DollarSign', // <--- ADICIONADO
+    categoryIcon: dbTx.category_icon_name || 'DollarSign',
     description: dbTx.description || '',
     value: Math.abs(dbTx.value),
     condition: dbTx.condition === 'paid' ? 'À Vista' : 'Parcelado',
@@ -31,45 +38,104 @@ export const useStatementData = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const [rawTransactions, setRawTransactions] = useState<TransactionWithNames[]>([]);
+  // ESTE ESTADO AGORA GUARDA OS DADOS JÁ FILTRADOS
+  const [filteredTransactions, setFilteredTransactions] = useState<TransactionWithNames[]>([]);
+  
   const [rawCategories, setRawCategories] = useState<Category[]>([]);
   const [rawPaymentMethods, setRawPaymentMethods] = useState<PaymentMethod[]>([]);
   const [userConfig, setUserConfig] = useState<UserConfig | null>(null);
 
   const { refreshTrigger } = useRefresh();
   
+  //STATES DE FILTRO
+  const todayISO = useMemo(() => formatDateToString(new Date()), []);
+  const initialDateISO = useMemo(() => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return formatDateToString(thirtyDaysAgo);
+  }, []);
 
-  const loadAllData = useCallback(async () => {
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState<string>('all');
+  const [paymentType, setPaymentType] = useState<string>('all');
+  const [startDate, setStartDate] = useState<string>(initialDateISO);
+  const [endDate, setEndDate] = useState<string>(todayISO);
+  const [movementType, setMovementType] = useState<'all' | 'Receita' | 'Despesa'>('all');
+  const [installments, setInstallments] = useState<'all' | 'vista' | 'parcelado'>('all');
+
+  // --- BUSCA DE DADOS DE SUPORTE (Categorias, Métodos) ---
+  // Roda apenas uma vez ou quando o refreshTrigger muda
+  useEffect(() => {
+    const loadSupportData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [categories, paymentMethods, config] = await Promise.all([
+          DB.fetchCategories(),
+          DB.fetchPaymentMethods(),
+          DB.fetchOrCreateUserConfig(),
+        ]);
+        setRawCategories(categories);
+        setRawPaymentMethods(paymentMethods);
+        setUserConfig(config);
+      } catch (e) {
+        setError(e as Error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadSupportData();
+  }, [refreshTrigger]);
+
+
+  // --- BUSCA DE TRANSAÇÕES FILTRADAS ---
+  // Roda quando qualquer filtro (incluindo refreshTrigger) mudar
+  const loadFilteredData = useCallback(async () => {
+    // Se as categorias e métodos ainda não carregaram, espere.
+    if (!rawCategories.length || !rawPaymentMethods.length) return;
+
     setIsLoading(true);
     setError(null);
     try {
-      const [transactions, categories, paymentMethods, config] = await Promise.all([
-        DB.fetchTransactions(),
-        DB.fetchCategories(),
-        DB.fetchPaymentMethods(),
-        DB.fetchOrCreateUserConfig(),
-      ]);
+      // Constrói o objeto de filtros para o SQL
+      // Precisamos converter os 'slugs' e 'nomes' de volta para IDs
+      const categoryId = rawCategories.find(c => categoryToSlug(c.name) === category)?.id;
+      const paymentMethodId = rawPaymentMethods.find(p => p.name === paymentType)?.id;
 
-      setRawTransactions(transactions);
-      setRawCategories(categories);
-      setRawPaymentMethods(paymentMethods);
-      setUserConfig(config);
+      const filters: DB.FetchTransactionsFilters = {
+        startDate,
+        endDate,
+        query: query.trim(),
+        type: movementType === 'all' ? undefined : (movementType === 'Receita' ? 'revenue' : 'expense'),
+        condition: installments === 'all' ? undefined : (installments === 'vista' ? 'paid' : 'pending'),
+        categoryId: category === 'all' ? undefined : categoryId,
+        paymentMethodId: paymentType === 'all' ? undefined : paymentMethodId,
+      };
+      
+      // Busca transações JÁ FILTRADAS
+      const transactions = await DB.fetchTransactions(filters);
+      setFilteredTransactions(transactions);
 
     } catch (e) {
       setError(e as Error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [
+      startDate, endDate, query, movementType, installments, 
+      category, paymentType, rawCategories, rawPaymentMethods
+      // refreshTrigger não é necessário aqui, pois ele já dispara o useEffect de cima
+      // que por sua vez atualiza rawCategories/rawPaymentMethods, disparando este.
+  ]);
 
   useEffect(() => {
-    loadAllData();
-  }, [loadAllData, refreshTrigger]);
+    loadFilteredData();
+  }, [loadFilteredData]);
   
 
   const adaptedTransactions: Tx[] = useMemo(
-    () => rawTransactions.map(adaptDbTransactionToTx),
-    [rawTransactions]
+    () => filteredTransactions.map(adaptDbTransactionToTx),
+    [filteredTransactions] // <-- Depende apenas das transações já filtradas
   );
 
   const initialBalance = useMemo(
@@ -77,6 +143,7 @@ export const useStatementData = () => {
     [userConfig]
   );
 
+  // --- OPÇÕES DE FILTRO (Não mudam) ---
   const categoryFilterOptions: Option[] = useMemo(() => {
     const options = rawCategories.map(c => ({
       label: c.name,
@@ -96,24 +163,7 @@ export const useStatementData = () => {
   }, [rawPaymentMethods]);
 
 
-  //STATES
-  const todayISO = useMemo(() => formatDateToString(new Date()), []);
-
-  const initialDateISO = useMemo(() => {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return formatDateToString(thirtyDaysAgo);
-  }, []);
-
-  const [query, setQuery] = useState('');
-  const [category, setCategory] = useState<string>('all');
-  const [paymentType, setPaymentType] = useState<string>('all');
-  const [startDate, setStartDate] = useState<string>(initialDateISO);
-  const [endDate, setEndDate] = useState<string>(todayISO);
-  const [movementType, setMovementType] = useState<'all' | 'Receita' | 'Despesa'>('all');
-  const [installments, setInstallments] = useState<'all' | 'vista' | 'parcelado'>('all');
-
-  // Handles
+  // Handles (Não mudam)
   const handleClearAll = () => {
     setQuery('');
     setCategory('all');
@@ -124,55 +174,20 @@ export const useStatementData = () => {
     setInstallments('all');
   };
 
-  const doSearch = () => { /* ... */ };
+  const doSearch = () => {
+      // O useEffect [loadFilteredData] já é disparado quando 'query' muda.
+      // Mas se o usuário pressionar "buscar" sem mudar o texto,
+      // podemos forçar o recarregamento.
+      loadFilteredData();
+  };
+  
+  // --- USEMEMO REFEITO ---
+  // A lógica de filtragem foi movida para o `loadFilteredData` (e para o SQL)
+  // O agrupamento agora só agrupa os dados já filtrados.
   const groups: TransactionGroup[] = useMemo(() => {
-    let filteredTxs = adaptedTransactions; 
-
-    const start = new Date(`${startDate}T00:00:00`);
-    const end = new Date(`${endDate}T23:59:59`); 
-
-    filteredTxs = filteredTxs.filter(t => {
-        const d = new Date(`${t.date}T00:00:00`);
-        return d >= start && d <= end;
-    });
-
-    filteredTxs = filteredTxs.filter(t => {
-        if (movementType === 'all') return true;
-        return t.type === movementType;
-    });
-
-    filteredTxs = filteredTxs.filter(t => {
-        if (installments === 'all') return true;
-        if (installments === 'vista') return t.condition === 'À Vista';
-        if (installments === 'parcelado') return t.condition === 'Parcelado';
-        return true;
-    });
-    
-    filteredTxs = filteredTxs.filter(t => {
-        if (category === 'all') return true;
-        return categoryToSlug(t.category) === category;
-    });
-
-    filteredTxs = filteredTxs.filter(t => {
-        if (paymentType === 'all') return true;
-        return t.paymentType === paymentType;
-    });
-
-    const q = query.trim().toLowerCase();
-    if (q.length > 0) {
-        filteredTxs = filteredTxs.filter(t =>
-            t.description.toLowerCase().includes(q) ||
-            t.paymentType.toLowerCase().includes(q) ||
-            t.category.toLowerCase().includes(q)
-        );
-    }
-
-
-    const sortedTxs = filteredTxs.sort((a, b) => b.date.localeCompare(a.date));
-    
-    return groupTransactionsByDay(sortedTxs, initialBalance); 
-
-  }, [startDate, endDate, movementType, installments, category, paymentType, query, adaptedTransactions, initialBalance]);
+    // O `adaptedTransactions` já vem ordenado do DB (via `loadFilteredData`)
+    return groupTransactionsByDay(adaptedTransactions, initialBalance); 
+  }, [adaptedTransactions, initialBalance]);
 
 
   const filtersConfig: FilterConfig[] = [
@@ -247,6 +262,7 @@ export const useStatementData = () => {
     doSearch,
     isLoading,
     error,
-    reload: loadAllData,
+    // Renomeei para ser explícito
+    reload: loadFilteredData, 
   };
 };

@@ -1,6 +1,7 @@
+// src/components/DatePickerInput.tsx
 import React, { useState } from 'react';
 import { View, Text, Platform, Pressable } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { formatDateToString, parseStringToDate } from '../utils/Date';
 
 interface DatePickerInputProps {
@@ -9,22 +10,29 @@ interface DatePickerInputProps {
   onChange: (dateString: string) => void;
 }
 
-export const DatePickerInput: React.FC<DatePickerInputProps> = ({ label, value, onChange }) => {
+export const DatePickerInput: React.FC<DatePickerInputProps> = ({
+  label,
+  value,
+  onChange,
+}) => {
   const [show, setShow] = useState(false);
   const currentDate = parseStringToDate(value);
 
-  const onChangePicker = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    setShow(Platform.OS === 'ios');
-    if (selectedDate) {
-      const newDateString = formatDateToString(selectedDate) as string;
-      onChange(newDateString);
-    }
-  };
-
+  const hideDatePicker = () => setShow(false);
   const showDatePicker = () => setShow(true);
 
+  const handleConfirm = (selectedDate: Date) => {
+    if (selectedDate) {
+      const newDateString = formatDateToString(selectedDate);
+      onChange(newDateString);
+    }
+    hideDatePicker();
+  };
+
   // Exibição formatada (DD/MM/YYYY)
-  const displayValue = value ? value.split('-').reverse().join('/') : 'Selecionar data';
+  const displayValue = value
+    ? value.split('-').reverse().join('/')
+    : 'Selecionar data';
 
   const CONTROL_HEIGHT = Platform.OS === 'android' ? 52 : 44;
 
@@ -47,16 +55,15 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({ label, value, 
         </Text>
       </Pressable>
 
-      {show && (
-        <DateTimePicker
-          testID="dateTimePicker"
-          value={currentDate}
-          mode="date"
-          is24Hour={true}
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={onChangePicker}
-        />
-      )}
+      <DateTimePickerModal
+        isVisible={show}
+        mode="date"
+        date={currentDate}
+        onConfirm={handleConfirm}
+        onCancel={hideDatePicker}
+        confirmTextIOS="Confirmar"
+        cancelTextIOS="Cancelar"
+      />
     </View>
   );
 };

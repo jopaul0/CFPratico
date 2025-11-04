@@ -1,6 +1,6 @@
 // src/navigation/SettingsStack.tsx
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 
 // Importa os tipos e as telas
 import { SettingsStackParamList } from '../types/Navigation';
@@ -8,14 +8,10 @@ import { SettingsScreen } from '../screens/SettingsScreen';
 import { ManageCategoriesScreen } from '../screens/ManageCategoriesScreen';
 import { ManagePaymentMethodsScreen } from '../screens/ManagePaymentMethodsScreen';
 
-const Stack = createNativeStackNavigator<SettingsStackParamList>();
+const Stack = createStackNavigator<SettingsStackParamList>();
 
 export const SettingsStackNavigator: React.FC = () => (
-  <Stack.Navigator 
-    screenOptions={{
-      headerBackVisible: true
-    }}
-  >
+  <Stack.Navigator>
     <Stack.Screen 
       name="SettingsMain" 
       component={SettingsScreen} 

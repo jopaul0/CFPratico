@@ -1,11 +1,12 @@
 // src/hooks/useReportExporter.ts
 import { useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
-import { File, Paths } from 'expo-file-system'; 
+import { Asset } from 'expo-asset';
+import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
-import * as XLSX from 'xlsx';
+// O 'xlsx' será importado dinamicamente
 
 import { formatToBRL } from '../utils/Value';
 import { parseStringToDate } from '../utils/Date';
@@ -13,19 +14,53 @@ import { useDashboardData, AggregatedData } from './useDashboardData';
 
 type ReportData = ReturnType<typeof useDashboardData>;
 
+// --- (MODIFICADO) ---
+// Removemos 'logoBase64' das props, pois vamos carregá-la sob demanda.
 interface UseReportExporterProps {
   data: ReportData;
-  logoBase64: string | null;
 }
 
-export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) => {
+export const useReportExporter = ({ data }: UseReportExporterProps) => {
   const [isExporting, setIsExporting] = useState(false);
- 
+
   const formatShortDate = (isoDate: string) => {
     try {
       return parseStringToDate(isoDate).toLocaleDateString('pt-BR');
     } catch (e) {
       return isoDate;
+    }
+  };
+
+  // --- (NOVA FUNÇÃO) ---
+  /**
+   * Carrega e converte a imagem da logo para Base64.
+   * Isso só é chamado quando o usuário tenta exportar um PDF.
+   */
+  const getLogoBase64 = async (): Promise<string | null> => {
+    try {
+      // O 'require' é estático, então o caminho é relativo a este arquivo
+      const asset = Asset.fromModule(require('../assets/onvale.png'));
+      await asset.downloadAsync();
+
+      if (Platform.OS === 'web') {
+        const res = await fetch(asset.uri);
+        const blob = await res.blob();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const r = new FileReader();
+          r.onloadend = () => resolve((r.result as string).split(',')[1] ?? '');
+          r.onerror = reject;
+          r.readAsDataURL(blob);
+        });
+        return base64;
+      }
+
+      const uri = asset.localUri ?? asset.uri;
+      const logoFile = new File(uri);
+      const base64 = await logoFile.base64();
+      return base64;
+    } catch (e) {
+      console.error("Erro ao carregar logo 'onvale.png' para exportar:", e);
+      return null;
     }
   };
 
@@ -40,11 +75,15 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
 
     setIsExporting(true);
     try {
+      // --- (MODIFICADO) ---
+      // Carrega a biblioteca 'xlsx' dinamicamente
+      const XLSX = await import('xlsx');
+
       const header = [
-        "Data", "Descrição", "Categoria", "Forma de Pagamento", 
+        "Data", "Descrição", "Categoria", "Forma de Pagamento",
         "Condição", "Parcelas", "Tipo", "Valor"
       ];
-      
+
       const aoa = data.filteredTransactions.map(tx => {
         const condicao = tx.condition === 'paid' ? 'À Vista' : 'Parcelado';
         const parcelas = tx.condition === 'paid' ? 1 : tx.installments;
@@ -53,7 +92,7 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
           tx.category_name || 'N/A', tx.payment_method_name || 'N/A',
           condicao, parcelas,
           tx.type === 'revenue' ? 'Receita' : 'Despesa',
-          tx.value 
+          tx.value
         ];
       });
 
@@ -66,7 +105,7 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
       XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
 
       const base64 = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
-      
+
       const documentsDir = Paths.document;
       const filename = 'relatorio_cfpratico.xlsx';
       const excelFile = new File(documentsDir, filename);
@@ -87,23 +126,25 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
 
   /**
    * Gera o HTML base para os relatórios PDF.
+   * --- (MODIFICADO) ---
+   * Agora aceita 'logoBase64' como argumento
    */
-  const createPdfHtml = () => {
-    const { 
-        summary, filteredTransactions, rawTransactions, userConfig, 
-        startDate, endDate, byCategoryRevenue, byCategoryExpense
+  const createPdfHtml = (logoBase64: string | null) => {
+    const {
+      summary, filteredTransactions, rawTransactions, userConfig,
+      startDate, endDate, byCategoryRevenue, byCategoryExpense
     } = data;
-    
+
     // Cálculos de Saldo Anterior
     const initialBalance = userConfig?.initial_balance || 0;
-    const filterStartDate = parseStringToDate(startDate); 
+    const filterStartDate = parseStringToDate(startDate);
     let saldoAnterior = initialBalance;
     const allSortedTxs = [...rawTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     for (const tx of allSortedTxs) {
-        const txDate = new Date(tx.date);
-        if (txDate.getTime() < filterStartDate.getTime()) {
-            saldoAnterior += tx.value;
-        }
+      const txDate = new Date(tx.date);
+      if (txDate.getTime() < filterStartDate.getTime()) {
+        saldoAnterior += tx.value;
+      }
     }
 
     // Linhas da Tabela de Extrato
@@ -111,11 +152,11 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
     const transactionRows = filteredTransactions
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .map(tx => {
-          runningBalance += tx.value; 
-          const categoria = tx.category_name || 'N/A';
-          const pagamento = tx.payment_method_name || 'N/A';
-          const condicao = tx.condition === 'paid' ? 'À Vista' : `Parcelado (${tx.installments}x)`;
-          return `
+        runningBalance += tx.value;
+        const categoria = tx.category_name || 'N/A';
+        const pagamento = tx.payment_method_name || 'N/A';
+        const condicao = tx.condition === 'paid' ? 'À Vista' : `Parcelado (${tx.installments}x)`;
+        return `
             <tr class="tx-row">
               <td>${formatShortDate(tx.date)}</td>
               <td>
@@ -127,17 +168,17 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
             </tr>
           `;
       }).join('');
-      
+
     // Tabelas de Resumo de Categoria
     const generateCategoryTable = (title: string, items: AggregatedData[], colorClass: 'receita' | 'despesa') => {
-        if (items.length === 0) return `<h3>${title}</h3><p>Nenhum dado no período.</p>`;
-        const rows = items.map(item => `
+      if (items.length === 0) return `<h3>${title}</h3><p>Nenhum dado no período.</p>`;
+      const rows = items.map(item => `
             <tr>
                 <td>${item.name}</td>
                 <td class="${colorClass}">${formatToBRL(item.total)}</td>
                 <td>${item.count}</td>
             </tr>`).join('');
-        return `
+      return `
             <h3>${title}</h3>
             <table class="category-table">
                 <thead><tr>
@@ -158,7 +199,7 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
               ${generateCategoryTable('Despesas por Categoria', byCategoryExpense, 'despesa')}
           </div>
       </div>`;
-    
+
     // Logo, Nome e Período
     const logoHtml = logoBase64 ? `<img src="data:image/png;base64,${logoBase64}" class="logo" />` : '';
     const companyName = userConfig?.company_name || 'CFPratico';
@@ -252,14 +293,17 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
       Alert.alert("Nenhum dado", "Não há transações ou saldo inicial para exportar.");
       return;
     }
-    
+
     setIsExporting(true);
     try {
-      // 1. Gerar HTML
-      const html = createPdfHtml(); 
-      
-      // 2. Imprimir para arquivo temporário (com margens da impressora)
-      const { uri: tempUri } = await Print.printToFileAsync({ 
+      // 1. Carrega a logo sob demanda
+      const logoBase64 = await getLogoBase64();
+
+      // 2. Gerar HTML (passando a logo)
+      const html = createPdfHtml(logoBase64);
+
+      // 3. Imprimir para arquivo temporário (com margens da impressora)
+      const { uri: tempUri } = await Print.printToFileAsync({
         html,
         margins: {
           top: 80,
@@ -269,21 +313,21 @@ export const useReportExporter = ({ data, logoBase64 }: UseReportExporterProps) 
         }
       });
 
-      // 3. Criar referências de arquivo
+      // 4. Criar referências de arquivo
       const tempFile = new File(tempUri);
       const documentsDir = Paths.document;
       const pdfFile = new File(documentsDir, 'relatorio-cfpratico.pdf');
 
-      // 4. Ler o conteúdo (Base64)
+      // 5. Ler o conteúdo (Base64)
       const base64Content = await tempFile.base64();
-      
-      // 5. Escrever o conteúdo no novo arquivo nomeado
+
+      // 6. Escrever o conteúdo no novo arquivo nomeado
       await pdfFile.write(base64Content, { encoding: 'base64' });
 
-      // 6. Compartilhar o novo arquivo
-      await Sharing.shareAsync(pdfFile.uri, { 
-        mimeType: 'application/pdf', 
-        dialogTitle: 'Exportar Relatório PDF' 
+      // 7. Compartilhar o novo arquivo
+      await Sharing.shareAsync(pdfFile.uri, {
+        mimeType: 'application/pdf',
+        dialogTitle: 'Exportar Relatório PDF'
       });
 
     } catch (e: any) {

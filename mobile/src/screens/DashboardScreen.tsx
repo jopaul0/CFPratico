@@ -1,9 +1,6 @@
 // src/screens/DashboardScreen.tsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ActivityIndicator, Platform } from 'react-native';
-
-import { Asset } from 'expo-asset';
-import { File } from 'expo-file-system';
+import React, { useState, useCallback } from 'react';
+import { View, Text, ActivityIndicator } from 'react-native';
 
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -31,49 +28,15 @@ import { Plus } from 'lucide-react-native';
 
 export const DashboardScreen: React.FC = () => {
     const navigation = useNavigation<NativeStackNavigationProp<DashboardStackParamList>>();
-    const [logoBase64, setLogoBase64] = useState<string | null>(null);
 
-    // 2. Carregar a logo (sem mudanças)
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                const asset = Asset.fromModule(require('../assets/onvale.png'));
-                await asset.downloadAsync(); 
-
-                if (Platform.OS === 'web') {
-                    const res = await fetch(asset.uri);
-                    const blob = await res.blob();
-                    const base64 = await new Promise<string>((resolve, reject) => {
-                        const r = new FileReader();
-                        r.onloadend = () => resolve((r.result as string).split(',')[1] ?? '');
-                        r.onerror = reject;
-                        r.readAsDataURL(blob);
-                    });
-                    if (!cancelled) setLogoBase64(base64);
-                    return;
-                }
-
-                const uri = asset.localUri ?? asset.uri;
-                const logoFile = new File(uri);
-                const base64 = await logoFile.base64();
-                if (!cancelled) setLogoBase64(base64);
-            } catch (e) {
-                console.error("Erro ao carregar logo 'onvale.png':", e);
-            }
-        })();
-        return () => { cancelled = true; };
-    }, []);
-
-    // 3. Hook de Dados (ATUALIZADO)
-    const dashboardData = useDashboardData();
+   const dashboardData = useDashboardData();
     const {
         isLoading,
         error,
         filtersConfig,
-        handleClearAll, // <-- NOVO
+        handleClearAll,
         summary,
-        currentBalance, // <-- NOVO
+        currentBalance,
         byCategoryRevenue,
         byCategoryExpense,
         byDate,
@@ -86,8 +49,7 @@ export const DashboardScreen: React.FC = () => {
         handleExportExcel,
         handleExportPdf,
     } = useReportExporter({
-        data: dashboardData,
-        logoBase64: logoBase64,
+        data: dashboardData
     });
 
     // 5. Handlers de Navegação (sem alteração)
@@ -182,7 +144,7 @@ export const DashboardScreen: React.FC = () => {
                 <DashboardExportButton
                     onExportPDF={handleExportPdf}
                     onExportExcel={handleExportExcel}
-                    isLoading={isLoading || isExporting || !logoBase64}
+                    isLoading={isLoading || isExporting}
                 />
             </>
         );

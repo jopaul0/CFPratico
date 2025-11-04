@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Controle Financeiro Prático</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="icon" href="./assets/img/transparenticon.png" type="image/png">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet">
+    <script defer
+      src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+    <script defer
+      src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+    <script src="./app.js"></script>
+  </head>
+
+  <body class="bg-gray-50 text-gray-900 antialiased"
+    style="font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'">
+    <main class="max-w-6xl mx-auto p-4 md:p-8">
+
+      <!-- HEADER & AÇÕES -->
+      <header
+        class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 pb-6 border-b border-gray-200">
+
+        <div class="flex items-center gap-3">
+          <img id="logoHeader" src="assets/img/transparenticon.png" alt="OnVale"
+            class="h-10 w-auto" />
+          <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Controle
+              Financeiro Prático</h1>
+            <p class="text-sm text-gray-500">Prototipo com categorias em JSON,
+              parcelamento e exportação em PDF com a logo.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 flex-wrap">
+          <!-- Botão Secundário (Exportar CSV) -->
+          <button id="btnExportCSV"
+            class="py-2 px-4 rounded-lg font-semibold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 transition duration-150 ease-in-out shadow-sm text-sm"
+            title="Exportar CSV">Exportar CSV</button>
+          <!-- Botão Secundário (Importar CSV - Label disfarçada de botão) -->
+          <label
+            class="flex items-center justify-center py-2 px-4 rounded-lg font-semibold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 transition duration-150 ease-in-out shadow-sm cursor-pointer text-sm"
+            title="Importar CSV">
+            Importar CSV
+            <input id="fileImport" type="file" accept=".csv" class="hidden" />
+          </label>
+          <!-- Botão Secundário (Exportar PDF) -->
+          <button id="btnExportPDF"
+            class="py-2 px-4 rounded-lg font-semibold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 transition duration-150 ease-in-out shadow-sm text-sm"
+            title="Exportar PDF">Exportar PDF</button>
+          <!-- Botão Secundário (Imprimir) -->
+          <button id="btnPrint"
+            class="py-2 px-4 rounded-lg font-semibold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 transition duration-150 ease-in-out shadow-sm text-sm"
+            title="Imprimir">Imprimir</button>
+        </div>
+
+      </header>
+
+      <!-- RESUMO (CARDS) -->
+      <section class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8"
+        id="cardsResumo">
+
+        <!-- CARD 1: Receitas -->
+        <div class="p-5 border border-gray-200 rounded-xl shadow-lg bg-white">
+          <p
+            class="text-sm font-medium text-gray-500 uppercase tracking-wider">Receitas</p>
+          <p id="totalReceitas"
+            class="text-3xl font-bold text-emerald-600 mt-2">R$ 0,00</p>
+        </div>
+
+        <!-- CARD 2: Despesas -->
+        <div class="p-5 border border-gray-200 rounded-xl shadow-lg bg-white">
+          <p
+            class="text-sm font-medium text-gray-500 uppercase tracking-wider">Despesas</p>
+          <p id="totalDespesas" class="text-3xl font-bold text-rose-600 mt-2">R$
+            0,00</p>
+        </div>
+
+        <!-- CARD 3: Saldo do Período -->
+        <div class="p-5 border border-gray-200 rounded-xl shadow-lg bg-white">
+          <p
+            class="text-sm font-medium text-gray-500 uppercase tracking-wider">Saldo
+            do Período</p>
+          <!-- A cor é determinada pelo JS, mas a classe inicial deve ser neutra -->
+          <p id="saldoPeriodo" class="text-3xl font-bold text-gray-800 mt-2">R$
+            0,00</p>
+        </div>
+      </section>
+
+      <!-- FILTROS -->
+      <section
+        class="p-5 border border-gray-200 rounded-xl shadow-lg bg-white mt-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 mb-1">Data
+              Início</label>
+            <input id="filtroDataInicial" type="date"
+              class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out" />
+          </div>
+          <!-- NOVO: Filtro de Data Final -->
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 mb-1">Data
+              Fim</label>
+            <input id="filtroDataFinal" type="date"
+              class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out" />
+          </div>
+
+          <div class="relative">
+            <label
+              class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+            <input id="filtroCategoria" type="text"
+              placeholder="ex.: Vendas, Aluguel"
+              class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out" />
+            <div id="comboListFiltro"
+              class="absolute z-10 w-full mt-1 border border-gray-300 rounded-lg bg-white shadow-xl max-h-48 overflow-y-auto hidden">
+            </div>
+          </div>
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+            <select id="filtroTipo"
+              class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out">
+              <option value>Todos</option>
+              <option value="receita">Receitas</option>
+              <option value="despesa">Despesas</option>
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 mb-1">Pagamento</label>
+            <select id="filtroConta"
+              class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out">
+              <option value>Todas</option>
+              <!-- Novas opções para Formas de Pagamento -->
+              <option value="pix">Pix</option>
+              <option value="cartao">Cartão de Crédito</option>
+              <option value="ted">Transferência TED</option>
+              <option value="boleto">Boleto</option>
+              <option value="cheque">Cheque</option>
+              <option value="dinheiro">Dinheiro</option>
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 mb-1">Condição</label>
+            <select id="filtroForma"
+              class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out">
+              <option value>Todas</option>
+              <option value="avista">À vista</option>
+              <option value="parcelado">Parcelado</option>
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 mb-1">Histórico</label>
+            <input id="filtroBusca" type="search"
+              placeholder="Contém no histórico..."
+              class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out" />
+          </div>
+          <div class="flex items-end">
+            <button id="btnLimparFiltros"
+              class="w-full py-2 px-4 rounded-lg font-semibold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 transition duration-150 ease-in-out shadow-sm">Limpar
+              filtros</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- FORMULÁRIO -->
+      <section
+        class="p-5 border border-gray-200 rounded-xl shadow-lg bg-white mt-6">
+        <h2 class="font-semibold text-xl text-gray-800 mb-4">Nova
+          movimentação</h2>
+        <form id="formMov" class="grid grid-cols-1 gap-3">
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                <input id="movData" type="date"
+                  class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out"
+                  required />
+              </div>
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                <select id="movTipo"
+                  class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out"
+                  required>
+                  <option value="receita">Receita</option>
+                  <option value="despesa">Despesa</option>
+                </select>
+              </div>
+              <!-- CAMPO ATUALIZADO: Conta mudou para Formas de Pagamento -->
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-700 mb-1">Formas de
+                  Pagamento</label>
+                <select id="movConta"
+                  class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out"
+                  required>
+                  <option value="pix">Pix</option>
+                  <option value="cartao">Cartão de Crédito</option>
+                  <option value="ted">Transferência Bancária TED</option>
+                  <option value="boleto">Boleto</option>
+                  <option value="cheque">Cheque</option>
+                  <option value="dinheiro">Dinheiro</option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-700 mb-1">Valor</label>
+                <input id="movValor" inputmode="decimal"
+                  placeholder="ex.: 1500,00"
+                  class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out"
+                  required />
+              </div>
+
+              <!-- CAMPO ATUALIZADO: Forma mudou para Condição -->
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-700 mb-1">Condição</label>
+                <select id="movForma"
+                  class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out"
+                  required>
+                  <option value="avista">À vista</option>
+                  <option value="parcelado">Parcelado</option>
+                </select>
+              </div>
+              <div id="parcelasWrap" class="hidden">
+                <label
+                  class="block text-sm font-medium text-gray-700 mb-1">Parcelas</label>
+                <select id="movParcelas"
+                  class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out"></select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3">
+              <div class="md:col-span-2 relative">
+                <label
+                  class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+
+                <div class="relative combo">
+                  <input id="movCategoria" type="text"
+                    class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out combo-input"
+                    placeholder="Selecione ou digite..." autocomplete="off"
+                    required />
+
+                  <div id="comboList"
+                    class="absolute z-10 w-full mt-1 border border-gray-300 rounded-lg bg-white shadow-xl max-h-48 overflow-y-auto hidden">
+                  </div>
+                </div>
+              </div>
+              <div class="md:col-span-2">
+                <label
+                  class="block text-sm font-medium text-gray-700 mb-1">Histórico</label>
+                <input id="movHistorico" type="text"
+                  placeholder="ex.: Venda #123, Energia"
+                  class="block w-full rounded-lg border border-gray-300 bg-white py-2 px-3 text-base shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out"
+                  required />
+              </div>
+            </div>
+          </div>
+
+          <div class="md:col-span-8 flex gap-2 justify-end pt-4">
+            <button type="reset"
+              class="py-2 px-4 rounded-lg font-semibold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 transition duration-150 ease-in-out shadow-sm">Limpar</button>
+            <button type="submit"
+              class="py-2 px-4 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out shadow-lg">Salvar</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- TABELA (Relatório) -->
+      <!-- TABELA (Relatório) -->
+      <section
+        class="p-5 border border-gray-200 rounded-xl shadow-lg bg-white mt-6"
+        id="reportArea">
+        <div
+          class="flex items-center justify-between mb-4 border-b pb-3 border-gray-100">
+          <h2
+            class="font-semibold text-xl text-gray-800 flex items-center gap-2">
+            Movimentações
+          </h2>
+          <span id="contagem" class="text-sm text-gray-600"></span>
+        </div>
+        <div class="overflow-x-auto rounded-lg border border-gray-200">
+          <table class="min-w-full text-sm divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  class="py-3 px-4 text-left font-semibold uppercase tracking-wider text-xs text-gray-600">
+                  Data</th>
+                <th
+                  class="py-3 px-4 text-left font-semibold uppercase tracking-wider text-xs text-gray-600">
+                  Tipo</th>
+                <th
+                  class="py-3 px-4 text-left font-semibold uppercase tracking-wider text-xs text-gray-600">
+                  Pagamento</th>
+                <th
+                  class="py-3 px-4 text-left font-semibold uppercase tracking-wider text-xs text-gray-600">
+                  Categoria</th>
+                <th
+                  class="py-3 px-4 text-left font-semibold uppercase tracking-wider text-xs text-gray-600">
+                  Histórico</th>
+                <th
+                  class="py-3 px-4 text-right font-semibold uppercase tracking-wider text-xs text-gray-600">
+                  Valor</th>
+                <th
+                  class="py-3 px-4 text-right font-semibold uppercase tracking-wider text-xs text-gray-600">
+                  Condição</th>
+                <th
+                  class="py-3 px-4 text-right font-semibold uppercase tracking-wider text-xs text-gray-600">
+                  Parcelas</th>
+                <th
+                  class="py-3 px-4 text-right font-semibold uppercase tracking-wider text-xs text-gray-600">
+                  Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody" class="bg-white divide-y divide-gray-100">
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </body>
+</html>

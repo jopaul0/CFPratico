@@ -1,27 +1,15 @@
+import React from 'react'
 
-import React from 'react';
-
-interface SimpleButtonProps {
-  onPress?: () => void;
-  disabled?: boolean;
-  title: string;
-  className?: string;
+type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: 'default'|'primary'|'danger'|'ghost'
 }
 
-export const SimpleButton: React.FC<SimpleButtonProps> = ({
-  onPress,
-  disabled = false,
-  title,
-  className = '',
-}) => {
-  return (
-    <button
-      onClick={onPress}
-      disabled={disabled}
-      type="button"
-      className={`py-2 px-4 rounded-lg border border-gray-300 shadow-sm text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 ${className}`}
-    >
-      {title}
-    </button>
-  );
-};
+export const SimpleButton: React.FC<Props> = ({variant='default', className='', ...rest}) => {
+  const map = {
+    default: 'btn',
+    primary: 'btn btn-primary',
+    danger: 'btn btn-danger',
+    ghost: 'inline-flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-gray-100 text-gray-700'
+  } as const
+  return <button {...rest} className={`${map[variant]} ${className}`.trim()} />
+}

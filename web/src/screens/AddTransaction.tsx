@@ -1,110 +1,98 @@
-// src/screens/AddTransaction.tsx
-// Traduzido de
-// Tela de formulário simples. Apenas visual.
+import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { BaseCard } from '../components/BaseCard'
+import { InputGroup } from '../components/InputGroup'
+import { SimpleButton } from '../components/SimpleButton'
+import { addTransaction, getCategories, getPaymentMethods } from '../services/database'
+import type { NewTransactionData, Category, PaymentMethod, TransactionType, TransactionCondition } from '../services/database/types'
 
-import React from 'react';
-import { MainContainer } from '../components/MainContainer';
-import { DatePickerInput } from '../components/DatePickerInput';
-import { InputGroup } from '../components/InputGroup';
-import { Divider } from '../components/Divider';
-import { SimpleButton } from '../components/SimpleButton';
+export function AddTransaction(){
+  const nav = useNavigate()
 
-// --- MOCK DATA PARA VISUAL ---
-const MOCK_OPTIONS = [{ label: 'Selecione...', value: '' }];
-const MOCK_STATE = {
-  dateISO: '2025-10-25',
-  description: '',
-  valueInput: '',
-  movementType: 'revenue',
-  condition: 'paid',
-  installments: '1',
-};
-// --- FIM MOCK DATA ---
+  const [categories, setCategories] = useState<Category[]>([])
+  const [methods, setMethods] = useState<PaymentMethod[]>([])
 
-export const AddTransaction: React.FC = () => {
-  const isSaving = false;
+  const [form, setForm] = useState<NewTransactionData>({
+    date: new Date().toISOString(),
+    description: '',
+    value: 0,
+    type: 'expense',
+    condition: 'paid',
+    installments: 1,
+    payment_method_id: 1,
+    category_id: 1,
+  })
+
+  useEffect(() => {
+    getCategories().then(setCategories)
+    getPaymentMethods().then(setMethods)
+  }, [])
+
+  async function handleSubmit(e: React.FormEvent){
+    e.preventDefault()
+    await addTransaction(form)
+    nav('/')
+  }
 
   return (
-    <MainContainer>
-      {/* <KeyboardAvoidingView> não é necessário na web */}
-      <div className="p-4">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">
-          Adicionar Transação
-        </h1>
+    <BaseCard title="Adicionar Transação">
+      <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
+        <InputGroup label="Descrição">
+          <input className="input" value={form.description ?? ''} onChange={e => setForm({...form, description: e.target.value})}/>
+        </InputGroup>
 
-        <DatePickerInput
-          label="Data"
-          value={MOCK_STATE.dateISO}
-          onChange={() => {}}
-        />
-
-        <InputGroup
-          label="Descrição"
-          placeholder="ex.: Venda de serviço"
-          value={MOCK_STATE.description}
-        />
-
-        <InputGroup
-          label="Valor"
-          placeholder="ex.: 1.500,00"
-          keyboardType="numeric"
-          value={MOCK_STATE.valueInput}
-        />
-
-        <InputGroup
-          label="Tipo"
-          isSelect
-          currentValue={MOCK_STATE.movementType}
-          options={[
-            { label: 'Receita', value: 'revenue' },
-            { label: 'Despesa', value: 'expense' },
-          ]}
-        />
-
-        <InputGroup
-          label="Condição"
-          isSelect
-          currentValue={MOCK_STATE.condition}
-          options={[
-            { label: 'À vista', value: 'paid' },
-            { label: 'Parcelado', value: 'pending' },
-          ]}
-        />
-
-        {MOCK_STATE.condition === 'pending' && (
-          <InputGroup
-            label="Parcelas"
-            placeholder="ex.: 3"
-            keyboardType="numeric"
-            value={MOCK_STATE.installments}
+        <InputGroup label="Data">
+          <input type="datetime-local" className="input"
+            value={new Date(form.date).toISOString().slice(0,16)}
+            onChange={e => setForm({...form, date: new Date(e.target.value).toISOString()})}
           />
-        )}
+        </InputGroup>
 
-        <InputGroup
-          label="Categoria"
-          isSelect
-          currentValue={""}
-          options={MOCK_OPTIONS}
-        />
-
-        <InputGroup
-          label="Forma de pagamento"
-          isSelect
-          currentValue={""}
-          options={MOCK_OPTIONS}
-        />
-
-        <Divider marginVertical={14} />
-
-        <div className="flex flex-row justify-center gap-3">
-          <SimpleButton title="Cancelar" />
-          <SimpleButton
-            title={isSaving ? 'Salvando…' : 'Salvar'}
-            disabled={isSaving}
-            className="bg-blue-600 text-white hover:bg-blue-700"
+        <InputGroup label="Valor (R$)">
+          <input type="number" step="0.01" className="input"
+            value={form.value}
+            onChange={e => setForm({...form, value: parseFloat(e.target.value) })}
           />
+        </InputGroup>
+
+        <InputGroup label="Tipo">
+          <select className="input" value={form.type} onChange={e => setForm({...form, type: e.target.value as TransactionType})}>
+            <option value="expense">Despesa</option>
+            <option value="revenue">Receita</option>
+          </select>
+        </InputGroup>
+
+        <InputGroup label="Condição">
+          <select className="input" value={form.condition} onChange={e => setForm({...form, condition: e.target.value as TransactionCondition})}>
+            <option value="paid">Paga</option>
+            <option value="pending">Pendente</option>
+          </select>
+        </InputGroup>
+
+        <InputGroup label="Parcelas">
+          <input type="number" min={1} className="input"
+            value={form.installments}
+            onChange={e => setForm({...form, installments: parseInt(e.target.value || '1') })}
+          />
+        </InputGroup>
+
+        <InputGroup label="Categoria">
+          <select className="input" value={form.category_id} onChange={e => setForm({...form, category_id: parseInt(e.target.value)})}>
+            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </InputGroup>
+
+        <InputGroup label="Forma de pagamento">
+          <select className="input" value={form.payment_method_id} onChange={e => setForm({...form, payment_method_id: parseInt(e.target.value)})}>
+            {methods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+          </select>
+        </InputGroup>
+
+        <div className="md:col-span-2 flex items-center gap-2">
+          <SimpleButton type="submit" variant="primary">Salvar</SimpleButton>
+          <SimpleButton type="button" onClick={() => nav('/')}>Cancelar</SimpleButton>
         </div>
-      </div>
-    </MainContainer>
-  );
-};
+      </form>
+    </BaseCard>
+  )
+}

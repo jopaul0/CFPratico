@@ -1,125 +1,80 @@
-// src/screens/StatementScreen.tsx (Versão Web Corrigida)
+import React, { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Trash2, Plus } from 'lucide-react'
+import { BaseCard } from '../components/BaseCard'
+import { SimpleButton } from '../components/SimpleButton'
+import { getTransactions, deleteTransactions } from '../services/database'
+import type { Transaction } from '../services/database/types'
 
-import React from 'react';
-import { Loader2, Plus, Trash } from 'lucide-react';
+export function StatementScreen(){
+  const [loading, setLoading] = useState(true)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [selected, setSelected] = useState<Set<number>>(new Set())
 
-// Importando nossos componentes web traduzidos
-import { MainContainer } from '../components/MainContainer';
-import { SearchBar } from '../components/SearchBar';
-import { Filters } from '../components/Filters';
-import { TransactionItem } from '../components/TransactionItem';
-import { Divider } from '../components/Divider';
+  async function load(){
+    setLoading(true)
+    const list = await getTransactions()
+    setTransactions(list)
+    setLoading(false)
+  }
+  useEffect(() => { load() }, [])
 
-// --- MOCK DATA PARA VISUAL ---
-const MOCK_FILTERS_STATEMENT = [
-    { key: 'dateStart', label: 'Data Inicial', type: 'date', value: '2025-10-01', width: 150 },
-    { key: 'dateEnd', label: 'Data Final', type: 'date', value: '2025-10-31', width: 150 },
-    // ... (outros filtros)
-];
-const MOCK_GROUPS = [
-    {
-        dateISO: '2025-10-25',
-        dateLabel: 'sáb, 25/10/2025',
-        balance: 5000.00,
-        transactions: [
-            { id: '1', category: 'Venda de Software', categoryIcon: 'DollarSign', description: 'Licença anual', value: 'R$ 1.500,00', isNegative: false },
-        ]
-    },
-    {
-        dateISO: '2025-10-24',
-        dateLabel: 'sex, 24/10/2025',
-        balance: 3500.00,
-        transactions: [
-            { id: '2', category: 'Fornecedor', categoryIcon: 'Truck', description: 'Pagamento internet', value: '-R$ 350,50', isNegative: true },
-            { id: '3', category: 'Aluguel', categoryIcon: 'LandPlot', description: 'Escritório', value: '-R$ 1.200,00', isNegative: true },
-        ]
-    }
-];
-// --- FIM MOCK DATA ---
+  const balance = useMemo(() => {
+    return transactions.reduce((acc, t) => acc + (t.type === 'revenue' ? t.value : -t.value), 0)
+  }, [transactions])
 
-// Componente de Cabeçalho da Seção (traduzido)
-const SectionHeader: React.FC<{ group: any }> = ({ group }) => (
-  <div className="bg-gray-100 pt-4 pb-2 px-4 sticky top-0 z-10">
-    <div className="flex flex-row items-center justify-between">
-      <p className="text-black-100 font-semibold">{group.dateLabel}</p>
-      <p className="text-gray-500 text-sm">Saldo: R$ {group.balance.toFixed(2)}</p>
-    </div>
-    <Divider className="bg-gray-300" marginVertical={8} />
-  </div>
-);
-
-export const StatementScreen: React.FC = () => {
-  const isLoading = false;
-  const isSelectionMode = false;
-  const selectedIds = new Set();
-
-  // Cabeçalho da Lista (Filtros, etc.)
-  const ListHeader = (
-    <div className="p-4 bg-gray-100">
-      <SearchBar
-        value={""}
-        placeholder="Buscar por descrição, valor, categoria…"
-      />
-      
-      {isSelectionMode ? (
-        <div className="flex flex-row items-center justify-between p-3 bg-blue-100 rounded-lg mt-2">
-          <span className="font-semibold text-blue-800">
-            {selectedIds.size} selecionada(s)
-          </span>
-          <button>
-            <span className="font-semibold text-blue-600">Cancelar</span>
-          </button>
-        </div>
-      ) : (
-        <Filters
-          filters={MOCK_FILTERS_STATEMENT}
-          onClearFilters={() => {}}
-        />
-      )}
-    </div>
-  );
-
-  // Componente para Lista Vazia
-  const ListEmpty = (
-    <div className="mt-16 items-center text-center">
-      {isLoading ? (
-        <Loader2 size={32} className="mx-auto animate-spin" />
-      ) : (
-        <p className="text-center text-gray-500">Nenhum dado encontrado.</p>
-      )}
-    </div>
-  );
+  async function handleDelete(){
+    if (selected.size === 0) return
+    if (!confirm(`Excluir ${selected.size} ${selected.size>1? 'transações':'transação'}?`)) return
+    await deleteTransactions(Array.from(selected))
+    setSelected(new Set())
+    await load()
+  }
 
   return (
-    // --- (INÍCIO DA CORREÇÃO) ---
-    // A prop "scrollEnabled" foi removida, pois ela não
-    // existe no nosso MainContainer.tsx da web.
-    <MainContainer noPadding={true}>
-    {/* --- (FIM DA CORREÇÃO) --- */}
-      
-      {/* Isto substitui o <SectionList> */}
-      <div className="flex-1">
-        {ListHeader}
-        
-        {MOCK_GROUPS.length === 0 && !isLoading && ListEmpty}
-        {isLoading && MOCK_GROUPS.length === 0 && ListEmpty}
+    <div className="space-y-4">
+      <BaseCard title="Saldo atual">
+        <div className="text-2xl font-bold text-gray-900">
+          {balance.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}
+        </div>
+      </BaseCard>
 
-        {MOCK_GROUPS.map(group => (
-          <section key={group.dateISO}>
-            <SectionHeader group={group} />
-            <div className="px-4 bg-gray-100">
-              {group.transactions.map((item: any) => (
-                <TransactionItem
-                  key={item.id}
-                  {...item}
-                  isSelected={selectedIds.has(item.id)}
-                  isSelectionMode={isSelectionMode}
-                />
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
-    </MainContainer>
-  );
-};
+      <BaseCard title="Extrato" right={
+        <div className="flex items-center gap-2">
+          <Link to="/add" className="btn btn-primary"><Plus size={18}/> Adicionar</Link>
+          <SimpleButton onClick={handleDelete} variant="danger"><Trash2 size={18}/> Excluir</SimpleButton>
+        </div>
+      }>
+        {loading ? <p className="text-gray-600">Carregando…</p> : (
+          <div className="space-y-2">
+            {transactions.length === 0 && <p className="text-gray-500">Nenhuma transação ainda.</p>}
+            {transactions.map(tx => {
+              const isSel = selected.has(tx.id)
+              return (
+                <label key={tx.id} className={`list-item border ${isSel ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+                  <input
+                    type="checkbox"
+                    className="accent-blue-600"
+                    checked={isSel}
+                    onChange={e => {
+                      const next = new Set(selected)
+                      e.target.checked ? next.add(tx.id) : next.delete(tx.id)
+                      setSelected(next)
+                    }}
+                  />
+                  <div className="flex-1">
+                    <Link to={`/transaction/${tx.id}`} className="font-medium text-gray-800">{tx.description ?? '(Sem descrição)'}</Link>
+                    <div className="text-xs text-gray-500">{new Date(tx.date).toLocaleString('pt-BR')}</div>
+                  </div>
+                  <div className={`font-semibold ${tx.type==='revenue' ? 'text-emerald-600' : 'text-red-600'}`}>
+                    {(tx.type==='revenue'? tx.value : -tx.value).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+                  </div>
+                </label>
+              )
+            })}
+          </div>
+        )}
+      </BaseCard>
+    </div>
+  )
+}

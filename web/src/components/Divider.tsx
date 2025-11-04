@@ -1,20 +1,2 @@
-import React from 'react';
-
-interface DividerProps {
-  marginVertical?: number;
-  className?: string;
-}
-
-export const Divider: React.FC<DividerProps> = ({
-  marginVertical = 10,
-  className,
-}) => {
-  return (
-    <hr
-      className={`w-full border-t border-gray-200 rounded-full ${className}`}
-      style={{
-        marginBlock: marginVertical,
-      }}
-    />
-  );
-};
+import React from 'react'
+export const Divider: React.FC = () => <hr className="my-4 border-gray-200" />

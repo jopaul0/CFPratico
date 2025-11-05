@@ -18,7 +18,7 @@ Este projeto está sendo construído em etapas, com o objetivo de cobrir todas a
 - Status: Em Desenvolvimento
 - Objetivo: Construir o aplicativo móvel nativo (iOS/Android) com funcionalidade completa offline-first, usando Expo e um banco de dados SQLite local.
 
-### [⬜] Etapa 3: Aplicativo Web
+### [✅] Etapa 3: Aplicativo Web
 
 - Status: Planejado
 - Objetivo: Desenvolver a versão web completa.

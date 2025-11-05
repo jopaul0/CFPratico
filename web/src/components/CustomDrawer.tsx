@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, List, Settings, Package } from 'lucide-react';
+import { LayoutDashboard, List, Settings } from 'lucide-react';
 
 const LinkItem: React.FC<{ to: string; label: string; icon: React.ReactNode }> = ({ to, label, icon }) => {
   return (
@@ -21,12 +21,12 @@ const LinkItem: React.FC<{ to: string; label: string; icon: React.ReactNode }> =
 
 export const CustomDrawer: React.FC = () => {
   return (
-    <div className="flex h-full w-64 flex-col gap-2 border-r bg-white p-4 shadow-lg">
+    <div className="flex h-full w-64 flex-col gap-2 bg-white p-4 shadow-lg">
       {/* Topo do Drawer */}
-      <div className="flex items-center gap-3 p-2 mb-4">
+      <div className="flex flex-col items-start gap-3 p-2 mb-4">
         {/* Usando um ícone placeholder, você pode trocar pela sua logo */}
-        <div className="p-2 rounded-lg bg-gray-800 text-white">
-            <Package size={28} /> 
+        <div className="rounded text-white">
+            <img src="/icon.png" width={60} alt="icon" />
         </div>
         <span className="text-xl font-bold text-gray-800">CF Prático</span>
       </div>

@@ -10,10 +10,12 @@ import { SimpleButton } from '../components/SimpleButton';
 
 import { useAddTransaction } from '../hooks/useAddTransaction';
 import { useRefresh } from '../contexts/RefreshContext';
+import { useModal } from '../contexts/ModalContext';
 
 export const AddTransaction: React.FC = () => {
   const navigate = useNavigate();
   const { triggerReload } = useRefresh();
+  const {alert} = useModal();
   const {
     loading, saving, error,
     categories, paymentMethods,
@@ -24,11 +26,11 @@ export const AddTransaction: React.FC = () => {
     e.preventDefault(); // Impede o reload da página
     try {
       await save();
-      alert('Sucesso! Transação adicionada.');
+      await alert('Sucesso!', 'Transação adicionada.', 'success');
       triggerReload();
       navigate(-1); // Volta para a página anterior
     } catch (e: any) {
-      alert(`Erro: ${e?.message ?? 'Falha ao salvar.'}`);
+      await alert('Erro', e?.message ?? 'Falha ao salvar.', 'error');
     }
   }, [save, navigate, triggerReload]);
 

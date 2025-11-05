@@ -1,4 +1,4 @@
-// src/screens/ManagePaymentMethodsScreen.tsx
+
 import React from 'react';
 import { MainContainer } from '../components/MainContainer';
 import { InputGroup } from '../components/InputGroup';
@@ -7,6 +7,7 @@ import { Divider } from '../components/Divider';
 import { useManagePaymentMethods } from '../hooks/useManagePaymentMethods';
 import { PaymentMethod } from '../types/Database';
 import { Trash, Edit, Wallet } from 'lucide-react';
+import { useModal } from '../contexts/ModalContext';
 
 // Componente de Item (traduzido para web)
 const PaymentMethodItem: React.FC<{
@@ -52,21 +53,32 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
     handleSave,
     handleDelete,
   } = useManagePaymentMethods();
+  const { alert, confirm } = useModal();
 
   const onSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await handleSave();
     } catch (e: any) {
-      alert(`Erro: ${e.message}`);
+      await alert('Erro', e.message, 'error');
     }
   };
 
-  const onDelete = (item: PaymentMethod) => {
-    if (window.confirm(`Tem certeza que deseja excluir "${item.name}"? As transações associadas não serão excluídas, mas ficarão sem esta forma de pagamento.`)) {
-      handleDelete(item.id).catch(e => alert(`Erro ao excluir: ${e.message}`));
-    }
-  };
+  const onDelete = async (item: PaymentMethod) => {
+      // 3. Substituir o confirm
+      const userConfirmed = await confirm(
+        'Confirmar Exclusão',
+        `Tem certeza que deseja excluir "${item.name}"? As transações associadas não serão excluídas, mas ficarão sem categoria.`,
+        { confirmText: 'Excluir', type: 'warning' }
+      );
+      if (userConfirmed) {
+        try {
+          await handleDelete(item.id);
+        } catch (e: any) {
+          await alert('Erro ao Excluir', e.message, 'error');
+        }
+      }
+    };
 
   const onDeleteFromForm = () => {
     if (selectedMethod) {
@@ -102,47 +114,47 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
 
   return (
     <MainContainer title="Gerenciar Formas de Pagamento" showBackButton>
-        {/* Formulário de Edição/Criação */}
-        <form onSubmit={onSave} className="p-4 bg-white rounded-lg shadow mb-6">
-          <h2 className="text-lg font-semibold text-gray-700 mb-3">
-            {selectedMethod ? 'Editar Forma de Pagamento' : 'Nova Forma de Pagamento'}
-          </h2>
-          <InputGroup
-            label="Nome da Forma de Pagamento"
-            placeholder="Ex: Cartão de Débito"
-            value={formName}
-            onChangeText={setFormName}
-          />
-          <div className="flex flex-wrap justify-end gap-3 mt-2">
-            {selectedMethod && (
-              <SimpleButton
-                title="Excluir"
-                type="button"
-                onPress={onDeleteFromForm}
-                disabled={isSaving}
-                className="bg-red-100 text-red-700 hover:bg-red-200"
-              />
-            )}
+      {/* Formulário de Edição/Criação */}
+      <form onSubmit={onSave} className="p-4 bg-white rounded-lg shadow mb-6">
+        <h2 className="text-lg font-semibold text-gray-700 mb-3">
+          {selectedMethod ? 'Editar Forma de Pagamento' : 'Nova Forma de Pagamento'}
+        </h2>
+        <InputGroup
+          label="Nome da Forma de Pagamento"
+          placeholder="Ex: Cartão de Débito"
+          value={formName}
+          onChangeText={setFormName}
+        />
+        <div className="flex flex-wrap justify-end gap-3 mt-2">
+          {selectedMethod && (
             <SimpleButton
-              title="Limpar"
+              title="Excluir"
               type="button"
-              onPress={handleClearForm}
+              onPress={onDeleteFromForm}
               disabled={isSaving}
+              className="bg-red-100 text-red-700 hover:bg-red-200"
             />
-            <SimpleButton
-              title={isSaving ? 'Salvando...' : (selectedMethod ? 'Salvar' : 'Adicionar')}
-              type="submit"
-              disabled={isSaving}
-              className="bg-blue-600 text-white hover:bg-blue-700"
-            />
-          </div>
-        </form>
+          )}
+          <SimpleButton
+            title="Limpar"
+            type="button"
+            onPress={handleClearForm}
+            disabled={isSaving}
+          />
+          <SimpleButton
+            title={isSaving ? 'Salvando...' : (selectedMethod ? 'Salvar' : 'Adicionar')}
+            type="submit"
+            disabled={isSaving}
+            className="bg-blue-600 text-white hover:bg-blue-700"
+          />
+        </div>
+      </form>
 
-        <Divider />
+      <Divider />
 
-        {/* Lista */}
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Formas de Pagamento Existentes</h2>
-        {renderList()}
+      {/* Lista */}
+      <h2 className="text-xl font-bold text-gray-800 mb-4">Formas de Pagamento Existentes</h2>
+      {renderList()}
     </MainContainer>
   );
 };

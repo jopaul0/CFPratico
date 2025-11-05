@@ -13,6 +13,7 @@ import { ActionButton } from '../components/ActionButton';
 
 import { useSettings } from '../hooks/useSettings';
 import { Database, Wallet, UploadCloud, DownloadCloud, RefreshCw, HelpCircle } from 'lucide-react';
+import { useModal } from '../contexts/ModalContext';
 
 export const SettingsScreen: React.FC = () => {
   const { triggerReload } = useRefresh();
@@ -25,6 +26,7 @@ export const SettingsScreen: React.FC = () => {
     setInitialBalanceInput,
     handleSave,
   } = useSettings();
+  const { alert, confirm } = useModal();
 
   // Ref para o input de arquivo (para importação)
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -33,9 +35,9 @@ export const SettingsScreen: React.FC = () => {
     e.preventDefault();
     try {
       await handleSave();
-      alert('Configurações salvas!');
+      await alert('Sucesso!', 'Configurações salvas!', 'success');
     } catch (e: any) {
-      alert(`Erro: ${e.message}`);
+      await alert('Erro', e.message, 'error');
     }
   };
 
@@ -52,12 +54,11 @@ export const SettingsScreen: React.FC = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e: any) {
-      alert(`Erro ao Exportar: ${e?.message ?? e}`);
+      await alert('Erro ao Exportar', e?.message ?? e, 'error');
     }
   };
 
   const handleImportClick = () => {
-    // Abre o seletor de arquivos
     fileInputRef.current?.click();
   };
 
@@ -65,7 +66,12 @@ export const SettingsScreen: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!window.confirm("ATENÇÃO: Isso limpará TODOS os dados atuais e os substituirá pelo arquivo selecionado. Deseja continuar?")) {
+    const userConfirmed = await confirm(
+      'Atenção!',
+      'Isso limpará TODOS os dados atuais e os substituirá pelo arquivo selecionado. Deseja continuar?',
+      { type: 'warning', confirmText: 'Continuar' }
+    );
+    if (!userConfirmed) {
       // Limpa o input se o usuário cancelar
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
@@ -75,9 +81,9 @@ export const SettingsScreen: React.FC = () => {
       const jsonString = await file.text();
       await importDataFromJson(jsonString);
       triggerReload();
-      alert('Sucesso! Dados restaurados.');
+      await alert('Sucesso!', 'Dados restaurados.', 'success');
     } catch (e: any) {
-      alert(`Erro ao Importar: ${e?.message ?? e}`);
+      await alert('Erro ao Importar', e?.message ?? e, 'error');
     } finally {
       // Limpa o input
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -89,9 +95,9 @@ export const SettingsScreen: React.FC = () => {
       try {
         await DB.resetDatabaseToDefaults();
         triggerReload();
-        alert('Aplicativo Resetado. Os dados foram restaurados ao padrão.');
+        await alert('Aplicativo Resetado', 'Os dados foram restaurados ao padrão.', 'success');
       } catch (e: any) {
-        alert(`Erro no Reset: ${e?.message ?? e}`);
+        await alert('Erro no Reset', e?.message ?? e, 'error');
       }
     }
   };

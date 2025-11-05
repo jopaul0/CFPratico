@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { RefreshProvider } from './contexts/RefreshContext';
+import { ModalProvider } from './contexts/ModalContext'
 
 import { AppNavigator } from './navigation/AppNavigatior';
 
@@ -58,8 +59,10 @@ const router = createBrowserRouter([
 
 export function App() {
   return (
-    <RefreshProvider>
-      <RouterProvider router={router} />
-    </RefreshProvider>
+    <ModalProvider>
+      <RefreshProvider>
+        <RouterProvider router={router} />
+      </RefreshProvider>
+    </ModalProvider>
   );
 }

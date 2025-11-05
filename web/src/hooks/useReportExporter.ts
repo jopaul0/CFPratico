@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 import { formatToBRL } from '../utils/Value';
 import { parseStringToDate } from '../utils/Date';
 import { useDashboardData, AggregatedData } from './useDashboardData';
+import { useModal } from '../contexts/ModalContext';
 
 type ReportData = ReturnType<typeof useDashboardData>;
 
@@ -14,6 +15,7 @@ interface UseReportExporterProps {
 
 export const useReportExporter = ({ data }: UseReportExporterProps) => {
   const [isExporting, setIsExporting] = useState(false);
+  const { alert } = useModal();
 
   const formatShortDate = (isoDate: string) => {
     try {
@@ -28,7 +30,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
    */
   const handleExportExcel = async () => {
     if (data.filteredTransactions.length === 0) {
-      alert("Nenhum dado, não há transações no período selecionado para exportar.");
+      await alert("Nenhum dado", "Não há transações no período selecionado para exportar.");
       return;
     }
 
@@ -63,7 +65,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       XLSX.writeFile(wb, "relatorio_cfpratico.xlsx");
 
     } catch (e: any) {
-      alert(`Erro ao Exportar: Não foi possível gerar o arquivo Excel: ${e.message}`);
+      await alert("Erro ao exportar", "Ocorreu um erro ao gerar o arquivo xlsx", 'error');
     } finally {
       setIsExporting(false);
     }
@@ -144,7 +146,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     // NOTA: Para a logo funcionar na web, ela deve estar na pasta 'public'
     // ou ser importada como um módulo (ex: import logoUrl from '...').
     // Estou usando um caminho relativo '/onvale.png' (assumindo que está em 'public')
-    const logoHtml = `<img src="/onvale.png" class="logo" />`; 
+    const logoHtml = `<img src="/onvale.png" class="logo" />`;
     const companyName = userConfig?.company_name || 'CFPratico';
     const reportPeriod = `<p class="period"><b>Período do Relatório:</b> ${formatShortDate(startDate)} a ${formatShortDate(endDate)}</p>`;
 
@@ -221,23 +223,23 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
    */
   const handleExportPdf = async () => {
     if (data.filteredTransactions.length === 0 && (data.userConfig?.initial_balance ?? 0) === 0) {
-      alert("Nenhum dado, não há dados para exportar.");
+      await alert("Nenhum dado", "Não há dados no período selecionado para exportar.");
       return;
     }
 
     setIsExporting(true);
     try {
       const html = createPdfHtml();
-      
+
       // Abre uma nova janela/aba apenas com o HTML
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
         throw new Error('Não foi possível abrir a janela de impressão. Verifique se os pop-ups estão bloqueados.');
       }
-      
+
       printWindow.document.write(html);
       printWindow.document.close();
-      
+
       // Espera o conteúdo carregar e chama a impressão
       printWindow.onload = () => {
         printWindow.focus(); // Necessário para alguns navegadores
@@ -247,7 +249,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       };
 
     } catch (e: any) {
-      alert(`Erro ao Exportar: ${e.message}`);
+      await alert("Erro ao exportar", "Ocorreu um erro ao transformar em PDF.", "error");
     } finally {
       setIsExporting(false);
     }

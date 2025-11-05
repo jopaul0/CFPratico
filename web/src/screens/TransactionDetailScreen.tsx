@@ -14,6 +14,7 @@ import { SimpleButton } from '../components/SimpleButton';
 import { DatePickerInput } from '../components/DatePickerInput';
 import { InputGroup } from '../components/InputGroup';
 import { useRefresh } from '../contexts/RefreshContext';
+import { useModal } from '../contexts/ModalContext';
 
 const ViewMode: React.FC<{ tx: TransactionWithNames }> = ({ tx }) => {
     const Icon = getCategoryIcon(tx.category_icon_name);
@@ -85,6 +86,7 @@ export const TransactionDetailScreen: React.FC = () => {
     const { triggerReload } = useRefresh();
     const { id } = useParams<{ id: string }>();
     const txId = parseInt(id || '0', 10);
+    const { alert, confirm } = useModal();
 
     const hook = useTransactionDetail({ transactionId: txId });
     const {
@@ -97,22 +99,27 @@ export const TransactionDetailScreen: React.FC = () => {
         e.preventDefault(); // Impede o reload da página
         try {
             await handleSave();
-            alert('Sucesso! Transação atualizada.');
+            await alert('Sucesso!', 'Transação atualizada.', 'success');
             triggerReload();
         } catch (e: any) {
-            alert(`Erro ao Salvar: ${e?.message ?? 'Falha ao salvar.'}`);
+            await alert('Erro ao Salvar', e?.message ?? 'Falha ao salvar.', 'error');
         }
     }, [handleSave, triggerReload]);
 
     const onDelete = useCallback(async () => {
-        if (window.confirm("Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.")) {
+        const userConfirmed = await confirm(
+            'Confirmar Exclusão',
+            'Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.',
+            { confirmText: 'Excluir', type: 'error' }
+        );
+        if (userConfirmed) {
             try {
                 await handleDelete();
-                alert('Sucesso! Transação excluída.');
+                await alert('Sucesso!', 'Transação excluída.', 'success');
                 triggerReload();
                 navigate('/statement');
             } catch (e: any) {
-                alert(`Erro ao Excluir: ${e?.message ?? 'Falha ao excluir.'}`);
+                await alert('Erro ao Excluir', e?.message ?? 'Falha ao excluir.', 'error');
             }
         }
     }, [handleDelete, navigate, triggerReload]);

@@ -1,4 +1,3 @@
-// src/screens/ManageCategoriesScreen.tsx
 import React from 'react';
 import { MainContainer } from '../components/MainContainer';
 import { InputGroup } from '../components/InputGroup';
@@ -9,6 +8,8 @@ import { Category } from '../types/Database';
 import { iconMap, getCategoryIcon, ICON_TRANSLATIONS } from '../utils/CategoryIcons';
 import { Option } from '../types/Filters';
 import { Trash, Edit } from 'lucide-react';
+import { useModal } from '../contexts/ModalContext';
+
 
 const iconOptions: Option[] = Object.keys(iconMap)
   .sort((a, b) => (ICON_TRANSLATIONS[a] || a).localeCompare(ICON_TRANSLATIONS[b] || b))
@@ -64,19 +65,30 @@ export const ManageCategoriesScreen: React.FC = () => {
     handleSave,
     handleDelete,
   } = useManageCategories();
+  const { alert, confirm } = useModal();
 
   const onSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await handleSave();
     } catch (e: any) {
-      alert(`Erro: ${e.message}`);
+      await alert('Erro', e.message, 'error');
     }
   };
 
-  const onDelete = (item: Category) => {
-    if (window.confirm(`Tem certeza que deseja excluir "${item.name}"? As transações associadas não serão excluídas, mas ficarão sem categoria.`)) {
-      handleDelete(item.id).catch(e => alert(`Erro ao excluir: ${e.message}`));
+  const onDelete = async (item: Category) => {
+    // 3. Substituir o confirm
+    const userConfirmed = await confirm(
+      'Confirmar Exclusão',
+      `Tem certeza que deseja excluir "${item.name}"? As transações associadas não serão excluídas, mas ficarão sem categoria.`,
+      { confirmText: 'Excluir', type: 'warning' }
+    );
+    if (userConfirmed) {
+      try {
+        await handleDelete(item.id);
+      } catch (e: any) {
+        await alert('Erro ao Excluir', e.message, 'error');
+      }
     }
   };
 

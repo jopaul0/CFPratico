@@ -1,13 +1,10 @@
-// src/hooks/useReportExporter.ts
+
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
 
 import { formatToBRL } from '../utils/Value';
 import { parseStringToDate } from '../utils/Date';
 import { useDashboardData, AggregatedData } from './useDashboardData';
-// Este import é assumindo que você tem o logo na pasta 'public' ou 'assets'
-// Em um app Vite/CRA, você pode importar a imagem diretamente
-// import logoUrl from '../assets/onvale.png'; 
 
 type ReportData = ReturnType<typeof useDashboardData>;
 

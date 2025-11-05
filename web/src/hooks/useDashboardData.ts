@@ -5,9 +5,8 @@ import {
     TransactionWithNames, 
     Category, 
     UserConfig, 
-    Transaction,
-    FetchTransactionsFilters
-} from '../services/database';
+    Transaction
+} from '../types/Database';
 import type { FilterConfig, Option } from '../types/Filters';
 import { categoryToSlug } from '../utils/Categories';
 import { formatDateToString } from '../utils/Date';
@@ -122,7 +121,7 @@ export const useDashboardData = () => {
           
           const categoryId = categories.find(c => categoryToSlug(c.name) === category)?.id;
           
-          const filterOptions: FetchTransactionsFilters = {
+          const filterOptions: DB.FetchTransactionsFilters = {
               startDate: startDate,
               endDate: endDate,
               type: movementType === 'all' ? undefined : movementType,

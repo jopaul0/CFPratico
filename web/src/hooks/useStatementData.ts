@@ -5,9 +5,8 @@ import {
     TransactionWithNames, 
     Category, 
     PaymentMethod, 
-    UserConfig, 
-    FetchTransactionsFilters 
-} from '../services/database';
+    UserConfig
+} from '../types/Database';
 
 import type { Tx, TransactionGroup } from '../types/Transactions';
 import type { FilterConfig, Option } from '../types/Filters';

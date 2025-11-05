@@ -1,6 +1,5 @@
-// src/hooks/useSettings.ts
+
 import { useState, useCallback, useEffect } from 'react';
-// IMPORTANTE: importando da nossa nova camada de dados web
 import * as DB from '../services/database';
 import type { UserConfig } from '../types/Database';
 import { formatBRLToNumber, formatNumberToBRLInput } from '../utils/Value';

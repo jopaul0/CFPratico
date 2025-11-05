@@ -1,6 +1,5 @@
-// src/hooks/useTransactionDetail.ts
+
 import { useState, useCallback, useEffect } from 'react';
-// IMPORTANTE: importando da nossa nova camada de dados web
 import * as DB from '../services/database';
 import {
     Category,

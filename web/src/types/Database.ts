@@ -1,3 +1,4 @@
+
 export type TransactionType = 'revenue' | 'expense';
 export type TransactionCondition = 'paid' | 'pending';
 

@@ -1,20 +1,18 @@
-// src/hooks/useSettings.ts
 import { useState, useCallback, useEffect } from 'react';
 import { Alert } from 'react-native';
 import * as DB from '../services/database';
 import type { UserConfig } from '../services/database';
-import { formatBRLToNumber, formatNumberToBRLInput } from '../utils/Value';
+import { formatBRLToNumber, formatNumberToBRLInput, formatBRLInputMask } from '../utils/Value';
+
 
 export const useSettings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // O estado do formulário
   const [companyName, setCompanyName] = useState('');
   const [initialBalanceInput, setInitialBalanceInput] = useState('');
 
-  // A configuração original carregada do banco
   const [originalConfig, setOriginalConfig] = useState<UserConfig | null>(null);
 
   const loadData = useCallback(async () => {
@@ -23,7 +21,6 @@ export const useSettings = () => {
     try {
       const config = await DB.fetchOrCreateUserConfig();
       setOriginalConfig(config);
-      // Define os valores do formulário com base no que foi carregado
       setCompanyName(config.company_name || '');
       setInitialBalanceInput(formatNumberToBRLInput(config.initial_balance));
     } catch (e) {
@@ -36,6 +33,11 @@ export const useSettings = () => {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const handleBalanceInputChange = useCallback((text: string) => {
+      const maskedValue = formatBRLInputMask(text);
+      setInitialBalanceInput(maskedValue);
+  }, []);
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
@@ -51,8 +53,6 @@ export const useSettings = () => {
       };
 
       await DB.saveOrUpdateUserConfig(newConfig);
-      
-      // Recarrega os dados para garantir que o "originalConfig" esteja atualizado
       await loadData(); 
       Alert.alert('Sucesso', 'Configurações salvas!');
 
@@ -71,7 +71,7 @@ export const useSettings = () => {
     companyName,
     setCompanyName,
     initialBalanceInput,
-    setInitialBalanceInput,
+    setInitialBalanceInput: handleBalanceInputChange,
     handleSave,
     reload: loadData,
   };

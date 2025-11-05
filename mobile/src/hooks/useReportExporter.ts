@@ -2,23 +2,32 @@
 import { useState } from 'react';
 import { Alert, Platform } from 'react-native';
 
+// Imports do Expo
 import { Asset } from 'expo-asset';
-import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
-import * as XLSX from 'xlsx'
 
+// Imports do FileSystem (SDK 51+)
+import { File, Paths, Directory } from 'expo-file-system'; //
+
+// Import do AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Imports de bibliotecas e utils
+import * as XLSX from 'xlsx';
 import { formatToBRL } from '../utils/Value';
 import { parseStringToDate } from '../utils/Date';
 import { useDashboardData, AggregatedData } from './useDashboardData';
 
+// Tipos
 type ReportData = ReturnType<typeof useDashboardData>;
 
-// --- (MODIFICADO) ---
-// Removemos 'logoBase64' das props, pois vamos carregá-la sob demanda.
 interface UseReportExporterProps {
   data: ReportData;
 }
+
+// Chave para salvar a URI da pasta no AsyncStorage
+const DOWNLOADS_DIR_STORAGE_KEY = '@downloadsDirectoryUri';
 
 export const useReportExporter = ({ data }: UseReportExporterProps) => {
   const [isExporting, setIsExporting] = useState(false);
@@ -31,15 +40,9 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     }
   };
 
-  // --- (NOVA FUNÇÃO) ---
-  /**
-   * Carrega e converte a imagem da logo para Base64.
-   * Isso só é chamado quando o usuário tenta exportar um PDF.
-   */
   const getLogoBase64 = async (): Promise<string | null> => {
     try {
-      // O 'require' é estático, então o caminho é relativo a este arquivo
-      const asset = Asset.fromModule(require('../assets/onvale.png'));
+      const asset = Asset.fromModule(require('../assets/onvale.png')); //
       await asset.downloadAsync();
 
       if (Platform.OS === 'web') {
@@ -55,14 +58,96 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       }
 
       const uri = asset.localUri ?? asset.uri;
-      const logoFile = new File(uri);
-      const base64 = await logoFile.base64();
+      const logoFile = new File(uri); //
+      const base64 = await logoFile.base64(); //
       return base64;
     } catch (e) {
       console.error("Erro ao carregar logo 'onvale.png' para exportar:", e);
       return null;
     }
   };
+
+  /**
+   * Salva um arquivo (em base64) publicamente no Android
+   * usando a API moderna de FileSystem (SDK 51+).
+   * Agora, lembra a pasta escolhida pelo usuário.
+   */
+  const saveToDownloadsAndroid = async (
+    filename: string, 
+    base64Content: string, 
+    mimeType: string
+  ) => {
+    if (Platform.OS !== 'android') {
+      return; // Apenas para Android
+    }
+
+    // Função interna para realmente salvar o arquivo
+    const trySave = async (dir: Directory) => {
+      // Tenta criar (ou sobrescrever) o arquivo
+      const safFile = dir.createFile(filename, mimeType); //
+      // Escreve o conteúdo
+      safFile.write(base64Content, { encoding: 'base64' }); //
+      Alert.alert('Sucesso', `Arquivo salvo em Downloads!\n(${filename})`);
+    };
+
+    // Função para pedir ao usuário, salvar a URI e então salvar o arquivo
+    const askAndSave = async () => {
+      Alert.alert(
+        'Salvar em Downloads',
+        'Por favor, selecione sua pasta "Downloads" para salvar os relatórios. O app lembrará desta pasta para o futuro.'
+      );
+      
+      // 1. Pede ao usuário para escolher (retorna o tipo base com a URI)
+      const pickedDirResult = await Directory.pickDirectoryAsync(); //
+      
+      // --- (INÍCIO DA CORREÇÃO) ---
+      // 2. Cria uma *instância da classe* Directory a partir da URI retornada
+      // Isso corrige o type mismatch que você viu.
+      const pickedDir = new Directory(pickedDirResult.uri); //
+      // --- (FIM DA CORREÇÃO) ---
+
+      // 3. Salva a URI da pasta para uso futuro
+      await AsyncStorage.setItem(DOWNLOADS_DIR_STORAGE_KEY, pickedDir.uri);
+      
+      // 4. Tenta salvar na pasta recém-escolhida (agora com o tipo correto)
+      await trySave(pickedDir);
+    };
+
+    try {
+      // 1. Tenta carregar uma URI de pasta já salva
+      const savedUri = await AsyncStorage.getItem(DOWNLOADS_DIR_STORAGE_KEY);
+      
+      if (!savedUri) {
+        // Se NUNCA salvamos antes, pede ao usuário
+        await askAndSave();
+      } else {
+        // Se JÁ temos uma URI, tentamos usá-la
+        const downloadsDir = new Directory(savedUri); //
+        try {
+          // Tenta salvar diretamente
+          await trySave(downloadsDir);
+        } catch (permissionError: any) {
+          // FALHOU! Provavelmente a permissão expirou ou o usuário limpou os dados.
+          console.warn('Falha ao usar URI salva, pedindo novamente:', permissionError.message);
+          
+          // Limpa a URI ruim
+          await AsyncStorage.removeItem(DOWNLOADS_DIR_STORAGE_KEY);
+          
+          // Pede ao usuário novamente
+          await askAndSave();
+        }
+      }
+    } catch (e: any) {
+      // Pega erros do 'pickDirectoryAsync' (como o usuário cancelar)
+      if (e.code === 'PickerCancelledException' || e.code === 'ERR_PICKER_CANCELLED' || e.message?.includes('cancelled')) { //
+        console.log("Usuário cancelou a seleção de diretório.");
+      } else {
+        console.error('Erro ao salvar em Downloads (Android):', e);
+        Alert.alert('Erro ao Salvar', 'Não foi possível salvar em Downloads. Você ainda pode salvar pela tela de compartilhamento.');
+      }
+    }
+  };
+
 
   /**
    * Gera um arquivo Excel (.xlsx)
@@ -72,11 +157,8 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       Alert.alert("Nenhum dado", "Não há transações no período selecionado para exportar.");
       return;
     }
-
     setIsExporting(true);
     try {
-
-
       const header = [
         "Data", "Descrição", "Categoria", "Forma de Pagamento",
         "Condição", "Parcelas", "Tipo", "Valor"
@@ -103,18 +185,22 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
 
       const base64 = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
-
-      const documentsDir = Paths.document;
       const filename = 'relatorio_cfpratico.xlsx';
-      const excelFile = new File(documentsDir, filename);
-      await excelFile.write(base64, { encoding: 'base64' });
+      const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
-      await Sharing.shareAsync(excelFile.uri, {
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      // 1. Salva em Downloads (Android)
+      await saveToDownloadsAndroid(filename, base64, mimeType);
+      
+      // 2. Salva no Cache (para Sharing)
+      const cacheFile = new File(Paths.cache, filename); //
+      cacheFile.write(base64, { encoding: 'base64' }); //
+      
+      // 3. Abre Sharing
+      await Sharing.shareAsync(cacheFile.uri, {
+        mimeType: mimeType,
         dialogTitle: 'Exportar para Excel',
         UTI: 'com.microsoft.excel.xlsx'
       });
-
     } catch (e: any) {
       Alert.alert("Erro ao Exportar", `Não foi possível gerar o arquivo Excel: ${e.message}`);
     } finally {
@@ -124,8 +210,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
   /**
    * Gera o HTML base para os relatórios PDF.
-   * --- (MODIFICADO) ---
-   * Agora aceita 'logoBase64' como argumento
    */
   const createPdfHtml = (logoBase64: string | null) => {
     const {
@@ -294,37 +378,37 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
     setIsExporting(true);
     try {
-      // 1. Carrega a logo sob demanda
+      // 1. Gerar PDF (tempUri tem nome aleatório)
       const logoBase64 = await getLogoBase64();
-
-      // 2. Gerar HTML (passando a logo)
       const html = createPdfHtml(logoBase64);
-
-      // 3. Imprimir para arquivo temporário (com margens da impressora)
       const { uri: tempUri } = await Print.printToFileAsync({
         html,
-        margins: {
-          top: 80,
-          bottom: 80,
-          left: 60,
-          right: 60
-        }
+        margins: { top: 80, bottom: 80, left: 60, right: 60 }
       });
 
-      // 4. Criar referências de arquivo
-      const tempFile = new File(tempUri);
-      const documentsDir = Paths.document;
-      const pdfFile = new File(documentsDir, 'relatorio-cfpratico.pdf');
+      const pdfFilename = 'relatorio-cfpratico.pdf';
+      const mimeType = 'application/pdf';
 
-      // 5. Ler o conteúdo (Base64)
-      const base64Content = await tempFile.base64();
+      // 2. Definir o destino final no cache com o nome correto
+      const shareableFile = new File(Paths.cache, pdfFilename); //
+      const tempFile = new File(tempUri); //
 
-      // 6. Escrever o conteúdo no novo arquivo nomeado
-      await pdfFile.write(base64Content, { encoding: 'base64' });
+      // 3. Se o arquivo já existir (de um export anterior), delete-o
+      if (shareableFile.exists) { //
+        shareableFile.delete(); //
+      }
 
-      // 7. Compartilhar o novo arquivo
-      await Sharing.shareAsync(pdfFile.uri, {
-        mimeType: 'application/pdf',
+      // 4. Mover (renomear) o arquivo temporário para o arquivo final
+      tempFile.move(shareableFile); //
+      
+      // 5. Ler o conteúdo (base64) do arquivo JÁ RENOMEADO para salvar no Android
+      const base64Content = shareableFile.base64Sync(); //
+      await saveToDownloadsAndroid(pdfFilename, base64Content, mimeType);
+
+      // 6. Abre o compartilhamento (em todas as plataformas)
+      //    USANDO O ARQUIVO RENOMEADO
+      await Sharing.shareAsync(shareableFile.uri, {
+        mimeType: mimeType,
         dialogTitle: 'Exportar Relatório PDF'
       });
 

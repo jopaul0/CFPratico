@@ -145,7 +145,6 @@ export const ManageCategoriesScreen: React.FC = () => {
           tintColor={'#3b82f6'} // para iOS
         />
       }>
-      <Text className="text-2xl font-bold text-gray-800 mb-4">Gerenciar Categorias</Text>
 
       {/* Formulário de Edição/Criação */}
       <View className="p-4 bg-white rounded-lg shadow mb-6">

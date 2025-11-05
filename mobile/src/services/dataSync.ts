@@ -1,13 +1,14 @@
 // src/services/dataSync.ts
 import { dbPromise } from './database/connection';
-import type { Category, PaymentMethod, Transaction } from '../types/Database';
+// 1. Importar o tipo UserConfig
+import type { Category, PaymentMethod, Transaction, UserConfig } from '../types/Database';
 
-// --- (CORREÇÃO) ---
-// Importa diretamente dos arquivos "crud" para quebrar o ciclo de dependência
+// Importa as funções de CRUD
 import { fetchCategories } from './database/crud/Category';
 import { fetchPaymentMethods } from './database/crud/PaymentMethods';
 import { fetchAllRawTransactions } from './database/crud/Transaction';
-// --- (FIM DA CORREÇÃO) ---
+// 2. Importar a função do UserConfig
+import { fetchOrCreateUserConfig } from './database/crud/UserConfig';
 
 
 /**
@@ -17,6 +18,7 @@ interface BackupData {
   categories: Category[];
   paymentMethods: PaymentMethod[];
   transactions: Transaction[];
+  userConfig: UserConfig; // 3. Adicionar userConfig à interface
 }
 
 /**
@@ -24,19 +26,22 @@ interface BackupData {
  */
 export const exportDataAsJson = async (): Promise<string> => {
   try {
-    // --- (CORREÇÃO) ---
-    // Chama as funções importadas diretamente
-    const categories = await fetchCategories();
-    const paymentMethods = await fetchPaymentMethods();
-    const transactions = await fetchAllRawTransactions(); 
+    // 4. Buscar o userConfig junto com os outros dados
+    const [categories, paymentMethods, transactions, userConfig] = await Promise.all([
+      fetchCategories(),
+      fetchPaymentMethods(),
+      fetchAllRawTransactions(),
+      fetchOrCreateUserConfig() // Adicionado
+    ]);
 
     const backupData: BackupData = {
       categories,
       paymentMethods,
       transactions,
+      userConfig, // 5. Adicionar o userConfig ao objeto de backup
     };
 
-    return JSON.stringify(backupData, null, 2); // 'null, 2' formata o JSON
+    return JSON.stringify(backupData, null, 2);
   } catch (e) {
     console.error("Erro ao gerar JSON de exportação:", e);
     throw new Error("Falha ao exportar dados.");
@@ -51,8 +56,8 @@ export const importDataFromJson = async (jsonString: string): Promise<void> => {
   let data: BackupData;
   try {
     data = JSON.parse(jsonString);
-    // Validação básica
-    if (!data.categories || !data.paymentMethods || !data.transactions) {
+    // 6. Validar se o userConfig está presente no JSON
+    if (!data.categories || !data.paymentMethods || !data.transactions || !data.userConfig) {
       throw new Error("Arquivo JSON inválido ou mal formatado.");
     }
   } catch (e: any) {
@@ -70,6 +75,13 @@ export const importDataFromJson = async (jsonString: string): Promise<void> => {
       await db.runAsync('DELETE FROM "transaction";');
       await db.runAsync('DELETE FROM "category";');
       await db.runAsync('DELETE FROM "payment_method";');
+      await db.runAsync('DELETE FROM "user_config";'); // 7. Limpar a tabela userConfig
+
+      // 8. Restaurar o UserConfig (usando ID 1 fixo)
+      await db.runAsync(
+        'INSERT OR REPLACE INTO user_config (id, company_name, initial_balance) VALUES (1, ?, ?);',
+        [data.userConfig.company_name, data.userConfig.initial_balance]
+      );
 
       // 2. Re-mapear e Inserir Categorias
       const categoryIdMap = new Map<number, number>(); // <OldID, NewID>
@@ -93,7 +105,6 @@ export const importDataFromJson = async (jsonString: string): Promise<void> => {
 
       // 4. Re-mapear e Inserir Transações
       for (const tx of data.transactions) {
-        // Encontra os novos IDs com base nos IDs antigos
         const newCatId = categoryIdMap.get(tx.category_id) || null;
         const newPmId = paymentMethodIdMap.get(tx.payment_method_id) || null;
 

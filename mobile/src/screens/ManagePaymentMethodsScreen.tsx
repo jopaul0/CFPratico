@@ -131,7 +131,6 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
           tintColor={'#3b82f6'} // para iOS
         />
       }>
-      <Text className="text-2xl font-bold text-gray-800 mb-4">Gerenciar Formas de Pagamento</Text>
 
       <View className="p-4 bg-white rounded-lg shadow mb-6">
         <Text className="text-lg font-semibold text-gray-700 mb-3">

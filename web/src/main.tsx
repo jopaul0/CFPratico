@@ -1,32 +1,21 @@
-import React from 'react'
-import { createRoot } from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import './index.css'
-import App from './App'
-import { StatementScreen } from './screens/StatementScreen'
-import { TransactionDetailScreen } from './screens/TransactionDetailScreen'
-import { AddTransaction } from './screens/AddTransaction'
-import SettingsScreen from './screens/SettingsScreen'
-import AdminScreen from './screens/AdminScreen'
-import PrototypeScreen from './screens/PrototypeScreen'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { App } from './App';
+import { initDatabase } from './services/database';
 
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <App />,
-    children: [
-      { index: true, element: <StatementScreen /> },
-      { path: 'transaction/:id', element: <TransactionDetailScreen /> },
-      { path: 'add', element: <AddTransaction /> },
-      { path: 'settings', element: <SettingsScreen /> },
-      { path: 'admin', element: <AdminScreen /> },
-      { path: 'prototype', element: <PrototypeScreen /> },
-    ]
-  }
-])
+// Importe seu CSS global (Tailwind/NativeWind)
+// Se você usar NativeWind para web, isso funcionará.
+// Se usar TailwindCSS puro, será 'index.css' ou similar.
+import './global.css'; 
 
-createRoot(document.getElementById('root')!).render(
+// 1. Inicia o banco de dados (Dexie)
+// Não precisamos "esperar" (await), o app pode carregar
+// enquanto o Dexie abre em segundo plano.
+initDatabase();
+
+// 2. Renderiza o aplicativo
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <RouterProvider router={router}/>
-  </React.StrictMode>
-)
+    <App />
+  </React.StrictMode>,
+);

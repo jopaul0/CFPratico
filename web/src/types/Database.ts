@@ -1,10 +1,10 @@
-// --- Tipos Base ---
 export type TransactionType = 'revenue' | 'expense';
 export type TransactionCondition = 'paid' | 'pending';
 
 export interface Category {
   id: number;
   name: string;
+  icon_name: string;
 }
 
 export interface PaymentMethod {
@@ -20,7 +20,7 @@ export interface UserConfig {
 
 export interface Transaction {
   id: number;
-  date: string; // ISO
+  date: string;
   description: string | null;
   value: number;
   type: TransactionType;
@@ -37,6 +37,12 @@ export interface NewTransactionData {
   type: TransactionType;
   condition: TransactionCondition;
   installments: number;
-  payment_method_id: number;
-  category_id: number;
+  paymentMethodId: number;
+  categoryId: number;
+}
+
+export interface TransactionWithNames extends Transaction {
+  category_name: string | null;
+  payment_method_name: string | null;
+  category_icon_name: string | null;
 }

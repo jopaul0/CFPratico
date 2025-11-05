@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as DB from '../services/database';
 import type { Category, PaymentMethod, TransactionCondition } from '../types/Database';
 import { parseNumberBR, toISODate } from '../utils/Date';
+import { formatBRLInputMask } from '../utils/Value';
 
 type MovementType = 'revenue' | 'expense';
 type ConditionType = TransactionCondition;
@@ -39,7 +40,12 @@ export const useAddTransaction = () => {
   });
 
   const setField = useCallback(<K extends keyof AddTxState>(key: K, value: AddTxState[K]) => {
-    setState(prev => ({ ...prev, [key]: value }));
+    if (key === 'valueInput') {
+      const maskedValue = formatBRLInputMask(value as string);
+      setState(prev => ({ ...prev, [key]: maskedValue }));
+    } else {
+      setState(prev => ({ ...prev, [key]: value }));
+    }
   }, []);
 
   const installmentsNumber = useMemo(() => {

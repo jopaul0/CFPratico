@@ -1,3 +1,4 @@
+// src/components/InputGroup.tsx
 import React from 'react';
 import { Option } from '../types/Filters';
 import { CustomPicker } from './CustomPicker';
@@ -27,7 +28,27 @@ export const InputGroup: React.FC<InputGroupProps> = (props) => {
     keyboardType = 'default',
   } = props;
 
-  const inputType = keyboardType === 'numeric' ? 'number' : 'text';
+  // --- INÍCIO DA CORREÇÃO ---
+  
+  // O <input type="number"> não aceita valores formatados com vírgula (ex: "1.234,56").
+  // Vamos usar type="text" para todos e controlar o teclado virtual com `inputMode`.
+  const inputType = 'text';
+  let inputMode: 'numeric' | 'decimal' | 'text' = 'text';
+
+  if (keyboardType === 'numeric') {
+    // "decimal" é ideal para valores monetários
+    // "numeric" é para inteiros (como Parcelas)
+    const labelLower = (label || '').toLowerCase();
+    const placeholderLower = (placeholder || '').toLowerCase();
+
+    if (labelLower.includes('valor') || placeholderLower.includes(',')) {
+        inputMode = 'decimal';
+    } else {
+        inputMode = 'numeric';
+    }
+  }
+  // --- FIM DA CORREÇÃO ---
+
 
   const inputNode = isSelect ? (
     <CustomPicker
@@ -42,7 +63,8 @@ export const InputGroup: React.FC<InputGroupProps> = (props) => {
         {label}
       </label>
       <input
-        type={inputType}
+        type={inputType} // Corrigido
+        inputMode={inputMode} // Adicionado
         className="w-full h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
         placeholder={placeholder}
         value={value ?? ''}

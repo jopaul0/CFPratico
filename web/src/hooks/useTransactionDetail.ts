@@ -9,7 +9,7 @@ import {
     TransactionType,
     TransactionCondition,
 } from '../types/Database';
-import { formatBRLToNumber, formatNumberToBRLInput } from '../utils/Value';
+import { formatBRLToNumber, formatNumberToBRLInput, formatBRLInputMask } from '../utils/Value';
 
 // Estado do formulário
 interface FormState {
@@ -36,7 +36,7 @@ export const useTransactionDetail = ({ transactionId }: UseTransactionDetailProp
     const [transaction, setTransaction] = useState<TransactionWithNames | null>(null);
     const [categories, setCategories] = useState<Category[]>([]);
     const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-    
+
     const [formState, setFormState] = useState<FormState | null>(null);
 
     const txToFormState = (tx: TransactionWithNames): FormState => ({
@@ -57,7 +57,7 @@ export const useTransactionDetail = ({ transactionId }: UseTransactionDetailProp
             setIsLoading(false);
             return;
         }
-        
+
         setIsLoading(true);
         setError(null);
         try {
@@ -88,7 +88,12 @@ export const useTransactionDetail = ({ transactionId }: UseTransactionDetailProp
     }, [loadData]);
 
     const setField = (field: keyof FormState, value: any) => {
-        setFormState(prev => prev ? { ...prev, [field]: value } : null);
+        if (field === 'valueInput') {
+            const maskedValue = formatBRLInputMask(value as string);
+            setFormState(prev => prev ? { ...prev, [field]: maskedValue } : null);
+        } else {
+            setFormState(prev => prev ? { ...prev, [field]: value } : null);
+        }
     };
 
     const handleEditToggle = () => setIsEditing(true);
@@ -102,7 +107,7 @@ export const useTransactionDetail = ({ transactionId }: UseTransactionDetailProp
 
     const handleSave = async (): Promise<void> => {
         if (!formState) throw new Error('Formulário não inicializado.');
-        
+
         setIsSaving(true);
         try {
             const value = formatBRLToNumber(formState.valueInput);
@@ -136,7 +141,7 @@ export const useTransactionDetail = ({ transactionId }: UseTransactionDetailProp
 
         } catch (e) {
             setIsSaving(false);
-            throw e; 
+            throw e;
         }
     };
 

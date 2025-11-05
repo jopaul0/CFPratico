@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import * as DB from '../services/database';
 import type { UserConfig } from '../types/Database';
-import { formatBRLToNumber, formatNumberToBRLInput } from '../utils/Value';
+import { formatBRLToNumber, formatNumberToBRLInput, formatBRLInputMask } from '../utils/Value';
 
 export const useSettings = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -32,6 +32,11 @@ export const useSettings = () => {
     loadData();
   }, [loadData]);
 
+  const handleBalanceInputChange = useCallback((text: string) => {
+    const maskedValue = formatBRLInputMask(text);
+    setInitialBalanceInput(maskedValue);
+  }, []);
+
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
@@ -46,20 +51,16 @@ export const useSettings = () => {
       };
 
       await DB.saveOrUpdateUserConfig(newConfig);
-      await loadData(); 
-      
-      // No React Native você usou Alert.alert().
-      // Na web, o componente que usa o hook pode mostrar uma notificação.
-      // O hook em si não precisa fazer nada.
+      await loadData();
 
     } catch (e: any) {
       setError(e);
-      // Lança o erro para o componente (tela) tratar
-      throw e; 
+      throw e;
     } finally {
       setIsSaving(false);
     }
   }, [companyName, initialBalanceInput, loadData]);
+
 
   return {
     isLoading,
@@ -68,7 +69,7 @@ export const useSettings = () => {
     companyName,
     setCompanyName,
     initialBalanceInput,
-    setInitialBalanceInput,
+    setInitialBalanceInput: handleBalanceInputChange,
     handleSave,
     reload: loadData,
   };

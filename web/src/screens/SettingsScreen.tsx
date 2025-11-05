@@ -91,7 +91,12 @@ export const SettingsScreen: React.FC = () => {
   };
 
   const handleResetApp = async () => {
-    if (window.confirm("PERIGO: Isso apagará TODOS os dados e restaurará o aplicativo ao estado inicial. Deseja continuar?")) {
+    const userConfirmed = await confirm(
+      'Atenção!',
+      'Isso limpará TODOS os dados atuais. Deseja continuar?',
+      { type: 'warning', confirmText: 'Continuar' }
+    );
+    if (!userConfirmed) {
       try {
         await DB.resetDatabaseToDefaults();
         triggerReload();

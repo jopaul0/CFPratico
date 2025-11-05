@@ -18,10 +18,9 @@ let win: BrowserWindow | null
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'icon.png'),
-    
-    // --- 2. ADICIONAR ISSO ---
-    frame: false, // Esconde a barra de título padrão
+    icon: path.join(process.env.VITE_PUBLIC, 'desktop-icon.png'),
+    title: "CF Pratico",
+    frame: false,
     titleBarStyle: 'hidden', // Necessário para alguns casos
     // --- FIM DA ADIÇÃO ---
 

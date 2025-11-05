@@ -80,8 +80,14 @@ export const SettingsScreen: React.FC = () => {
     try {
       const jsonString = await file.text();
       await importDataFromJson(jsonString);
-      triggerReload();
-      await alert('Sucesso!', 'Dados restaurados.', 'success');
+
+      // --- CORREÇÃO AQUI ---
+      // 1. Mostra o alerta de sucesso PRIMEIRO
+      await alert('Sucesso!', 'Dados restaurados. O aplicativo será reiniciado.', 'success');
+      // 2. Recarrega a página inteira
+      window.location.reload();
+      // --- FIM DA CORREÇÃO ---
+
     } catch (e: any) {
       await alert('Erro ao Importar', e?.message ?? e, 'error');
     } finally {
@@ -96,11 +102,14 @@ export const SettingsScreen: React.FC = () => {
       'Isso limpará TODOS os dados atuais. Deseja continuar?',
       { type: 'warning', confirmText: 'Continuar' }
     );
-    if (!userConfirmed) {
+    
+    if (userConfirmed) {
       try {
         await DB.resetDatabaseToDefaults();
-        triggerReload();
-        await alert('Aplicativo Resetado', 'Os dados foram restaurados ao padrão.', 'success');
+
+        await alert('Aplicativo Resetado', 'Os dados foram restaurados ao padrão. O aplicativo será reiniciado.', 'success');
+        window.location.reload();
+
       } catch (e: any) {
         await alert('Erro no Reset', e?.message ?? e, 'error');
       }

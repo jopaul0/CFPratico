@@ -46,7 +46,7 @@ export const Filters: React.FC<FiltersProps> = ({ filters, className, onClearFil
     <div className={`mt-3 flex flex-row items-end gap-3 ${className}`}>
         
         {/* 1. O container que rola horizontalmente */}
-        <div className="flex-1 flex flex-row flex-nowrap items-end gap-3 overflow-x-auto no-scrollbar">
+        <div className="flex-1 flex flex-row flex-nowrap items-end gap-3 overflow-x-auto">
             {nodes}
         </div>
 
@@ -54,7 +54,7 @@ export const Filters: React.FC<FiltersProps> = ({ filters, className, onClearFil
         {onClearFilters && (
             <button
                 onClick={onClearFilters}
-                className="flex items-center justify-center rounded-lg bg-gray-200 hover:bg-gray-300 h-11 w-11 mb-3 shrink-0"
+                className="flex items-center justify-center rounded-lg bg-gray-200 hover:bg-gray-300 h-11 w-11 my-auto shrink-0"
                 aria-label="Limpar filtros"
             >
                 <X size={24} className="text-gray-600" />

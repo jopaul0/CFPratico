@@ -2,7 +2,7 @@ import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { RefreshProvider } from './contexts/RefreshContext';
 
-import { AppNavigator } from './navigation/AppNavigator';
+import { AppNavigator } from './navigation/AppNavigatior';
 
 import { DashboardScreen } from './screens/DashboardScreen';
 import { StatementScreen } from './screens/StatementScreen';

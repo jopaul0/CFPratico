@@ -1,35 +1,68 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/electron-vite.animate.svg'
-import './App.css'
+import React from 'react';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { RefreshProvider } from './contexts/RefreshContext';
+import { ModalProvider } from './contexts/ModalContext'
 
-function App() {
-  const [count, setCount] = useState(0)
+import { AppNavigator } from './navigation/AppNavigatior';
 
+import { DashboardScreen } from './screens/DashboardScreen';
+import { StatementScreen } from './screens/StatementScreen';
+import { SettingsScreen } from './screens/SettingsScreen';
+import { TransactionDetailScreen } from './screens/TransactionDetailScreen';
+import { AddTransaction } from './screens/AddTransaction';
+import { ManageCategoriesScreen } from './screens/ManageCategoriesScreen';
+import { ManagePaymentMethodsScreen } from './screens/ManagePaymentMethodsScreen';
+import { HelpScreen } from './screens/HelpScreen';
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <AppNavigator />,
+    children: [
+      {
+        index: true,
+        element: <DashboardScreen />,
+      },
+
+      {
+        path: 'statement',
+        element: <StatementScreen />,
+      },
+
+      {
+        path: 'statement/new',
+        element: <AddTransaction />,
+      },
+      {
+        path: 'statement/:id',
+        element: <TransactionDetailScreen />,
+      },
+      {
+        path: 'settings',
+        element: <SettingsScreen />,
+      },
+      {
+        path: 'settings/categories',
+        element: <ManageCategoriesScreen />,
+      },
+      {
+        path: 'settings/payment-methods',
+        element: <ManagePaymentMethodsScreen />,
+      },
+      {
+        path: 'settings/help',
+        element: <HelpScreen />,
+      },
+    ],
+  },
+]);
+
+export function App() {
   return (
-    <>
-      <div>
-        <a href="https://electron-vite.github.io" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <ModalProvider>
+      <RefreshProvider>
+        <RouterProvider router={router} />
+      </RefreshProvider>
+    </ModalProvider>
+  );
 }
-
-export default App

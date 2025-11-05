@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron' // 1. Importar ipcMain
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -6,18 +6,8 @@ import path from 'node:path'
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// The built directory structure
-//
-// ├─┬─┬ dist
-// │ │ └── index.html
-// │ │
-// │ ├─┬ dist-electron
-// │ │ ├── main.js
-// │ │ └── preload.mjs
-// │
 process.env.APP_ROOT = path.join(__dirname, '..')
 
-// 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
 export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
@@ -28,7 +18,13 @@ let win: BrowserWindow | null
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+    icon: path.join(process.env.VITE_PUBLIC, 'icon.png'),
+    
+    // --- 2. ADICIONAR ISSO ---
+    frame: false, // Esconde a barra de título padrão
+    titleBarStyle: 'hidden', // Necessário para alguns casos
+    // --- FIM DA ADIÇÃO ---
+
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
     },
@@ -42,14 +38,21 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
   } else {
-    // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
+
+  // --- 3. ADICIONAR ISSO (Monitorar estado da janela) ---
+  // Envia o estado da janela para o React quando ela for maximizada
+  win.on('maximize', () => {
+    win?.webContents.send('window-state-changed', 'maximized');
+  });
+  // Envia o estado da janela para o React quando ela for restaurada
+  win.on('unmaximize', () => {
+    win?.webContents.send('window-state-changed', 'unmaximized');
+  });
+  // --- FIM DA ADIÇÃO ---
 }
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
@@ -58,11 +61,29 @@ app.on('window-all-closed', () => {
 })
 
 app.on('activate', () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow()
   }
 })
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  createWindow();
+
+  // --- 4. ADICIONAR ISSO (Handlers dos botões) ---
+  ipcMain.on('minimize-window', () => {
+    win?.minimize();
+  });
+
+  ipcMain.on('maximize-window', () => {
+    if (win?.isMaximized()) {
+      win?.unmaximize();
+    } else {
+      win?.maximize();
+    }
+  });
+
+  ipcMain.on('close-window', () => {
+    win?.close();
+  });
+  // --- FIM DA ADIÇÃO ---
+});

@@ -10,7 +10,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ title, value, valueCol
   const formattedValue = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
   return (
-    <div className="w-full p-2 sm:w-1/3">
+    <div className="w-full p-2 lg:w-1/3">
       <div className="bg-white rounded-xl shadow-md p-5">
         <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">
           {title}

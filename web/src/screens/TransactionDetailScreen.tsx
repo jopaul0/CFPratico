@@ -6,7 +6,7 @@ import { getCategoryIcon } from '../utils/CategoryIcons';
 import { formatToBRL } from '../utils/Value';
 import { parseStringToDate } from '../utils/Date';
 
-import {TransactionWithNames} from '../types/Database';
+import { TransactionWithNames } from '../types/Database';
 
 import { MainContainer } from '../components/MainContainer';
 import { Divider } from '../components/Divider';
@@ -25,17 +25,17 @@ const ViewMode: React.FC<{ tx: TransactionWithNames }> = ({ tx }) => {
     const valueColorClass = tx.type === 'expense' ? 'text-red-500' : 'text-green-600';
 
     const DetailRow: React.FC<{ label: string, value: string, colorClass?: string }> = ({ label, value, colorClass = 'text-gray-800' }) => (
-         <>
+        <>
             <div className="py-3">
                 <span className="text-gray-500 text-xs font-medium">{label}</span>
                 <p className={`text-base font-semibold ${colorClass}`}>{value}</p>
             </div>
             <Divider className="my-0" />
-         </>
+        </>
     );
 
     return (
-        <div className="flex-1 bg-white rounded-lg m-4 p-4 shadow-lg max-w-2xl mx-auto">
+        <div className="flex-1 bg-white rounded-lg m-4 p-4 shadow-lg w-full mx-auto">
             <div className="flex flex-col items-center mb-6">
                 <div className="p-4 rounded-full bg-gray-100 mb-3">
                     <Icon size={36} color={iconColor} />
@@ -84,7 +84,7 @@ export const TransactionDetailScreen: React.FC = () => {
     const navigate = useNavigate();
     const { triggerReload } = useRefresh();
     const { id } = useParams<{ id: string }>();
-    const txId = parseInt(id || '0', 10); 
+    const txId = parseInt(id || '0', 10);
 
     const hook = useTransactionDetail({ transactionId: txId });
     const {
@@ -133,14 +133,15 @@ export const TransactionDetailScreen: React.FC = () => {
         if (!isEditing) {
             return <ViewMode tx={transaction} />;
         }
-        
+
         // Se estiver editando, retorna o EditMode
         // O <form> e os botões serão renderizados fora
         return <EditMode hook={hook} />;
     };
 
     return (
-        <MainContainer>
+        <MainContainer title={isEditing ? "Editar Transação" : "Detalhe da Transação"}
+            showBackButton>
             {/* --- CORREÇÃO DE LÓGICA ---
               O <form> agora envolve o conteúdo E os botões
               quando está em modo de edição.
@@ -154,10 +155,10 @@ export const TransactionDetailScreen: React.FC = () => {
                             <Divider className="my-6" />
                             <div className="p-2 max-w-2xl mx-auto">
                                 <div className="flex justify-center gap-3">
-                                    <SimpleButton 
-                                        title="Cancelar" 
+                                    <SimpleButton
+                                        title="Cancelar"
                                         type="button" // Importante: não submete o form
-                                        onPress={handleCancel} 
+                                        onPress={handleCancel}
                                     />
                                     <SimpleButton
                                         title={isSaving ? 'Salvando…' : 'Salvar'}

@@ -16,7 +16,7 @@ const LinkItem: React.FC<LinkItemProps> = ({ to, label, icon, onClick }) => {
     <NavLink
       to={to}
       end
-      onClick={onClick} // 2. Adicionar onClick
+      onClick={onClick}
       className={({ isActive }) =>
         `flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 transition-all hover:bg-gray-200 ${
           isActive ? 'bg-gray-200 font-semibold' : ''

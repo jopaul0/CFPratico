@@ -47,18 +47,17 @@ const FAQ_DATA = [
 
 export const HelpScreen: React.FC = () => {
     return (
-        <MainContainer>
-            <div className="max-w-3xl">
-                <h1 className="text-2xl font-bold text-gray-800 mb-6">Central de Ajuda (FAQ)</h1>
+        <MainContainer title="Central de Ajuda (FAQ)" showBackButton>
 
-                {FAQ_DATA.map((item, index) => (
-                    <FaqItem
-                        key={index}
-                        q={item.q}
-                        a={item.a}
-                    />
-                ))}
-            </div>
+
+            {FAQ_DATA.map((item, index) => (
+                <FaqItem
+                    key={index}
+                    q={item.q}
+                    a={item.a}
+                />
+            ))}
+
         </MainContainer>
     );
 };

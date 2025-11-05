@@ -63,7 +63,7 @@ export const DashboardScreen: React.FC = () => {
         return (
             <>
                 {/* --- Resumo (Responsivo por padrão) --- */}
-                <div className="flex flex-row flex-wrap -mx-2">
+                <div className="flex md:flex-row flex-wrap -mx-2">
                     <SummaryCard
                         title="Saldo Atual"
                         value={currentBalance}

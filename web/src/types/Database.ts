@@ -1,0 +1,49 @@
+
+export type TransactionType = 'revenue' | 'expense';
+export type TransactionCondition = 'paid' | 'pending';
+
+export interface Category {
+  id: number;
+  name: string;
+  icon_name: string;
+}
+
+export interface PaymentMethod {
+  id: number;
+  name: string;
+}
+
+export interface UserConfig {
+  id: 1;
+  company_name: string | null;
+  initial_balance: number;
+}
+
+export interface Transaction {
+  id: number;
+  date: string;
+  description: string | null;
+  value: number;
+  type: TransactionType;
+  condition: TransactionCondition;
+  installments: number;
+  payment_method_id: number;
+  category_id: number;
+}
+
+export interface NewTransactionData {
+  date: string;
+  description: string | null;
+  value: number;
+  type: TransactionType;
+  condition: TransactionCondition;
+  installments: number;
+  paymentMethodId: number;
+  categoryId: number;
+}
+
+export interface TransactionWithNames extends Transaction {
+  category_name: string | null;
+  payment_method_name: string | null;
+  category_icon_name: string | null;
+}

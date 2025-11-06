@@ -6,6 +6,8 @@ import { parseStringToDate } from '../utils/Date';
 import { useDashboardData, AggregatedData } from './useDashboardData';
 import { useModal } from '../contexts/ModalContext';
 
+import logoImage from '../assets/onvale.png';
+
 type ReportData = ReturnType<typeof useDashboardData>;
 
 interface UseReportExporterProps {
@@ -57,7 +59,11 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
 
-      XLSX.writeFile(wb, "relatorio_cfpratico.xlsx");
+      const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+      const result = await window.ipcRenderer.invoke('export-excel', buffer);
+
+       XLSX.writeFile(wb, "relatorio_cfpratico.xlsx");
+
 
     } catch (e: any) {
       await alert("Erro ao exportar", "Ocorreu um erro ao gerar o arquivo xlsx", 'error');
@@ -133,8 +139,8 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
               ${generateCategoryTable('Despesas por Categoria', byCategoryExpense, 'despesa')}
           </div>
       </div>`;
-
-    const logoHtml = `<img src="/onvale.png" class="logo" />`;
+    
+    const logoHtml = `<img src="${logoImage}" class="logo" />`;
     const companyName = userConfig?.company_name || 'CFPratico';
     const reportPeriod = `<p class="period"><b>Período do Relatório:</b> ${formatShortDate(startDate)} a ${formatShortDate(endDate)}</p>`;
 
@@ -196,7 +202,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
           <h2>Resumo Geral do Período</h2>
           <table class="summary-table">
             <tr><td>Total de Receitas</td><td class="receita">${formatToBRL(summary.totalRevenue)}</td></tr>
-            <tr><td>Total de Despesas</td><td class-"despesa">${formatToBRL(summary.totalExpense)}</td></tr>
+            <tr><td>Total de Despesas</td><td class="despesa">${formatToBRL(summary.totalExpense)}</td></tr>
             <tr><td><b>Saldo do Período</b></td><td class="total">${formatToBRL(summary.netBalance)}</td></tr>
           </table>
           ${categoryTablesSection}
@@ -204,6 +210,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       </html>
     `;
   };
+
 
   const handleExportPdf = async () => {
     if (data.filteredTransactions.length === 0 && (data.userConfig?.initial_balance ?? 0) === 0) {
@@ -215,21 +222,16 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     try {
       const html = createPdfHtml();
 
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        throw new Error('Não foi possível abrir a janela de impressão. Verifique se os pop-ups estão bloqueados.');
+      const result: { success: boolean; filePath?: string; error?: string; canceled?: boolean } = 
+        await window.ipcRenderer.invoke('export-pdf', html);
+
+      if (result.success) {
+      } else if (result.error) {
+        throw new Error(result.error);
       }
 
-      printWindow.document.write(html);
-      printWindow.document.close();
-
-      printWindow.onload = () => {
-        printWindow.focus();
-        printWindow.print();
-      };
-
     } catch (e: any) {
-      await alert("Erro ao exportar", "Ocorreu um erro ao transformar em PDF.", "error");
+      await alert("Erro ao exportar", e.message || "Ocorreu um erro ao gerar o arquivo PDF.", "error");
     } finally {
       setIsExporting(false);
     }

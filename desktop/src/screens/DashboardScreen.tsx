@@ -1,9 +1,7 @@
-// src/screens/DashboardScreen.tsx
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import type { Tx } from '../types/Transactions';
 
-// Componentes de UI
 import { TransactionItem } from '../components/TransactionItem';
 import { SimpleButton } from '../components/SimpleButton';
 import { Divider } from '../components/Divider';
@@ -14,7 +12,6 @@ import { CategoryChart } from '../components/charts/CategoryChart';
 import { TimeChart } from '../components/charts/TimeChart';
 import { DashboardExportButton } from '../components/DashboardExportButton';
 
-// Hooks
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useReportExporter } from '../hooks/useReportExporter';
 
@@ -45,9 +42,7 @@ export const DashboardScreen: React.FC = () => {
         data: dashboardData
     });
 
-    // Handlers de Navegação
     const handleViewAll = () => navigate('/statement');
-    // handlePressItem é tratado pelo próprio TransactionItem (que é um <Link>)
     const handleAddTransaction = () => navigate('/statement/new');
 
 
@@ -62,7 +57,6 @@ export const DashboardScreen: React.FC = () => {
 
         return (
             <>
-                {/* --- Resumo (Responsivo por padrão) --- */}
                 <div className="flex md:flex-row flex-wrap -mx-2">
                     <SummaryCard
                         title="Saldo Atual"
@@ -81,7 +75,6 @@ export const DashboardScreen: React.FC = () => {
                     />
                 </div>
 
-                {/* --- Transações Recentes --- */}
                 <div className="p-4 bg-white rounded-lg shadow mt-4">
                     <h2 className="text-lg font-bold text-gray-800 mb-4">Transações Recentes</h2>
                     {recentTransactions.length > 0 ? (
@@ -105,13 +98,11 @@ export const DashboardScreen: React.FC = () => {
                     )}
                 </div>
 
-                {/* --- Gráficos --- */}
                 <TimeChart
                     title="Receitas x Despesas por Dia"
                     data={byDate}
                 />
                 
-                {/* --- Layout Responsivo para Gráficos de Categoria --- */}
                 <div className="lg:flex lg:gap-4">
                     <div className="lg:w-1/2">
                         <CategoryChart
@@ -148,7 +139,6 @@ export const DashboardScreen: React.FC = () => {
                 {renderContent()}
             </MainContainer>
             
-            {/* Botão Flutuante (FAB) */}
             <Link
                 to="/statement/new"
                 title="Adicionar transação"

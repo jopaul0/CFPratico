@@ -18,9 +18,6 @@ export interface FetchTransactionsFilters {
   query?: string;
 }
 
-/**
- * Função auxiliar para simular o LEFT JOIN do SQL (sem alterações)
- */
 const mapTransactionNames = async (
     transactions: Transaction[]
 ): Promise<TransactionWithNames[]> => {
@@ -48,7 +45,6 @@ const mapTransactionNames = async (
     });
 };
 
-// addTransaction, updateTransaction, deleteTransaction, deleteTransactions (sem alterações)
 export const addTransaction = async (data: NewTransactionData): Promise<number> => {
   try {
     const { date, description, value, type, condition, installments, paymentMethodId, categoryId } = data;
@@ -111,21 +107,13 @@ export const deleteTransactions = async (ids: number[]): Promise<void> => {
     }
 };
 
-/**
- * Busca transações com filtros dinâmicos e "JOIN" simulado. (CORRIGIDO)
- */
 export const fetchTransactions = async (
   options?: FetchTransactionsFilters
 ): Promise<TransactionWithNames[]> => {
   
   try {
-    // --- INÍCIO DA CORREÇÃO ---
-    
-    // 1. Define o tipo da 'collection'
     let collection: Dexie.Collection<Transaction, number>;
 
-    // 2. Aplica filtro de índice (O ÚNICO .where() VÁLIDO)
-    // Começa a query a partir da TABELA
     if (options?.startDate && options?.endDate) {
       collection = db.transactions.where('date').between(
           `${options.startDate}T00:00:00`,
@@ -136,13 +124,9 @@ export const fetchTransactions = async (
     } else if (options?.endDate) {
       collection = db.transactions.where('date').belowOrEqual(`${options.endDate}T23:59:59`);
     } else {
-      // Se nenhum filtro de data, pega a tabela inteira como uma coleção
       collection = db.transactions.toCollection();
     }
-    // --- FIM DA CORREÇÃO ---
 
-
-    // 3. Aplica filtros secundários (em JS) usando .filter()
     const filteredTxs = await collection.filter(tx => {
         if (options?.type && tx.type !== options.type) {
             return false;
@@ -158,13 +142,11 @@ export const fetchTransactions = async (
         }
         return true;
     })
-    .reverse() // Ordena (ORDER BY t.date DESC)
-    .sortBy('date'); // Executa a query
+    .reverse()
+    .sortBy('date');
 
-    // 4. Simular o JOIN
     let resultsWithNames = await mapTransactionNames(filteredTxs);
-    
-    // 5. Aplicar o filtro de query (texto) nos resultados com nomes
+
     if (options?.query && options.query.trim().length > 0) {
        const q = options.query.trim().toLowerCase();
        resultsWithNames = resultsWithNames.filter(tx => 
@@ -182,7 +164,6 @@ export const fetchTransactions = async (
   }
 };
 
-// fetchAllRawTransactions, fetchTransactionById, clearAllTransactions (sem alterações)
 export const fetchAllRawTransactions = async (): Promise<Transaction[]> => {
   try {
     return await db.transactions.toArray();

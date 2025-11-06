@@ -1,4 +1,3 @@
-// src/components/TitleBar.tsx
 import React, { useState, useEffect } from 'react';
 import { Minus, Square, Copy, X } from 'lucide-react';
 
@@ -6,14 +5,12 @@ export const TitleBar: React.FC = () => {
   const [isMaximized, setIsMaximized] = useState(false);
 
   useEffect(() => {
-    // Escuta a mudança de estado enviada pelo main.ts
     const handleWindowStateChange = (event: any, state: string) => {
       setIsMaximized(state === 'maximized');
     };
     
     window.ipcRenderer.on('window-state-changed', handleWindowStateChange);
 
-    // Limpa o listener ao desmontar
     return () => {
       window.ipcRenderer.off('window-state-changed', handleWindowStateChange);
     };
@@ -31,7 +28,6 @@ export const TitleBar: React.FC = () => {
     window.ipcRenderer.send('close-window');
   };
 
-  // Botão customizado para evitar repetição
   const TitleBarButton: React.FC<{ onClick: () => void, children: React.ReactNode, className?: string }> = 
     ({ onClick, children, className = '' }) => (
     <button
@@ -43,11 +39,10 @@ export const TitleBar: React.FC = () => {
   );
 
   return (
-    // 'title-bar' é a classe CSS que define a área de arrastar
     <div className="title-bar w-full h-8 bg-gray-800 flex justify-between items-center fixed top-0 left-0 z-50">
       <div className="flex-1 h-full flex items-center pl-2">   
       </div>
-      {/* Botões (Direita) */}
+ 
       <div className="flex h-full">
         <TitleBarButton onClick={handleMinimize}>
           <Minus color='#fff' size={16} />

@@ -1,8 +1,7 @@
-// src/hooks/useStatmentMassDelete.ts
 import { useState, useCallback } from 'react';
 import * as DB from '../services/database';
 import { useRefresh } from '../contexts/RefreshContext';
-import { useModal } from '../contexts/ModalContext'; // 1. Importar
+import { useModal } from '../contexts/ModalContext';
 
 interface useStatmentMassDeleteProps {
     reload: () => void;
@@ -12,9 +11,8 @@ export const useStatmentMassDelete = ({ reload }: useStatmentMassDeleteProps) =>
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const { triggerReload } = useRefresh();
-    const { confirm, alert } = useModal(); // 2. Pegar as funções
+    const { confirm, alert } = useModal();
 
-    // ... (outras funções não mudam) ...
     const handleLongPressItem = useCallback((txId: string) => {
         setIsSelectionMode(true);
         setSelectedIds(prev => new Set(prev).add(txId));
@@ -47,7 +45,6 @@ export const useStatmentMassDelete = ({ reload }: useStatmentMassDeleteProps) =>
 
         const idsToDelete = Array.from(selectedIds).map(id => parseInt(id, 10));
 
-        // 3. Substituir o confirm
         const userConfirmed = await confirm(
             'Confirmar Exclusão',
             `Tem certeza que deseja excluir ${idsToDelete.length} ${idsToDelete.length > 1 ? "transações" : "transação"}? Esta ação não pode ser desfeita.`,

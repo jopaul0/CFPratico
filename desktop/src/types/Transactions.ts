@@ -1,5 +1,3 @@
-// src/types/Transactions.ts
-
 export type Tx = {
     id: string;
     date: string;

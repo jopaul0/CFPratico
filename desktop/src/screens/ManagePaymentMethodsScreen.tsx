@@ -9,7 +9,6 @@ import { PaymentMethod } from '../types/Database';
 import { Trash, Edit, Wallet } from 'lucide-react';
 import { useModal } from '../contexts/ModalContext';
 
-// Componente de Item (traduzido para web)
 const PaymentMethodItem: React.FC<{
   item: PaymentMethod;
   onSelect: (item: PaymentMethod) => void;
@@ -38,7 +37,6 @@ const PaymentMethodItem: React.FC<{
   );
 };
 
-// Tela Principal
 export const ManagePaymentMethodsScreen: React.FC = () => {
   const {
     paymentMethods,
@@ -65,7 +63,6 @@ export const ManagePaymentMethodsScreen: React.FC = () => {
   };
 
   const onDelete = async (item: PaymentMethod) => {
-      // 3. Substituir o confirm
       const userConfirmed = await confirm(
         'Confirmar Exclusão',
         `Tem certeza que deseja excluir "${item.name}"? As transações associadas não serão excluídas, mas ficarão sem categoria.`,

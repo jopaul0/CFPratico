@@ -1,4 +1,3 @@
-// src/hooks/useManagePaymentMethods.ts
 import { useState, useCallback, useEffect } from 'react';
 import * as DB from '../services/database';
 import type { PaymentMethod } from '../types/Database';

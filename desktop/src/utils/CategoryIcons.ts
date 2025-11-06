@@ -1,5 +1,3 @@
-// src/utils/CategoryIcons.ts
-// IMPORTANTE: Troque 'lucide-react-native' por 'lucide-react'
 import {
   LucideIcon,
   DollarSign,
@@ -19,9 +17,8 @@ import {
   Fuel, 
   HardHat, 
   MoreHorizontal,
-} from 'lucide-react'; // <-- MUDANÇA AQUI
+} from 'lucide-react'; 
 
-// O resto do arquivo é idêntico
 export const iconMap: Record<string, LucideIcon> = {
     "DollarSign": DollarSign,
     "Wallet": Wallet,

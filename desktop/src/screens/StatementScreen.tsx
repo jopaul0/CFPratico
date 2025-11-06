@@ -1,10 +1,8 @@
-// src/screens/StatementScreen.tsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Tx, TransactionGroup } from '../types/Transactions';
 import { formatToBRL } from '../utils/Value';
 
-// Componentes
 import { MainContainer } from '../components/MainContainer';
 import { SearchBar } from '../components/SearchBar';
 import { Filters } from '../components/Filters';
@@ -12,11 +10,9 @@ import { TransactionItem } from '../components/TransactionItem';
 import { Divider } from '../components/Divider';
 import { Plus, Trash } from 'lucide-react';
 
-// Hooks
 import { useStatementData } from '../hooks/useStatementData';
 import { useStatmentMassDelete } from '../hooks/useStatementMassDelete';
 
-// Header da Seção (Recriado do original)
 const SectionHeader: React.FC<{ group: TransactionGroup }> = ({ group }) => (
     <div className="pt-4 pb-2 px-4">
         <div className="flex items-center justify-between">
@@ -53,8 +49,6 @@ export const StatementScreen: React.FC = () => {
 
     const handleAddTransaction = () => navigate('/statement/new');
 
-    // O 'onPress' do item agora só precisa lidar com o modo de seleção,
-    // pois a navegação é feita pelo <Link> no próprio componente
     const handlePressItem = (tx: Tx) => {
         if (isSelectionMode) {
             toggleSelectItem(tx.id);
@@ -133,7 +127,6 @@ export const StatementScreen: React.FC = () => {
                     )}
                 </div>
 
-                {/* Botão Flutuante (FAB) Condicional */}
                 <button
                     title={isSelectionMode ? "Excluir selecionados" : "Adicionar transação"}
                     onClick={isSelectionMode ? handleDeleteSelected : handleAddTransaction}

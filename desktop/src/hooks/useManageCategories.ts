@@ -1,4 +1,3 @@
-// src/hooks/useManageCategories.ts
 import { useState, useCallback, useEffect } from 'react';
 import * as DB from '../services/database';
 import type { Category } from '../types/Database';

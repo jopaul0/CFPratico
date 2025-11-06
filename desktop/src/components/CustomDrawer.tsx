@@ -1,14 +1,13 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, List, Settings, X } from 'lucide-react'; // Importar X
+import { LayoutDashboard, List, Settings, X } from 'lucide-react';
 import { Divider } from './Divider';
 
-// 1. Props para o LinkItem
 interface LinkItemProps {
   to: string;
   label: string;
   icon: React.ReactNode;
-  onClick: () => void; // Para fechar o drawer ao clicar
+  onClick: () => void;
 }
 
 const LinkItem: React.FC<LinkItemProps> = ({ to, label, icon, onClick }) => {
@@ -29,7 +28,6 @@ const LinkItem: React.FC<LinkItemProps> = ({ to, label, icon, onClick }) => {
   );
 };
 
-// 3. Props para o CustomDrawer
 interface CustomDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -37,7 +35,6 @@ interface CustomDrawerProps {
 
 export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) => {
   return (
-    // 4. Lógica de classes para responsividade
     <div
       className={`
         fixed inset-y-0 left-0 z-40 flex h-full w-64 pt-8 transform flex-col gap-2 bg-white p-4 shadow-lg
@@ -49,11 +46,9 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) =
       {/* Topo do Drawer */}
       <div className="flex items-center justify-between p-2 mb-4">
         <div className="flex items-center gap-3">
-          {/* Usando um ícone placeholder, você pode trocar pela sua logo */}
           <img src="/icon.png" width={60} alt="icon" />
           <span className="text-xl font-bold text-gray-800">CF Prático</span>
         </div>
-        {/* 5. Botão de Fechar (só no mobile) */}
         <button
           onClick={onClose}
           className="p-1 text-gray-600 hover:bg-gray-200 rounded-full md:hidden"

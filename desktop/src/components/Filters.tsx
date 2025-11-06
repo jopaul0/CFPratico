@@ -1,9 +1,8 @@
-// src/components/Filters.tsx
 import React from 'react';
 import { X } from 'lucide-react';
 import { InputGroup } from './InputGroup';
 import { DatePickerInput } from './DatePickerInput';
-import { FilterPicker, FilterDate, FiltersProps } from '../types/Filters';
+import { FiltersProps } from '../types/Filters';
 
 export const Filters: React.FC<FiltersProps> = ({ filters, className, onClearFilters }) => {
   
@@ -34,23 +33,17 @@ export const Filters: React.FC<FiltersProps> = ({ filters, className, onClearFil
 
     return (
         <div key={f.key} style={{ width: f.width ?? 240 }} className="shrink-0">
-            {/* Adicionado 'shrink-0' para garantir que os itens não encolham */}
             {inputNode}
         </div>
     );
   });
 
   return (
-    // --- LÓGICA ATUALIZADA AQUI ---
-    // Container principal que alinha a lista de filtros e o botão de limpar
-    <div className={`mt-3 flex flex-row items-end gap-3 ${className}`}>
-        
-        {/* 1. O container que rola horizontalmente */}
+    <div className={`mt-3 flex flex-row items-end gap-3 ${className}`}>        
         <div className="flex-1 flex flex-row flex-nowrap items-end gap-3 overflow-x-auto">
             {nodes}
         </div>
 
-        {/* 2. O botão de limpar, que fica estático no final */}
         {onClearFilters && (
             <button
                 onClick={onClearFilters}

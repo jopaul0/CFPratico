@@ -21,9 +21,7 @@ function createWindow() {
     icon: path.join(process.env.VITE_PUBLIC, 'desktop-icon.png'),
     title: "CF Pratico",
     frame: false,
-    titleBarStyle: 'hidden', // Necessário para alguns casos
-    // --- FIM DA ADIÇÃO ---
-
+    titleBarStyle: 'hidden', 
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
     },
@@ -40,16 +38,12 @@ function createWindow() {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 
-  // --- 3. ADICIONAR ISSO (Monitorar estado da janela) ---
-  // Envia o estado da janela para o React quando ela for maximizada
   win.on('maximize', () => {
     win?.webContents.send('window-state-changed', 'maximized');
   });
-  // Envia o estado da janela para o React quando ela for restaurada
   win.on('unmaximize', () => {
     win?.webContents.send('window-state-changed', 'unmaximized');
   });
-  // --- FIM DA ADIÇÃO ---
 }
 
 app.on('window-all-closed', () => {
@@ -67,8 +61,6 @@ app.on('activate', () => {
 
 app.whenReady().then(() => {
   createWindow();
-
-  // --- 4. ADICIONAR ISSO (Handlers dos botões) ---
   ipcMain.on('minimize-window', () => {
     win?.minimize();
   });
@@ -84,5 +76,4 @@ app.whenReady().then(() => {
   ipcMain.on('close-window', () => {
     win?.close();
   });
-  // --- FIM DA ADIÇÃO ---
 });

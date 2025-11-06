@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import * as DB from '../services/database';
 import type { UserConfig } from '../types/Database';

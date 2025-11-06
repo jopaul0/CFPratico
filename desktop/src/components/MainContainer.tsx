@@ -1,4 +1,3 @@
-// src/components/MainContainer.tsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -17,12 +16,10 @@ export const MainContainer: React.FC<MainContainerProps> = ({
   showBackButton = false,
 }) => {
   const navigate = useNavigate();
-  const handleBack = () => navigate(-1); // Função para voltar
+  const handleBack = () => navigate(-1);
 
   return (
     <main className={`p-4 md:p-8 max-w-7xl mx-auto w-full ${className}`}>
-      
-      {/* --- NOVO CABEÇALHO --- */}
       {(title || showBackButton) && (
         <div className="flex items-center mb-6">
           {showBackButton && (
@@ -41,8 +38,6 @@ export const MainContainer: React.FC<MainContainerProps> = ({
           )}
         </div>
       )}
-      {/* --- FIM DO NOVO CABEÇALHO --- */}
-      
       {children}
     </main>
   );

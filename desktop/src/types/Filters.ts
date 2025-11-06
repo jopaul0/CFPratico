@@ -1,8 +1,5 @@
-// src/types/Filters.ts
-
 export type Option = { label: string; value: string };
 
-// Tipos para os filtros baseados em Picker
 export type FilterPicker = {
   key: string;
   label: string;
@@ -13,7 +10,6 @@ export type FilterPicker = {
   width?: number;
 };
 
-// Tipos para os filtros de Data
 export type FilterDate = {
     key: string;
     label: string;
@@ -23,7 +19,6 @@ export type FilterDate = {
     width?: number;
 }
 
-// Tipo de união para as configurações de filtro
 export type FilterConfig = FilterPicker | FilterDate;
 
 export interface FiltersProps {

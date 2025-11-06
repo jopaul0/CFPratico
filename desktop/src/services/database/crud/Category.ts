@@ -1,4 +1,3 @@
-// src/services/database/crud/Category.ts
 import { db } from '../db';
 import { Category } from '../../../types/Database';
 
@@ -16,7 +15,7 @@ export const addCategory = async (name: string, iconName: string): Promise<Categ
     const newId = await db.categories.add({
       name: name,
       icon_name: iconName
-    } as any); // 'as any' para Dexie gerenciar o 'id'
+    } as any);
     
     return { id: newId as number, name, icon_name: iconName };
   } catch (error: any) {
@@ -45,15 +44,10 @@ export const updateCategory = async (id: number, name: string, iconName: string)
 
 export const deleteCategory = async (id: number): Promise<void> => {
   try {
-    // No Dexie, não temos 'ON DELETE SET NULL' automático.
-    // Precisamos atualizar as transações manualmente.
     await db.transaction('rw', db.categories, db.transactions, async () => {
-      // 1. Remove a referência das transações
       await db.transactions
         .where({ category_id: id })
-        .modify({ category_id: null as any }); // Dexie não gosta de null em FKs indexadas, mas funciona
-      
-      // 2. Deleta a categoria
+        .modify({ category_id: null as any });
       await db.categories.delete(id);
     });
     

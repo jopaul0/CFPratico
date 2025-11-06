@@ -1,4 +1,3 @@
-// src/utils/Categories.ts
 type CategoryName = string;
 export const ALL_CATEGORY_NAMES: CategoryName[] = [
     "Saldo Inicial", "Venda", "Prestação de Serviço", "Transferência", "Fornecedor",

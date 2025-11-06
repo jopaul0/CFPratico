@@ -18,7 +18,6 @@ const iconOptions: Option[] = Object.keys(iconMap)
     value: iconName,
   }));
 
-// Componente de Item (traduzido para web)
 const CategoryItem: React.FC<{
   item: Category;
   onSelect: (item: Category) => void;
@@ -48,7 +47,6 @@ const CategoryItem: React.FC<{
   );
 };
 
-// Tela Principal
 export const ManageCategoriesScreen: React.FC = () => {
   const {
     categories,
@@ -77,7 +75,6 @@ export const ManageCategoriesScreen: React.FC = () => {
   };
 
   const onDelete = async (item: Category) => {
-    // 3. Substituir o confirm
     const userConfirmed = await confirm(
       'Confirmar Exclusão',
       `Tem certeza que deseja excluir "${item.name}"? As transações associadas não serão excluídas, mas ficarão sem categoria.`,
@@ -126,7 +123,6 @@ export const ManageCategoriesScreen: React.FC = () => {
 
   return (
     <MainContainer title="Gerenciar Categorias" showBackButton>
-      {/* Formulário de Edição/Criação */}
       <form onSubmit={onSave} className="p-4 bg-white rounded-lg shadow mb-6">
         <h2 className="text-lg font-semibold text-gray-700 mb-3">
           {selectedCategory ? 'Editar Categoria' : 'Nova Categoria'}
@@ -171,7 +167,6 @@ export const ManageCategoriesScreen: React.FC = () => {
 
       <Divider />
 
-      {/* Lista de Categorias */}
       <h2 className="text-xl font-bold text-gray-800 mb-4">Categorias Existentes</h2>
       {renderList()}
     </MainContainer>

@@ -1,4 +1,3 @@
-// src/screens/AddTransaction.tsx
 import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,12 +22,12 @@ export const AddTransaction: React.FC = () => {
   } = useAddTransaction();
 
   const onSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault(); // Impede o reload da página
+    e.preventDefault();
     try {
       await save();
       await alert('Sucesso!', 'Transação adicionada.', 'success');
       triggerReload();
-      navigate(-1); // Volta para a página anterior
+      navigate(-1);
     } catch (e: any) {
       await alert('Erro', e?.message ?? 'Falha ao salvar.', 'error');
     }

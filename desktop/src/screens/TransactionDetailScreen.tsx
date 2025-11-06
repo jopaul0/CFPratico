@@ -60,7 +60,6 @@ const ViewMode: React.FC<{ tx: TransactionWithNames }> = ({ tx }) => {
     );
 };
 
-// --- (O componente EditMode não muda) ---
 const EditMode: React.FC<{ hook: ReturnType<typeof useTransactionDetail> }> = ({ hook }) => {
     const { formState, setField, categories, paymentMethods } = hook;
     if (!formState) return null;
@@ -80,7 +79,6 @@ const EditMode: React.FC<{ hook: ReturnType<typeof useTransactionDetail> }> = ({
 };
 
 
-// --- TELA PRINCIPAL (Corrigida) ---
 export const TransactionDetailScreen: React.FC = () => {
     const navigate = useNavigate();
     const { triggerReload } = useRefresh();
@@ -94,9 +92,8 @@ export const TransactionDetailScreen: React.FC = () => {
         handleEditToggle, handleCancel, handleSave, handleDelete
     } = hook;
 
-    // --- CORREÇÃO: onSave agora é um handler de 'submit' do formulário ---
     const onSave = useCallback(async (e: React.FormEvent) => {
-        e.preventDefault(); // Impede o reload da página
+        e.preventDefault();
         try {
             await handleSave();
             await alert('Sucesso!', 'Transação atualizada.', 'success');
@@ -136,23 +133,16 @@ export const TransactionDetailScreen: React.FC = () => {
             return <p className="mt-16 text-center text-gray-500">Transação não encontrada.</p>;
         }
 
-        // Se não estiver editando, apenas mostra o ViewMode
         if (!isEditing) {
             return <ViewMode tx={transaction} />;
         }
 
-        // Se estiver editando, retorna o EditMode
-        // O <form> e os botões serão renderizados fora
         return <EditMode hook={hook} />;
     };
 
     return (
         <MainContainer title={isEditing ? "Editar Transação" : "Detalhe da Transação"}
             showBackButton>
-            {/* --- CORREÇÃO DE LÓGICA ---
-              O <form> agora envolve o conteúdo E os botões
-              quando está em modo de edição.
-            */}
             {isEditing ? (
                 <form onSubmit={onSave}>
                     {renderMainContent()}
@@ -164,12 +154,12 @@ export const TransactionDetailScreen: React.FC = () => {
                                 <div className="flex justify-center gap-3">
                                     <SimpleButton
                                         title="Cancelar"
-                                        type="button" // Importante: não submete o form
+                                        type="button"
                                         onPress={handleCancel}
                                     />
                                     <SimpleButton
                                         title={isSaving ? 'Salvando…' : 'Salvar'}
-                                        type="submit" // Submete o formulário
+                                        type="submit"
                                         disabled={isSaving}
                                         className="bg-blue-600 text-white hover:bg-blue-700"
                                     />

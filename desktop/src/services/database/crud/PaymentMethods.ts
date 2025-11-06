@@ -1,4 +1,3 @@
-// src/services/database/crud/PaymentMethods.ts
 import { db } from '../db';
 import { PaymentMethod } from '../../../types/Database';
 
@@ -41,14 +40,11 @@ export const updatePaymentMethod = async (id: number, name: string): Promise<voi
 
 export const deletePaymentMethod = async (id: number): Promise<void> => {
   try {
-    // Similar às Categorias, precisamos limpar as FKs manualmente
      await db.transaction('rw', db.paymentMethods, db.transactions, async () => {
-        // 1. Remove a referência das transações
         await db.transactions
             .where({ payment_method_id: id })
             .modify({ payment_method_id: null as any });
-            
-        // 2. Deleta o método
+    
         await db.paymentMethods.delete(id);
      });
     console.log(`Método de pagamento ${id} deletado (e transações associadas atualizadas).`);

@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import * as DB from '../services/database';
 import {
@@ -11,7 +10,6 @@ import {
 } from '../types/Database';
 import { formatBRLToNumber, formatNumberToBRLInput, formatBRLInputMask } from '../utils/Value';
 
-// Estado do formulário
 interface FormState {
     dateISO: string;
     description: string;
@@ -24,7 +22,7 @@ interface FormState {
 }
 
 interface UseTransactionDetailProps {
-    transactionId: number; // A tela (componente) será responsável por extrair isso da URL
+    transactionId: number;
 }
 
 export const useTransactionDetail = ({ transactionId }: UseTransactionDetailProps) => {
@@ -51,7 +49,6 @@ export const useTransactionDetail = ({ transactionId }: UseTransactionDetailProp
     });
 
     const loadData = useCallback(async () => {
-        // Validação para evitar buscar "NaN" se o ID da URL for inválido
         if (isNaN(transactionId)) {
             setError(new Error('ID de transação inválido.'));
             setIsLoading(false);
@@ -137,7 +134,7 @@ export const useTransactionDetail = ({ transactionId }: UseTransactionDetailProp
 
             setIsSaving(false);
             setIsEditing(false);
-            await loadData(); // Recarrega os dados
+            await loadData();
 
         } catch (e) {
             setIsSaving(false);
@@ -147,7 +144,6 @@ export const useTransactionDetail = ({ transactionId }: UseTransactionDetailProp
 
     const handleDelete = async (): Promise<void> => {
         await DB.deleteTransaction(transactionId);
-        // O componente (tela) será responsável por navegar de volta
     };
 
     return {

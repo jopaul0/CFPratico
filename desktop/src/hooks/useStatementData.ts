@@ -1,4 +1,3 @@
-// src/hooks/useStatementData.ts
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import * as DB from '../services/database'; 
 import { 

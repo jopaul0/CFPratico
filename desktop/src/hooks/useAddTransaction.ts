@@ -1,4 +1,3 @@
-// src/hooks/useAddTransaction.ts
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as DB from '../services/database';
 import type { Category, PaymentMethod, TransactionCondition } from '../types/Database';

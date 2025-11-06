@@ -2,13 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
-import { View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { RefreshProvider } from './src/contexts/RefreshContext';
 import * as DB from './src/services/database';
 
-// Mantenha a tela de Splash visível enquanto o app carrega
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
@@ -47,13 +46,14 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <View
+      <SafeAreaView
         className="flex-1"
         onLayout={onLayoutRootView}
       >
-        <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
+        <StatusBar barStyle="dark-content" backgroundColor="transparent" 
+            translucent={true} />
         <RefreshProvider><AppNavigator /></RefreshProvider>
-      </View>
+      </SafeAreaView>
     </NavigationContainer>
   );
 }

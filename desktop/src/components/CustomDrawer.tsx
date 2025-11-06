@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, List, Settings, X } from 'lucide-react';
 import { Divider } from './Divider';
+import icon from '../assets/icon.png';
 
 interface LinkItemProps {
   to: string;
@@ -46,7 +47,7 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) =
       {/* Topo do Drawer */}
       <div className="flex items-center justify-between p-2 mb-4">
         <div className="flex items-center gap-3">
-          <img src="/icon.png" width={60} alt="icon" />
+          <img src={icon} width={60} alt="icon" />
           <span className="text-xl font-bold text-gray-800">CF Prático</span>
         </div>
         <button

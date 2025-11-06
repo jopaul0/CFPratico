@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createHashRouter, RouterProvider } from 'react-router-dom';
 import { RefreshProvider } from './contexts/RefreshContext';
 import { ModalProvider } from './contexts/ModalContext'
 
@@ -13,7 +13,7 @@ import { ManageCategoriesScreen } from './screens/ManageCategoriesScreen';
 import { ManagePaymentMethodsScreen } from './screens/ManagePaymentMethodsScreen';
 import { HelpScreen } from './screens/HelpScreen';
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: '/',
     element: <AppNavigator />,

@@ -20,12 +20,12 @@ Este projeto está sendo construído em etapas, com o objetivo de cobrir todas a
 
 ### [✅] Etapa 3: Aplicativo Web
 
-- Status: Planejado
+- Status: Concluído
 - Objetivo: Desenvolver a versão web completa.
 
 ### [✅] Etapa 4: Aplicativo Desktop
 
-- Status: Planejado
+- Status: Concluído
 - Objetivo: Empacotar a aplicação web (provavelmente usando Electron) para criar uma experiência de desktop instalável para Windows, macOS e Linux.
 
 ---

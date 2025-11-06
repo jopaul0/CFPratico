@@ -10,7 +10,7 @@ export const useSettings = () => {
 
   const [companyName, setCompanyName] = useState('');
   const [initialBalanceInput, setInitialBalanceInput] = useState('');
-  const [originalConfig, setOriginalConfig] = useState<UserConfig | null>(null);
+  const [_originalConfig, setOriginalConfig] = useState<UserConfig | null>(null);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);

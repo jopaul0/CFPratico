@@ -1,7 +1,6 @@
 import React, { useRef } from 'react';
 
 import * as DB from '../services/database';
-import { useRefresh } from '../contexts/RefreshContext';
 import { exportDataAsJson, importDataFromJson } from '../services/dataSync';
 
 import { MainContainer } from '../components/MainContainer';
@@ -16,7 +15,6 @@ import { Database, Wallet, UploadCloud, DownloadCloud, RefreshCw, HelpCircle } f
 import { useModal } from '../contexts/ModalContext';
 
 export const SettingsScreen: React.FC = () => {
-  const { triggerReload } = useRefresh();
   const {
     isLoading,
     isSaving,

@@ -32,8 +32,7 @@ export const StatementScreen: React.FC = () => {
         handleClearAll,
         doSearch,
         isLoading,
-        error,
-        reload,
+        error
     } = useStatementData();
 
     const {
@@ -43,7 +42,7 @@ export const StatementScreen: React.FC = () => {
         handleCancelSelection,
         toggleSelectItem,
         handleDeleteSelected,
-    } = useStatmentMassDelete({ reload });
+    } = useStatmentMassDelete();
 
     const navigate = useNavigate();
 

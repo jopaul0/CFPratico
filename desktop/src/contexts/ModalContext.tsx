@@ -32,7 +32,7 @@ type PromiseCallbacks = {
 export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<ModalOptions | null>(null);
-  const [callbacks, setCallbacks] = useState<PromiseCallbacks | null>(null);
+  const [_callbacks, setCallbacks] = useState<PromiseCallbacks | null>(null);
 
   const alert = useCallback((title: string, message: string, type: 'success' | 'error' | 'warning' = 'warning') => {
     return new Promise<void>((resolve) => {

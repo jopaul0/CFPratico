@@ -1,5 +1,10 @@
 {
   "name": "cfpratico",
+  "productName": "CF Prático",
+  "author": {
+    "email": "jopaulo.as8@gmail.com",
+    "name": "João Paulo"
+  },
   "private": true,
   "version": "1.0.0",
   "type": "module",

@@ -1,7 +1,5 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import type { Tx } from '../types/Transactions';
-
 import { TransactionItem } from '../components/TransactionItem';
 import { SimpleButton } from '../components/SimpleButton';
 import { Divider } from '../components/Divider';
@@ -30,8 +28,7 @@ export const DashboardScreen: React.FC = () => {
         byCategoryRevenue,
         byCategoryExpense,
         byDate,
-        recentTransactions,
-        reload
+        recentTransactions
     } = dashboardData;
 
     const {
@@ -43,7 +40,6 @@ export const DashboardScreen: React.FC = () => {
     });
 
     const handleViewAll = () => navigate('/statement');
-    const handleAddTransaction = () => navigate('/statement/new');
 
 
     const renderContent = () => {

@@ -1,9 +1,10 @@
 // @see - https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "YourAppID",
+  "appId": "CFPraticoID",
   "asar": true,
-  "productName": "YourAppName",
+  "copyright": "Copyright © 2025 João Paulo",
+  "productName": "CF Prático",
   "directories": {
     "output": "release/${version}"
   },
@@ -12,12 +13,14 @@
     "dist-electron"
   ],
   "mac": {
+    "icon": "public/desktop-icon.png",
     "target": [
       "dmg"
     ],
     "artifactName": "${productName}-Mac-${version}-Installer.${ext}"
   },
   "win": {
+    "icon": "public/desktop-icon.png",
     "target": [
       {
         "target": "nsis",
@@ -35,6 +38,7 @@
     "deleteAppDataOnUninstall": false
   },
   "linux": {
+    "icon": "public/desktop-icon.png",
     "target": [
       "AppImage"
     ],

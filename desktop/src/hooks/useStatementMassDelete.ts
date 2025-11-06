@@ -3,11 +3,7 @@ import * as DB from '../services/database';
 import { useRefresh } from '../contexts/RefreshContext';
 import { useModal } from '../contexts/ModalContext';
 
-interface useStatmentMassDeleteProps {
-    reload: () => void;
-}
-
-export const useStatmentMassDelete = ({ reload }: useStatmentMassDeleteProps) => {
+export const useStatmentMassDelete = () => {
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const { triggerReload } = useRefresh();

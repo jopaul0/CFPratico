@@ -5,7 +5,7 @@ export const TitleBar: React.FC = () => {
   const [isMaximized, setIsMaximized] = useState(false);
 
   useEffect(() => {
-    const handleWindowStateChange = (event: any, state: string) => {
+    const handleWindowStateChange = (_event: any, state: string) => {
       setIsMaximized(state === 'maximized');
     };
     

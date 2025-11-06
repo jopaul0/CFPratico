@@ -1,0 +1,97 @@
+
+import { useState, useCallback, useEffect } from 'react';
+import * as DB from '../services/database';
+import type { PaymentMethod } from '../services/database';
+import { useRefresh } from '../contexts/RefreshContext';
+
+export const useManagePaymentMethods = () => {
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  // Estado do formulário
+  const [formName, setFormName] = useState('');
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+
+  const { triggerReload } = useRefresh();
+
+  const loadPaymentMethods = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await DB.fetchPaymentMethods();
+      setPaymentMethods(data);
+    } catch (e) {
+      setError(e as Error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPaymentMethods();
+  }, [loadPaymentMethods]);
+
+  // Preenche o formulário para edição
+  const handleSelectMethod = useCallback((method: PaymentMethod) => {
+    setSelectedMethod(method);
+    setFormName(method.name);
+  }, []);
+
+  // Limpa o formulário para adição
+  const handleClearForm = useCallback(() => {
+    setSelectedMethod(null);
+    setFormName('');
+  }, []);
+
+  // Salva (cria ou atualiza)
+  const handleSave = useCallback(async () => {
+    if (!formName || formName.trim().length === 0) {
+      throw new Error('O nome é obrigatório.');
+    }
+    setIsSaving(true);
+    try {
+      if (selectedMethod) {
+        // Atualiza
+        await DB.updatePaymentMethod(selectedMethod.id, formName);
+      } else {
+        // Cria
+        await DB.addPaymentMethod(formName);
+      }
+      handleClearForm();
+      await loadPaymentMethods();
+      triggerReload();
+    } finally {
+      setIsSaving(false);
+    }
+  }, [selectedMethod, formName, loadPaymentMethods, handleClearForm, triggerReload]);
+
+  const handleDelete = useCallback(async (id: number) => {
+    if (!id) return;
+    try {
+      await DB.deletePaymentMethod(id);
+      handleClearForm(); // Limpa o form se o item deletado estava selecionado
+      await loadPaymentMethods(); // Recarrega a lista local
+      triggerReload(); // <-- DISPARA O GATILHO GLOBAL
+    } catch (e) {
+      console.error("Erro no hook handleDelete (PaymentMethod):", e);
+      throw e; // Lança o erro para a tela tratar
+    }
+  }, [loadPaymentMethods, handleClearForm, triggerReload]);
+
+  return {
+    paymentMethods,
+    isLoading,
+    isSaving,
+    error,
+    formName,
+    setFormName,
+    selectedMethod,
+    handleSelectMethod,
+    handleClearForm,
+    handleSave,
+    handleDelete,
+    reload: loadPaymentMethods,
+  };
+};

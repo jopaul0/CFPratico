@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "CFPratico",
+    "slug": "CFPratico",
+    "scheme": "cfpratico",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./src/assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.jopaul0.cfpratico"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jopaul0.cfpratico"
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./src/assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-splash-screen",
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e702bcb3-8640-4135-ad88-ac3694d9be63"
+      }
+    },
+    "owner": "jopaul0"
+  }
+}

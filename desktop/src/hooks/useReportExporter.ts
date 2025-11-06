@@ -60,13 +60,20 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
 
       const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
+
+      // Envia o buffer para o processo main (Electron) cuidar de salvar
       const result = await window.ipcRenderer.invoke('export-excel', buffer);
 
-       XLSX.writeFile(wb, "relatorio_cfpratico.xlsx");
+      // REMOVA A LINHA ABAIXO:
+      // XLSX.writeFile(wb, "relatorio_cfpratico.xlsx");
 
+      // Você pode (opcionalmente) tratar o 'result' aqui
+      if (!result.success && !result.canceled) {
+        throw new Error(result.error || "Falha ao salvar arquivo.");
+      }
 
     } catch (e: any) {
-      await alert("Erro ao exportar", "Ocorreu um erro ao gerar o arquivo xlsx", 'error');
+      await alert("Erro ao exportar", e.message || "Ocorreu um erro ao gerar o arquivo xlsx", 'error');
     } finally {
       setIsExporting(false);
     }
@@ -139,7 +146,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
               ${generateCategoryTable('Despesas por Categoria', byCategoryExpense, 'despesa')}
           </div>
       </div>`;
-    
+
     const logoHtml = `<img src="${logoImage}" class="logo" />`;
     const companyName = userConfig?.company_name || 'CFPratico';
     const reportPeriod = `<p class="period"><b>Período do Relatório:</b> ${formatShortDate(startDate)} a ${formatShortDate(endDate)}</p>`;
@@ -222,7 +229,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     try {
       const html = createPdfHtml();
 
-      const result: { success: boolean; filePath?: string; error?: string; canceled?: boolean } = 
+      const result: { success: boolean; filePath?: string; error?: string; canceled?: boolean } =
         await window.ipcRenderer.invoke('export-pdf', html);
 
       if (result.success) {

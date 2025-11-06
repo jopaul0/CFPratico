@@ -1,5 +1,5 @@
-# CF Prático (Web)
-Este é o repositório para o aplicativo móvel do CF Prático, um controlador financeiro ágil focado em pequenas empresas e usuários autônomos. Este projeto é a parte web de uma suíte que futuramente incluirá versões Mobile e Desktop.
+# CF Prático (Desktop)
+Este é o repositório para o aplicativo móvel do CF Prático, um controlador financeiro ágil focado em pequenas empresas e usuários autônomos. Este projeto é a parte desktop de uma suíte que futuramente incluirá versões Web e Mobile.
 
 O aplicativo é construído com React (usando Vite) e Electron. Ele utiliza um banco de dados local-first (Dexie.js sobre IndexedDB) para garantir funcionamento offline completo e alta performance no navegador e no desktop.
 
@@ -76,6 +76,8 @@ O aplicativo possui um CRUD (Criar, Ler, Atualizar, Deletar) completo para trans
 
 * Banco de Dados: Dexie.js (wrapper Local-First para IndexedDB)
 
+* Desktop Wrapper: Electron
+
 * Estilização: TailwindCSS
 
 * Navegação: React Router DOM
@@ -92,16 +94,23 @@ Instalar dependências:
 npm install
 ```
 
-Executar o aplicativo em modo de desenvolvimento (Vite):
+Executar o aplicativo em modo de desenvolvimento (Vite + Electron):
 
 ```bash
 npm run dev
+```
+
+Compilar o aplicativo para produção:
+
+```bash
+npm run build
 ```
 
 ## Estrutura do Projeto
 
 ```bash
 
+electron/             # Configuração do processo principal do Electron (main.ts, preload.ts)
 src/
 ├── assets/           # Imagens e logos (onvale.png, etc.)
 ├── components/       # Componentes reutilizáveis (Botões, Inputs, Gráficos)

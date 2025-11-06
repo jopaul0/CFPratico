@@ -28,7 +28,6 @@ export const SettingsScreen: React.FC = () => {
   } = useSettings();
   const { alert, confirm } = useModal();
 
-  // Ref para o input de arquivo (para importação)
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onSaveSettings = async (e: React.FormEvent) => {
@@ -72,7 +71,6 @@ export const SettingsScreen: React.FC = () => {
       { type: 'warning', confirmText: 'Continuar' }
     );
     if (!userConfirmed) {
-      // Limpa o input se o usuário cancelar
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -81,17 +79,12 @@ export const SettingsScreen: React.FC = () => {
       const jsonString = await file.text();
       await importDataFromJson(jsonString);
 
-      // --- CORREÇÃO AQUI ---
-      // 1. Mostra o alerta de sucesso PRIMEIRO
       await alert('Sucesso!', 'Dados restaurados. O aplicativo será reiniciado.', 'success');
-      // 2. Recarrega a página inteira
       window.location.reload();
-      // --- FIM DA CORREÇÃO ---
 
     } catch (e: any) {
       await alert('Erro ao Importar', e?.message ?? e, 'error');
     } finally {
-      // Limpa o input
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -150,7 +143,6 @@ export const SettingsScreen: React.FC = () => {
 
       <Divider />
 
-      {/* --- Personalização (Links) --- */}
       <div className="w-full">
         <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Personalização</h2>
         <NavLink
@@ -169,7 +161,6 @@ export const SettingsScreen: React.FC = () => {
 
       <Divider />
 
-      {/* --- Suporte (Link) --- */}
       <div className="w-full">
         <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Suporte</h2>
         <NavLink
@@ -182,7 +173,6 @@ export const SettingsScreen: React.FC = () => {
 
       <Divider />
 
-      {/* --- Backup (Botões de Ação) --- */}
       <div className="w-full">
         <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Backup e Restauração</h2>
         <ActionButton
@@ -192,7 +182,6 @@ export const SettingsScreen: React.FC = () => {
           onPress={handleExportData}
         />
 
-        {/* Input de arquivo oculto para importação */}
         <input
           type="file"
           accept=".json,application/json"

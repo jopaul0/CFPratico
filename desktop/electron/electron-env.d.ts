@@ -21,8 +21,6 @@ declare namespace NodeJS {
   }
 }
 
-// --- MODIFICADO PARA CORRESPONDER AO SEU PRELOAD.TS ---
-// Define os tipos para a API exata exposta em electron/preload.ts
 interface Window {
   ipcRenderer: {
     on: (channel: string, listener: (event: import('electron').IpcRendererEvent, ...args: any[]) => void) => import('electron').IpcRenderer;

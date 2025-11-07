@@ -26,50 +26,50 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
   const Icon = getCategoryIcon(categoryIcon);
 
   const selectionClass = isSelected ? 'bg-blue-100 border-blue-400' : 'bg-white border-gray-300';
-  
+
   const content = (
     <div className={`flex items-center justify-between py-3 px-3 rounded-lg border transition-colors ${selectionClass}`}>
-        {isSelectionMode && (
-          <div className="mr-3">
-            {isSelected ? (
-              <CheckCircle size={22} className="text-blue-600" />
-            ) : (
-              <Circle size={22} className="text-gray-400" />
-            )}
-          </div>
-        )}
-        <div className="flex items-center gap-3 flex-1">
-          <div className="p-2 rounded-full bg-gray-200">
-            <Icon size={22} color={iconColor} />
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-gray-900 font-semibold truncate">{category}</p>
-            <p className="text-gray-500 text-xs truncate">
-              {description}
-            </p>
-          </div>
+      {isSelectionMode && (
+        <div className="mr-3">
+          {isSelected ? (
+            <CheckCircle size={22} className="text-blue-600" />
+          ) : (
+            <Circle size={22} className="text-gray-400" />
+          )}
         </div>
-        <p className={`text-sm font-semibold whitespace-nowrap ${isNegative ? 'text-red-500' : 'text-green-600'}`}>
-          {formattedValue}
-        </p>
+      )}
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="p-2 rounded-full bg-gray-200">
+          <Icon size={22} color={iconColor} />
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <p className="text-gray-900 font-semibold truncate">{category}</p>
+          <p className="text-gray-500 text-xs truncate">
+            {description}
+          </p>
+        </div>
+      </div>
+      <p className={`text-sm font-semibold whitespace-nowrap flex-shrink-0 ${isNegative ? 'text-red-500' : 'text-green-600'}`}>
+        {formattedValue}
+      </p>
     </div>
   );
 
   return isSelectionMode ? (
-    <button 
-        onClick={onPress} 
-        onContextMenu={(e) => { e.preventDefault(); onLongPress?.(); }} 
-        className="w-full text-left rounded-lg mb-2"
+    <button
+      onClick={onPress}
+      onContextMenu={(e) => { e.preventDefault(); onLongPress?.(); }}
+      className="w-full text-left rounded-lg mb-2"
     >
-        {content}
+      {content}
     </button>
   ) : (
-    <Link 
-        to={`/statement/${id}`}
-        onContextMenu={(e) => { e.preventDefault(); onLongPress?.(); }} 
-        className="rounded-lg mb-2 block"
+    <Link
+      to={`/statement/${id}`}
+      onContextMenu={(e) => { e.preventDefault(); onLongPress?.(); }}
+      className="rounded-lg mb-2 block"
     >
-        {content}
+      {content}
     </Link>
   );
 };

@@ -1,8 +1,6 @@
-// src/services/database/crud/UserConfig.ts
 import { db } from '../db';
 import { UserConfig } from '../../../types/Database';
 
-// O ID da config é sempre 1
 const CONFIG_ID = 1;
 
 /**
@@ -10,11 +8,11 @@ const CONFIG_ID = 1;
  */
 export const saveOrUpdateUserConfig = async (config: Omit<UserConfig, 'id'>): Promise<void> => {
   try {
-    // 'put' em Dexie faz 'INSERT OR REPLACE'
     await db.userConfig.put({
       id: CONFIG_ID,
       company_name: config.company_name,
-      initial_balance: config.initial_balance
+      initial_balance: config.initial_balance,
+      company_logo: config.company_logo
     });
   } catch (error: any) {
     console.error('Erro ao salvar config do usuário:', error);
@@ -37,7 +35,8 @@ export const fetchOrCreateUserConfig = async (): Promise<UserConfig> => {
     // Não encontrou, cria a padrão
     const defaultConfig: Omit<UserConfig, 'id'> = {
       company_name: null,
-      initial_balance: 0.00
+      initial_balance: 0.00,
+      company_logo: null
     };
     await saveOrUpdateUserConfig(defaultConfig);
     

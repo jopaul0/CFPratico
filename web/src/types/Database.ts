@@ -17,6 +17,7 @@ export interface UserConfig {
   id: 1;
   company_name: string | null;
   initial_balance: number;
+  company_logo: string | null;
 }
 
 export interface Transaction {

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useCallback } from 'react';
 
 import * as DB from '../services/database';
 import { useRefresh } from '../contexts/RefreshContext';
@@ -12,8 +12,11 @@ import { NavLink } from '../components/NavLink';
 import { ActionButton } from '../components/ActionButton';
 
 import { useSettings } from '../hooks/useSettings';
-import { Database, Wallet, UploadCloud, DownloadCloud, RefreshCw, HelpCircle } from 'lucide-react';
+import { Database, Wallet, UploadCloud, DownloadCloud, RefreshCw, HelpCircle, Image as ImageIcon, X } from 'lucide-react';
 import { useModal } from '../contexts/ModalContext';
+
+
+const MAX_LOGO_SIZE_BYTES = 500 * 1024; 
 
 export const SettingsScreen: React.FC = () => {
   const { triggerReload } = useRefresh();
@@ -24,24 +27,57 @@ export const SettingsScreen: React.FC = () => {
     setCompanyName,
     initialBalanceInput,
     setInitialBalanceInput,
+    companyLogo,    
+    setCompanyLogo, 
     handleSave,
   } = useSettings();
   const { alert, confirm } = useModal();
 
-  // Ref para o input de arquivo (para importação)
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const onSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await handleSave();
       await alert('Sucesso!', 'Configurações salvas!', 'success');
+      triggerReload();
     } catch (e: any) {
       await alert('Erro', e.message, 'error');
     }
   };
 
+
+  const handleLogoFileSelected = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validação
+    if (!file.type.startsWith('image/')) {
+        await alert('Erro', 'Por favor, selecione um arquivo de imagem (PNG, JPG, etc).', 'error');
+        return;
+    }
+    if (file.size > MAX_LOGO_SIZE_BYTES) {
+        await alert('Erro', `A imagem é muito grande. O limite é ${MAX_LOGO_SIZE_BYTES / 1024}KB.`, 'error');
+        return;
+    }
+
+    // Converter para Base64
+    const reader = new FileReader();
+    reader.onload = () => {
+        setCompanyLogo(reader.result as string);
+    };
+    reader.onerror = (error) => {
+        console.error("Erro ao ler arquivo de logo:", error);
+        alert('Erro', 'Não foi possível ler o arquivo da logo.', 'error');
+    };
+    reader.readAsDataURL(file);
+
+  }, [alert, setCompanyLogo]);
+  
+  // --- FUNÇÕES DE BACKUP (Sem alterações) ---
   const handleExportData = async () => {
+    // ... (sem alterações)
     try {
       const jsonString = await exportDataAsJson();
       const blob = new Blob([jsonString], { type: 'application/json' });
@@ -63,6 +99,7 @@ export const SettingsScreen: React.FC = () => {
   };
 
   const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // ... (sem alterações)
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -72,7 +109,6 @@ export const SettingsScreen: React.FC = () => {
       { type: 'warning', confirmText: 'Continuar' }
     );
     if (!userConfirmed) {
-      // Limpa o input se o usuário cancelar
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -80,23 +116,17 @@ export const SettingsScreen: React.FC = () => {
     try {
       const jsonString = await file.text();
       await importDataFromJson(jsonString);
-
-      // --- CORREÇÃO AQUI ---
-      // 1. Mostra o alerta de sucesso PRIMEIRO
       await alert('Sucesso!', 'Dados restaurados. O aplicativo será reiniciado.', 'success');
-      // 2. Recarrega a página inteira
       window.location.reload();
-      // --- FIM DA CORREÇÃO ---
-
     } catch (e: any) {
       await alert('Erro ao Importar', e?.message ?? e, 'error');
     } finally {
-      // Limpa o input
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
   const handleResetApp = async () => {
+    // ... (sem alterações)
     const userConfirmed = await confirm(
       'Atenção!',
       'Isso limpará TODOS os dados atuais. Deseja continuar?',
@@ -106,15 +136,14 @@ export const SettingsScreen: React.FC = () => {
     if (userConfirmed) {
       try {
         await DB.resetDatabaseToDefaults();
-
         await alert('Aplicativo Resetado', 'Os dados foram restaurados ao padrão. O aplicativo será reiniciado.', 'success');
         window.location.reload();
-
       } catch (e: any) {
         await alert('Erro no Reset', e?.message ?? e, 'error');
       }
     }
   };
+
 
   return (
     <MainContainer>
@@ -125,6 +154,48 @@ export const SettingsScreen: React.FC = () => {
           <p>Carregando...</p>
         ) : (
           <>
+            {/* --- SEÇÃO DA LOGO (NOVO) --- */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Logo da Empresa
+              </label>
+              <div className="flex items-center gap-4">
+                {/* Preview */}
+                <div className="w-20 h-20 rounded-lg border border-gray-300 bg-gray-50 flex items-center justify-center overflow-hidden">
+                  {companyLogo ? (
+                    <img src={companyLogo} alt="Logo Preview" className="w-full h-full object-contain" />
+                  ) : (
+                    <ImageIcon size={32} className="text-gray-400" />
+                  )}
+                </div>
+                {/* Botões */}
+                <div className="flex flex-col gap-2">
+                  <SimpleButton
+                    title="Alterar Logo"
+                    type="button"
+                    onPress={() => logoInputRef.current?.click()}
+                  />
+                  {companyLogo && (
+                    <SimpleButton
+                      title="Remover"
+                      type="button"
+                      onPress={() => setCompanyLogo(null)}
+                      className="bg-red-50 text-red-700 hover:bg-red-100"
+                    />
+                  )}
+                </div>
+              </div>
+              {/* Input de logo oculto */}
+              <input
+                type="file"
+                accept="image/png, image/jpeg, image/webp"
+                ref={logoInputRef}
+                onChange={handleLogoFileSelected}
+                className="hidden"
+              />
+            </div>
+            {/* --- FIM DA SEÇÃO DA LOGO --- */}
+
             <InputGroup
               label="Nome da Empresa"
               placeholder="Minha Empresa LTDA"
@@ -151,6 +222,7 @@ export const SettingsScreen: React.FC = () => {
       <Divider />
 
       {/* --- Personalização (Links) --- */}
+      {/* ... (sem alterações) ... */}
       <div className="w-full">
         <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Personalização</h2>
         <NavLink
@@ -170,6 +242,7 @@ export const SettingsScreen: React.FC = () => {
       <Divider />
 
       {/* --- Suporte (Link) --- */}
+      {/* ... (sem alterações) ... */}
       <div className="w-full">
         <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Suporte</h2>
         <NavLink
@@ -181,8 +254,9 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       <Divider />
-
+      
       {/* --- Backup (Botões de Ação) --- */}
+      {/* ... (sem alterações, exceto o input de backup que já existia) ... */}
       <div className="w-full">
         <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Backup e Restauração</h2>
         <ActionButton
@@ -191,8 +265,6 @@ export const SettingsScreen: React.FC = () => {
           icon={<UploadCloud size={22} className="text-green-600" />}
           onPress={handleExportData}
         />
-
-        {/* Input de arquivo oculto para importação */}
         <input
           type="file"
           accept=".json,application/json"

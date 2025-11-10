@@ -1,36 +1,34 @@
-
+// src/hooks/useSettings.ts
 import { useState, useCallback, useEffect } from 'react';
 import * as DB from '../services/database';
 import type { UserConfig } from '../types/Database';
 import { formatBRLToNumber, formatNumberToBRLInput, formatBRLInputMask } from '../utils/Value';
+import { useUserConfig } from './useUserConfig'; // <-- IMPORTADO
 
 export const useSettings = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  // Usar o hook centralizado
+  const { 
+    config, 
+    isLoading: isConfigLoading, 
+    error: configError, 
+    reload: reloadConfig 
+  } = useUserConfig();
+  
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
+  
+  // Estados locais do formulário
   const [companyName, setCompanyName] = useState('');
   const [initialBalanceInput, setInitialBalanceInput] = useState('');
-  const [originalConfig, setOriginalConfig] = useState<UserConfig | null>(null);
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null); // <-- ADICIONADO
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const config = await DB.fetchOrCreateUserConfig();
-      setOriginalConfig(config);
+  // Sincroniza o estado do formulário com o config carregado
+  useEffect(() => {
+    if (config) {
       setCompanyName(config.company_name || '');
       setInitialBalanceInput(formatNumberToBRLInput(config.initial_balance));
-    } catch (e) {
-      setError(e as Error);
-    } finally {
-      setIsLoading(false);
+      setCompanyLogo(config.company_logo || null);
     }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  }, [config]);
 
   const handleBalanceInputChange = useCallback((text: string) => {
     const maskedValue = formatBRLInputMask(text);
@@ -48,29 +46,32 @@ export const useSettings = () => {
       const newConfig: Omit<UserConfig, 'id'> = {
         company_name: companyName.trim() || null,
         initial_balance: balanceValue,
+        company_logo: companyLogo, // <-- ADICIONADO (usa o estado local)
       };
 
       await DB.saveOrUpdateUserConfig(newConfig);
-      await loadData();
+      reloadConfig(); // Recarrega o config centralizado
 
     } catch (e: any) {
-      setError(e);
+      console.error("Erro ao salvar settings:", e); // Log do erro
       throw e;
     } finally {
       setIsSaving(false);
     }
-  }, [companyName, initialBalanceInput, loadData]);
+  }, [companyName, initialBalanceInput, companyLogo, reloadConfig]); // <-- DEPENDÊNCIAS
 
 
   return {
-    isLoading,
+    isLoading: isConfigLoading, // Passa o loading do hook
     isSaving,
-    error,
+    error: configError, // Passa o erro do hook
     companyName,
     setCompanyName,
     initialBalanceInput,
     setInitialBalanceInput: handleBalanceInputChange,
+    companyLogo, // <-- EXPOSTO
+    setCompanyLogo, // <-- EXPOSTO
     handleSave,
-    reload: loadData,
+    reload: reloadConfig,
   };
 };

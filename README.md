@@ -93,7 +93,7 @@ por **João Santos**
 
 ## 📝 Licença
 
-License: MIT + Commons Clause
+License: MIT + Commons Clause<br/>
 Copyright (c) 2025 Onvale Contabilidade
 
 ---

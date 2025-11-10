@@ -7,6 +7,7 @@ import { ManageCategoriesScreen } from '../screens/ManageCategoriesScreen';
 import { ManagePaymentMethodsScreen } from '../screens/ManagePaymentMethodsScreen';
 import { HelpScreen } from '../screens/HelpScreen';
 
+
 const Stack = createStackNavigator<SettingsStackParamList>();
 
 export const SettingsStackNavigator: React.FC = () => (

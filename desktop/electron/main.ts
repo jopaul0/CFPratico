@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, shell } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -88,6 +88,20 @@ app.whenReady().then(() => {
 
   ipcMain.on("close-window", () => {
     win == null ? void 0 : win.close();
+  });
+
+  ipcMain.on("open-external-link", (_event, url) => {
+    const allowedProtocols = ["http:", "https:", "mailto:", "tel:"];
+    try {
+      const parsedUrl = new URL(url);
+      if (allowedProtocols.includes(parsedUrl.protocol)) {
+        shell.openExternal(url);
+      } else {
+        console.warn(`Protocolo bloqueado: ${parsedUrl.protocol}`);
+      }
+    } catch (e) {
+      console.error("URL inválida para openExternal:", e);
+    }
   });
 
   ipcMain.handle("export-pdf", async (event, html) => {

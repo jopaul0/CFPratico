@@ -12,6 +12,7 @@ import { AddTransaction } from './screens/AddTransaction';
 import { ManageCategoriesScreen } from './screens/ManageCategoriesScreen';
 import { ManagePaymentMethodsScreen } from './screens/ManagePaymentMethodsScreen';
 import { HelpScreen } from './screens/HelpScreen';
+import { OnValeScreen } from './screens/OnValeScreen';
 
 const router = createHashRouter([
   {
@@ -51,6 +52,10 @@ const router = createHashRouter([
       {
         path: 'settings/help',
         element: <HelpScreen />,
+      },
+      {
+        path: 'onvale-contact',
+        element: <OnValeScreen />,
       },
     ],
   },

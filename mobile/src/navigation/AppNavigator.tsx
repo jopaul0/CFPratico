@@ -7,6 +7,7 @@ import { StatementStackNavigator } from './StatementStack';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { DashboardStackNavigator } from './DashboardStack';
 import { SettingsStackNavigator } from './SettingsStack'; 
+import { OnValeScreen } from '../screens/OnValeScreen';
 
 
 const AppDrawer = createDrawerNavigator<DrawerParamList>();
@@ -63,6 +64,15 @@ export const AppNavigator: React.FC = () => {
             title: 'Configurações',
             headerShown: !hideHeader,
           };
+        }}
+      />
+
+      <AppDrawer.Screen
+        name="OnValeContact"
+        component={OnValeScreen}
+        options={{
+          title: 'Sobre a OnVale',
+          drawerItemStyle: { display: 'none' },
         }}
       />
     </AppDrawer.Navigator>

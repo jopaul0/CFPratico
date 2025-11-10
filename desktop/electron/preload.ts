@@ -18,7 +18,7 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     const [channel, ...omit] = args
     return ipcRenderer.invoke(channel, ...omit)
   },
-
+  openExternal: (url: string) => ipcRenderer.send('open-external-link', url),
   // You can expose other APTs you need here.
   // ...
 })

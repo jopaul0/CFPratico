@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { LayoutDashboard, List, Settings, X } from 'lucide-react';
 import { Divider } from './Divider';
 import icon from '../assets/icon.png';
@@ -67,10 +67,20 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) =
         <LinkItem to="/settings" label="Configurações" icon={<Settings size={20} />} onClick={onClose} />
       </nav>
 
-      {/* Rodapé do Drawer */}
+     {/* Rodapé do Drawer */}
       <div className="mt-auto p-2">
-        <Divider/>
-        <span className="text-xs text-gray-400">Versão Desktop 1.0</span>
+        <span className="text-xs text-gray-500 block">
+          Disponibilizado por:
+        </span>
+        <Link
+          to="/onvale-contact"
+          onClick={onClose}
+          className="text-sm font-semibold text-gray-700 hover:text-red-800 block transition-colors"
+        >
+          OnVale Contabilidade
+        </Link>
+        <Divider className="my-2" />
+        <span className="text-xs text-gray-400 block">Versão Desktop 1.0</span>
       </div>
     </div>
   );

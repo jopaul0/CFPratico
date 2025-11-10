@@ -11,6 +11,7 @@ import { categoryToSlug } from '../utils/Categories';
 import { formatDateToString } from '../utils/Date';
 import type { Tx } from '../types/Transactions';
 import { useRefresh } from '../contexts/RefreshContext';
+import { useUserConfig } from './useUserConfig';
 
 export interface SummaryData {
     totalRevenue: number;
@@ -62,13 +63,15 @@ const adaptDbTransactionToTx = (dbTx: TransactionWithNames): Tx => {
 };
 
 export const useDashboardData = () => {
+    const { config: userConfig, isLoading: isConfigLoading } = useUserConfig();
+
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     
     const [rawTransactions, setRawTransactions] = useState<Transaction[]>([]);
     const [dbFilteredTransactions, setDbFilteredTransactions] = useState<TransactionWithNames[]>([]);
     const [rawCategories, setRawCategories] = useState<Category[]>([]);
-    const [userConfig, setUserConfig] = useState<UserConfig | null>(null);
+
     const [currentBalance, setCurrentBalance] = useState(0);
 
     const { refreshTrigger } = useRefresh();
@@ -105,16 +108,14 @@ export const useDashboardData = () => {
       setIsLoading(true);
       setError(null);
       try {
-          const [allTxs, categories, config] = await Promise.all([
+          const [allTxs, categories] = await Promise.all([
               DB.fetchAllRawTransactions(),
-              DB.fetchCategories(),
-              DB.fetchOrCreateUserConfig(),
+              DB.fetchCategories()
           ]);
           setRawTransactions(allTxs);
           setRawCategories(categories);
-          setUserConfig(config);
 
-          const initialBalance = config?.initial_balance ?? 0;
+          const initialBalance = userConfig?.initial_balance ?? 0;
           const totalFromTransactions = allTxs.reduce((sum, tx) => sum + tx.value, 0);
           setCurrentBalance(initialBalance + totalFromTransactions);
           
@@ -135,7 +136,7 @@ export const useDashboardData = () => {
       } finally {
           setIsLoading(false);
       }
-    }, [startDate, endDate, movementType, category, refreshTrigger]);
+    }, [startDate, endDate, movementType, category, refreshTrigger, userConfig]);
     
     useEffect(() => {
       loadData();
@@ -240,7 +241,7 @@ export const useDashboardData = () => {
     ];
 
     return {
-        isLoading,
+        isLoading: isLoading || isConfigLoading,
         error,
         filtersConfig,
         handleClearAll,

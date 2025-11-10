@@ -90,6 +90,55 @@ app.whenReady().then(() => {
     win == null ? void 0 : win.close();
   });
 
+  ipcMain.handle('open-logo-picker', async (event) => {
+    const mainWin = BrowserWindow.fromWebContents(event.sender);
+    if (!mainWin) {
+      return { success: false, error: "Janela principal não encontrada." };
+    }
+
+    const { canceled, filePaths } = await dialog.showOpenDialog(mainWin, {
+      title: 'Selecionar Logo da Empresa',
+      properties: ['openFile'],
+      filters: [
+        { name: 'Imagens', extensions: ['png', 'jpg', 'jpeg', 'webp'] },
+      ],
+    });
+
+    if (canceled || !filePaths || filePaths.length === 0) {
+      return { success: false, canceled: true };
+    }
+
+    const filePath = filePaths[0];
+
+    try {
+
+      const MAX_SIZE_BYTES = 500 * 1024;
+      const stats = fs.statSync(filePath);
+      if (stats.size > MAX_SIZE_BYTES) {
+        return { success: false, error: `A imagem é muito grande. O limite é ${MAX_SIZE_BYTES / 1024}KB.` };
+      }
+
+      const buffer = fs.readFileSync(filePath);
+
+      const ext = path.extname(filePath).toLowerCase();
+      let mimeType = '';
+      if (ext === '.png') mimeType = 'image/png';
+      else if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+      else if (ext === '.webp') mimeType = 'image/webp';
+      else {
+        return { success: false, error: 'Formato de imagem não suportado (use PNG, JPG ou WEBP).' };
+      }
+      
+      const dataUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
+      
+      return { success: true, dataUrl };
+
+    } catch (err: any) {
+      console.error("Erro ao ler arquivo de logo:", err);
+      return { success: false, error: err.message || "Erro desconhecido ao ler o arquivo." };
+    }
+  });
+
   ipcMain.handle("export-pdf", async (event, html) => {
     const mainWin = BrowserWindow.fromWebContents(event.sender);
     if (!mainWin) {

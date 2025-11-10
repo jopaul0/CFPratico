@@ -1,4 +1,3 @@
-// src/screens/SettingsScreen.tsx
 import React from 'react';
 import { 
     View, 
@@ -7,16 +6,15 @@ import {
     TouchableOpacity, 
     RefreshControl, 
     Alert,
-    Platform // 1. Importar Platform
+    Platform 
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SettingsStackParamList } from '../types/Navigation';
 
-// 2. Importar a API de FileSystem completa e AsyncStorage
 import { File, Paths, Directory } from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// ----------------
+
 
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
@@ -32,76 +30,57 @@ import { Divider } from '../components/Divider';
 import { useSettings } from '../hooks/useSettings';
 import { ChevronRight, Database, Wallet, UploadCloud, DownloadCloud, RefreshCw, HelpCircle } from 'lucide-react-native';
 
-// --- (INÍCIO DA LÓGICA DE DOWNLOAD) ---
-
-// 3. Chave para salvar a URI da pasta no AsyncStorage
 const DOWNLOADS_DIR_STORAGE_KEY = '@downloadsDirectoryUri';
 
-/**
- * Salva um arquivo (em string) publicamente no Android
- * usando a API moderna de FileSystem (SDK 51+).
- * Lembra a pasta escolhida pelo usuário.
- */
+
 const saveToDownloadsAndroid = async (
   filename: string, 
-  content: string, // <-- Alterado de base64Content para content
+  content: string,
   mimeType: string
 ) => {
   if (Platform.OS !== 'android') {
-    return; // Apenas para Android
+    return;
   }
 
-  // Função interna para realmente salvar o arquivo
   const trySave = async (dir: Directory) => {
-    // Tenta criar (ou sobrescrever) o arquivo
-    const safFile = dir.createFile(filename, mimeType); //
-    // Escreve o conteúdo com encoding UTF-8
-    safFile.write(content, { encoding: 'utf8' }); //
+    const safFile = dir.createFile(filename, mimeType); 
+    safFile.write(content, { encoding: 'utf8' });
     Alert.alert('Sucesso', `Arquivo salvo em Downloads!\n(${filename})`);
   };
 
-  // Função para pedir ao usuário, salvar a URI e então salvar o arquivo
   const askAndSave = async () => {
     Alert.alert(
       'Salvar em Downloads',
       'Por favor, selecione sua pasta "Downloads" para salvar os relatórios. O app lembrará desta pasta para o futuro.'
     );
     
-    // 1. Pede ao usuário para escolher (retorna o tipo base com a URI)
-    const pickedDirResult = await Directory.pickDirectoryAsync(); //
-    
-    // 2. Cria uma *instância da classe* Directory a partir da URI (corrige o erro de tipo)
+    const pickedDirResult = await Directory.pickDirectoryAsync(); 
     const pickedDir = new Directory(pickedDirResult.uri); //
 
-    // 3. Salva a URI da pasta para uso futuro
     await AsyncStorage.setItem(DOWNLOADS_DIR_STORAGE_KEY, pickedDir.uri);
-    
-    // 4. Tenta salvar na pasta recém-escolhida
     await trySave(pickedDir);
   };
 
   try {
-    // 1. Tenta carregar uma URI de pasta já salva
     const savedUri = await AsyncStorage.getItem(DOWNLOADS_DIR_STORAGE_KEY);
     
     if (!savedUri) {
-      // Se NUNCA salvamos antes, pede ao usuário
       await askAndSave();
     } else {
-      // Se JÁ temos uma URI, tentamos usá-la
-      const downloadsDir = new Directory(savedUri); //
+      
+      const downloadsDir = new Directory(savedUri);
       try {
-        // Tenta salvar diretamente
+        
         await trySave(downloadsDir);
       } catch (permissionError: any) {
-        // FALHOU! Provavelmente a permissão expirou
+
         console.warn('Falha ao usar URI salva, pedindo novamente:', permissionError.message);
         await AsyncStorage.removeItem(DOWNLOADS_DIR_STORAGE_KEY);
         await askAndSave();
       }
     }
   } catch (e: any) {
-    // Pega erros do 'pickDirectoryAsync' (como o usuário cancelar)
+
     if (e.code === 'PickerCancelledException' || e.code === 'ERR_PICKER_CANCELLED' || e.message?.includes('cancelled')) { //
       console.log("Usuário cancelou a seleção de diretório.");
     } else {
@@ -110,12 +89,11 @@ const saveToDownloadsAndroid = async (
     }
   }
 };
-// --- (FIM DA LÓGICA DE DOWNLOAD) ---
+
 
 
 const NavLink: React.FC<{ title: string; description: string; onPress: () => void; icon: React.ReactNode; }> =
   ({ title, description, onPress, icon }) => (
-    // ... (Componente NavLink não muda) ...
     <TouchableOpacity
       onPress={onPress}
       className="flex-row items-center p-4 bg-white rounded-lg mb-3 shadow"
@@ -142,11 +120,12 @@ export const SettingsScreen: React.FC = () => {
     companyName,
     setCompanyName,
     initialBalanceInput,
-    // 4. Usar o setter com máscara que criamos
     setInitialBalanceInput: handleBalanceInputChange,
+    initialBalanceSign,
+    setInitialBalanceSign,
     handleSave,
     reload,
-  } = useSettings(); //
+  } = useSettings();
 
   const handleExportData = async () => {
     if (!(await Sharing.isAvailableAsync())) {
@@ -155,18 +134,14 @@ export const SettingsScreen: React.FC = () => {
     }
 
     try {
-      // 1. Gera o JSON (string)
-      const jsonString = await exportDataAsJson(); //
+      const jsonString = await exportDataAsJson();
       const filename = 'backup-cfpratico.json';
       const mimeType = 'application/json';
 
-      // 2. Tenta salvar em "Downloads" (Android)
-      // Esta função agora usa o 'content' como string utf8
       await saveToDownloadsAndroid(filename, jsonString, mimeType);
 
-      // 3. Salva no cache INTERNO para o Sharing (todas as plataformas)
-      const cacheFile = new File(Paths.cache, filename); //
-      cacheFile.write(jsonString, { encoding: 'utf8' }); //
+      const cacheFile = new File(Paths.cache, filename);
+      cacheFile.write(jsonString, { encoding: 'utf8' });
 
       // 4. Abre o menu de compartilhamento
       await Sharing.shareAsync(cacheFile.uri, {
@@ -244,6 +219,12 @@ export const SettingsScreen: React.FC = () => {
     );
   };
 
+  const toggleSign = () => {
+    setInitialBalanceSign(prev => (prev === 'positive' ? 'negative' : 'positive'));
+  };
+
+  const isNegative = initialBalanceSign === 'negative';
+
   return (
     <MainContainer
       refreshControl={
@@ -265,14 +246,52 @@ export const SettingsScreen: React.FC = () => {
               value={companyName}
               onChangeText={setCompanyName}
             />
-            <InputGroup
-              label="Saldo Inicial"
-              placeholder="0,00"
-              keyboardType="numeric"
-              value={initialBalanceInput}
-              // 5. Conecta o setter com máscara
-              onChangeText={handleBalanceInputChange} 
-            />
+
+            {/* --- GRUPO DE SALDO INICIAL ATUALIZADO --- */}
+            <View className="mb-3">
+              <Text className="block text-sm font-medium text-gray-700 mb-1">
+                Saldo Inicial
+              </Text>
+              
+
+              <View className="flex-row items-center gap-2">
+                 {/* Input (agora dentro do flex) */}
+                <View className="flex-1">
+                  <InputGroup
+                    label="" // Label já está acima
+                    placeholder="0,00"
+                    keyboardType="numeric"
+                    value={initialBalanceInput}
+                    onChangeText={handleBalanceInputChange} 
+                  />
+                </View>
+
+                {/* Botão de Sinal */}
+                <TouchableOpacity
+                  onPress={toggleSign}
+                  className={`
+                    w-14 rounded-lg border justify-center mt-3 items-center
+                    ${isNegative 
+                      ? 'bg-red-100 border-red-300' 
+                      : 'bg-green-100 border-green-300'
+                    }
+                  `}
+                  style={{ height: Platform.OS === 'android' ? 52 : 44 }}
+                  activeOpacity={0.7}
+                >
+                  <Text className={`
+                    font-semibold text-lg
+                    ${isNegative ? 'text-red-700' : 'text-green-700'}
+                  `}>
+                    {isNegative ? '−' : '+'}
+                  </Text>
+                </TouchableOpacity>
+                
+               
+              </View>
+            </View>
+            {/* --- FIM DO GRUPO --- */}
+
             <SimpleButton
               title={isSaving ? 'Salvando...' : 'Salvar Dados'}
               onPress={handleSave}

@@ -4,6 +4,7 @@ import * as DB from '../services/database';
 import type { UserConfig } from '../types/Database';
 import { formatBRLToNumber, formatNumberToBRLInput, formatBRLInputMask } from '../utils/Value';
 import { useUserConfig } from './useUserConfig';
+import { useRefresh } from '../contexts/RefreshContext';
 
 export const useSettings = () => {
   const { 
@@ -13,6 +14,8 @@ export const useSettings = () => {
     reload: reloadConfig 
   } = useUserConfig();
   
+  const { triggerReload } = useRefresh();
+
   const [isSaving, setIsSaving] = useState(false);
   
   const [companyName, setCompanyName] = useState('');
@@ -48,6 +51,7 @@ export const useSettings = () => {
 
       await DB.saveOrUpdateUserConfig(newConfig);
       reloadConfig();
+      triggerReload();
       Alert.alert('Sucesso', 'Configurações salvas!');
 
     } catch (e: any) {

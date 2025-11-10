@@ -1,16 +1,17 @@
-import type { Tx } from './Transactions'; 
+import type { Tx } from './Transactions';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
 
 export type DrawerParamList = {
     Dashboard: NavigatorScreenParams<DashboardStackParamList> | undefined;
-    Statement: NavigatorScreenParams<StatementStackParamList> | undefined; 
+    Statement: NavigatorScreenParams<StatementStackParamList> | undefined;
     Settings: NavigatorScreenParams<SettingsStackParamList> | undefined;
+    OnValeContact: undefined;
 };
 
 export type StatementStackParamList = {
     StatementMain: undefined;
-    TransactionDetail: Tx; 
+    TransactionDetail: Tx;
     AddTransaction: undefined;
 };
 
@@ -23,6 +24,6 @@ export type SettingsStackParamList = {
 
 export type DashboardStackParamList = {
     DashboardMain: undefined;
-    TransactionDetail: Tx; 
+    TransactionDetail: Tx;
     AddTransaction: undefined;
 };

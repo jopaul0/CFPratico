@@ -1,14 +1,14 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, List, Settings, X } from 'lucide-react'; // Importar X
+import { NavLink, Link } from 'react-router-dom';
+import { LayoutDashboard, List, Settings, X } from 'lucide-react';
 import { Divider } from './Divider';
 
-// 1. Props para o LinkItem
+
 interface LinkItemProps {
   to: string;
   label: string;
   icon: React.ReactNode;
-  onClick: () => void; // Para fechar o drawer ao clicar
+  onClick: () => void;
 }
 
 const LinkItem: React.FC<LinkItemProps> = ({ to, label, icon, onClick }) => {
@@ -18,8 +18,7 @@ const LinkItem: React.FC<LinkItemProps> = ({ to, label, icon, onClick }) => {
       end
       onClick={onClick}
       className={({ isActive }) =>
-        `flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 transition-all hover:bg-gray-200 ${
-          isActive ? 'bg-gray-200 font-semibold' : ''
+        `flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 transition-all hover:bg-gray-200 ${isActive ? 'bg-gray-200 font-semibold' : ''
         }`
       }
     >
@@ -29,7 +28,6 @@ const LinkItem: React.FC<LinkItemProps> = ({ to, label, icon, onClick }) => {
   );
 };
 
-// 3. Props para o CustomDrawer
 interface CustomDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -37,7 +35,6 @@ interface CustomDrawerProps {
 
 export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) => {
   return (
-    // 4. Lógica de classes para responsividade
     <div
       className={`
         fixed inset-y-0 left-0 z-40 flex h-full w-64 transform flex-col gap-2 bg-white p-4 shadow-lg
@@ -61,7 +58,7 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) =
         >
           <X size={22} />
         </button>
-        
+
       </div>
 
       {/* Itens de Navegação */}
@@ -73,8 +70,18 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) =
 
       {/* Rodapé do Drawer */}
       <div className="mt-auto p-2">
-        <Divider/>
-        <span className="text-xs text-gray-400">Versão Web 1.0</span>
+        <span className="text-xs text-gray-500 block">
+          Disponibilizado por:
+        </span>
+        <Link
+          to="/onvale-contact"
+          onClick={onClose}
+          className="text-sm font-semibold text-gray-700 hover:text-red-800 block transition-colors"
+        >
+          OnVale Contabilidade
+        </Link>
+        <Divider className="my-2" />
+        <span className="text-xs text-gray-400 block">Versão Web 1.0</span>
       </div>
     </div>
   );

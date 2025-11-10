@@ -93,6 +93,7 @@ por **João Santos**
 
 ## 📝 Licença
 
-A definição de licença será incluída após escolha da modalidade de distribuição.
+License: MIT + Commons Clause
+Copyright (c) 2025 Onvale Contabilidade
 
 ---

@@ -24,11 +24,12 @@ export const SettingsScreen: React.FC = () => {
     setCompanyName,
     initialBalanceInput,
     setInitialBalanceInput,
+    initialBalanceSign,
+    setInitialBalanceSign,
     handleSave,
   } = useSettings();
   const { alert, confirm } = useModal();
 
-  // Ref para o input de arquivo (para importação)
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onSaveSettings = async (e: React.FormEvent) => {
@@ -72,7 +73,6 @@ export const SettingsScreen: React.FC = () => {
       { type: 'warning', confirmText: 'Continuar' }
     );
     if (!userConfirmed) {
-      // Limpa o input se o usuário cancelar
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -80,18 +80,12 @@ export const SettingsScreen: React.FC = () => {
     try {
       const jsonString = await file.text();
       await importDataFromJson(jsonString);
-
-      // --- CORREÇÃO AQUI ---
-      // 1. Mostra o alerta de sucesso PRIMEIRO
       await alert('Sucesso!', 'Dados restaurados. O aplicativo será reiniciado.', 'success');
-      // 2. Recarrega a página inteira
       window.location.reload();
-      // --- FIM DA CORREÇÃO ---
 
     } catch (e: any) {
       await alert('Erro ao Importar', e?.message ?? e, 'error');
     } finally {
-      // Limpa o input
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -116,6 +110,12 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
+  const toggleSign = () => {
+    setInitialBalanceSign(prev => (prev === 'positive' ? 'negative' : 'positive'));
+  };
+
+  const isNegative = initialBalanceSign === 'negative';
+
   return (
     <MainContainer>
       {/* --- Dados da Empresa --- */}
@@ -131,13 +131,45 @@ export const SettingsScreen: React.FC = () => {
               value={companyName}
               onChangeText={setCompanyName}
             />
-            <InputGroup
-              label="Saldo Inicial"
-              placeholder="0,00"
-              keyboardType="numeric"
-              value={initialBalanceInput}
-              onChangeText={setInitialBalanceInput}
-            />
+
+            {/* --- GRUPO DE SALDO INICIAL ATUALIZADO --- */}
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Saldo Inicial
+              </label>
+              <div className="flex items-center gap-2">
+
+                 {/* Input (agora dentro do flex) */}
+                <div className="flex-1">
+                  <InputGroup
+                    label=""
+                    placeholder="0,00"
+                    keyboardType="numeric"
+                    value={initialBalanceInput}
+                    onChangeText={setInitialBalanceInput}
+                  />
+                </div>
+                
+                {/* Botão de Sinal */}
+                <button
+                  type="button"
+                  onClick={toggleSign}
+                  className={`
+                    w-14 h-11 rounded-lg border mb-2 font-semibold text-sm transition-colors
+                    ${isNegative 
+                      ? 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200' 
+                      : 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200'
+                    }
+                  `}
+                >
+                  {isNegative ? '-' : '+'}
+                </button>
+                
+               
+              </div>
+            </div>
+            {/* --- FIM DO GRUPO --- */}
+
             <SimpleButton
               title={isSaving ? 'Salvando...' : 'Salvar Dados'}
               type="submit"

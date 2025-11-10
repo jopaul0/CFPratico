@@ -4,8 +4,9 @@ export function formatToBRL(value: number): string {
     const fixedValue = absoluteValue.toFixed(2);
     const [integerPart, decimalPart] = fixedValue.split('.');
     const formattedIntegerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    
     const formattedValueWithoutSign = `${formattedIntegerPart},${decimalPart}`;
-    return `${isNegative ? '-' : ''}R$ ${formattedValueWithoutSign}`;
+    return `${isNegative ? '-R$ ' : 'R$ '}${formattedValueWithoutSign}`;
 }
 
 export const formatBRLToNumber = (input: string): number => {
@@ -22,27 +23,34 @@ export const formatNumberToBRLInput = (value: number): string => {
     if (isNaN(value) || value === null || value === undefined) {
       return '';
     }
-    const fixedValue = value.toFixed(2);
+    
+    const isNegative = value < 0;
+    const absoluteValue = Math.abs(value);
+    
+    const fixedValue = absoluteValue.toFixed(2);
     const [integerPart, decimalPart] = fixedValue.split('.');
     const formattedIntegerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    return `${formattedIntegerPart},${decimalPart}`;
+
+    return `${isNegative ? '-' : ''}${formattedIntegerPart},${decimalPart}`;
 };
 
 
 export const formatBRLInputMask = (input: string): string => {
     if (!input) return '';
+    const isNegative = input.startsWith('-');
 
     const digits = input.replace(/\D/g, '');
     if (digits.length === 0) return '';
-
+ 
     let numValue: number;
-    if (digits.length === 1) numValue = parseInt(digits, 10) / 100; 
+    if (digits.length === 1) numValue = parseInt(digits, 10) / 100;
     else if (digits.length === 2) numValue = parseInt(digits, 10) / 100;
     else {
         const integerPart = digits.slice(0, -2);
         const decimalPart = digits.slice(-2);
         numValue = parseFloat(`${integerPart}.${decimalPart}`);
     }
-
-    return formatNumberToBRLInput(numValue);
+    
+    const finalValue = isNegative ? -Math.abs(numValue) : Math.abs(numValue);
+    return formatNumberToBRLInput(finalValue);
 };

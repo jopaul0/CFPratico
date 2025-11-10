@@ -1,140 +1,250 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { Tx, TransactionGroup } from '../types/Transactions';
-import { formatToBRL } from '../utils/Value';
+import React, { useRef } from 'react';
+
+import * as DB from '../services/database';
+import { useRefresh } from '../contexts/RefreshContext';
+import { exportDataAsJson, importDataFromJson } from '../services/dataSync';
 
 import { MainContainer } from '../components/MainContainer';
-import { SearchBar } from '../components/SearchBar';
-import { Filters } from '../components/Filters';
-import { TransactionItem } from '../components/TransactionItem';
+import { InputGroup } from '../components/InputGroup';
+import { SimpleButton } from '../components/SimpleButton';
 import { Divider } from '../components/Divider';
-import { Plus, Trash } from 'lucide-react';
+import { NavLink } from '../components/NavLink';
+import { ActionButton } from '../components/ActionButton';
 
-import { useStatementData } from '../hooks/useStatementData';
-import { useStatmentMassDelete } from '../hooks/useStatementMassDelete';
+import { useSettings } from '../hooks/useSettings';
+import { Database, Wallet, UploadCloud, DownloadCloud, RefreshCw, HelpCircle } from 'lucide-react';
+import { useModal } from '../contexts/ModalContext';
 
-const SectionHeader: React.FC<{ group: TransactionGroup }> = ({ group }) => (
-    <div className="pt-4 pb-2 px-4">
-        <div className="flex items-center justify-between">
-            <h3 className="text-gray-900 font-semibold">{group.dateLabel}</h3>
-            <span className="text-gray-500 text-sm">Saldo: {formatToBRL(group.balance)}</span>
-        </div>
-        <Divider className="my-2 bg-gray-300" />
-    </div>
-);
+export const SettingsScreen: React.FC = () => {
+  const { triggerReload } = useRefresh();
+  const {
+    isLoading,
+    isSaving,
+    companyName,
+    setCompanyName,
+    initialBalanceInput,
+    setInitialBalanceInput,
+    initialBalanceSign,
+    setInitialBalanceSign,
+    handleSave,
+  } = useSettings();
+  const { alert, confirm } = useModal();
 
-export const StatementScreen: React.FC = () => {
-    const {
-        groups,
-        query,
-        setQuery,
-        filtersConfig,
-        handleClearAll,
-        doSearch,
-        isLoading,
-        error
-    } = useStatementData();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const {
-        isSelectionMode,
-        selectedIds,
-        handleLongPressItem,
-        handleCancelSelection,
-        toggleSelectItem,
-        handleDeleteSelected,
-    } = useStatmentMassDelete();
+  const onSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await handleSave();
+      await alert('Sucesso!', 'Configurações salvas!', 'success');
+    } catch (e: any) {
+      await alert('Erro', e.message, 'error');
+    }
+  };
 
-    const navigate = useNavigate();
+  const handleExportData = async () => {
+    try {
+      const jsonString = await exportDataAsJson();
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'backup-cfpratico.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e: any) {
+      await alert('Erro ao Exportar', e?.message ?? e, 'error');
+    }
+  };
 
-    const handleAddTransaction = () => navigate('/statement/new');
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
 
-    const handlePressItem = (tx: Tx) => {
-        if (isSelectionMode) {
-            toggleSelectItem(tx.id);
-        }
-    };
-    const onLongPressItem = (txId: string) => {
-        handleLongPressItem(txId);
-    };
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    const ListHeader = (
-        <div className="p-4 bg-gray-100 sticky top-0 z-10">
-            <SearchBar
-                value={query}
-                onChangeText={setQuery}
-                placeholder="Buscar por descrição, valor, categoria…"
-                onSubmitSearch={doSearch}
-                onClearAll={handleClearAll}
+    const userConfirmed = await confirm(
+      'Atenção!',
+      'Isso limpará TODOS os dados atuais e os substituirá pelo arquivo selecionado. Deseja continuar?',
+      { type: 'warning', confirmText: 'Continuar' }
+    );
+    if (!userConfirmed) {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    try {
+      const jsonString = await file.text();
+      await importDataFromJson(jsonString);
+      await alert('Sucesso!', 'Dados restaurados. O aplicativo será reiniciado.', 'success');
+      window.location.reload();
+
+    } catch (e: any) {
+      await alert('Erro ao Importar', e?.message ?? e, 'error');
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleResetApp = async () => {
+    const userConfirmed = await confirm(
+      'Atenção!',
+      'Isso limpará TODOS os dados atuais. Deseja continuar?',
+      { type: 'warning', confirmText: 'Continuar' }
+    );
+    
+    if (userConfirmed) {
+      try {
+        await DB.resetDatabaseToDefaults();
+
+        await alert('Aplicativo Resetado', 'Os dados foram restaurados ao padrão. O aplicativo será reiniciado.', 'success');
+        window.location.reload();
+
+      } catch (e: any) {
+        await alert('Erro no Reset', e?.message ?? e, 'error');
+      }
+    }
+  };
+
+  const toggleSign = () => {
+    setInitialBalanceSign(prev => (prev === 'positive' ? 'negative' : 'positive'));
+  };
+
+  const isNegative = initialBalanceSign === 'negative';
+
+  return (
+    <MainContainer>
+      {/* --- Dados da Empresa --- */}
+      <form onSubmit={onSaveSettings} className="p-4 bg-white rounded-lg shadow mb-6 w-full">
+        <h2 className="text-lg font-semibold text-gray-700 mb-3">Dados da Empresa</h2>
+        {isLoading ? (
+          <p>Carregando...</p>
+        ) : (
+          <>
+            <InputGroup
+              label="Nome da Empresa"
+              placeholder="Minha Empresa LTDA"
+              value={companyName}
+              onChangeText={setCompanyName}
             />
 
-            {isSelectionMode ? (
-                <div className="flex items-center justify-between p-3 bg-blue-100 rounded-lg mt-2">
-                    <span className="font-semibold text-blue-800">
-                        {selectedIds.size} selecionada(s)
-                    </span>
-                    <button onClick={handleCancelSelection} className="font-semibold text-blue-600">
-                        Cancelar
-                    </button>
+            {/* --- GRUPO DE SALDO INICIAL ATUALIZADO --- */}
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Saldo Inicial
+              </label>
+              <div className="flex items-center gap-2">
+
+                 {/* Input (agora dentro do flex) */}
+                <div className="flex-1">
+                  <InputGroup
+                    label=""
+                    placeholder="0,00"
+                    keyboardType="numeric"
+                    value={initialBalanceInput}
+                    onChangeText={setInitialBalanceInput}
+                  />
                 </div>
-            ) : (
-                <Filters
-                    filters={filtersConfig}
-                    onClearFilters={handleClearAll}
-                />
-            )}
-        </div>
-    );
-
-    const ListEmpty = (
-        <div className="mt-16 text-center">
-            {isLoading ? (
-                <p>Carregando...</p>
-            ) : error ? (
-                <p className="text-red-500">Erro: {error.message}</p>
-            ) : (
-                <p className="text-gray-500">Nenhum dado encontrado.</p>
-            )}
-        </div>
-    );
-
-    return (
-        <MainContainer>
-            <div className="flex flex-col h-full bg-gray-100">
-                {ListHeader}
-
-                <div className="flex-1 overflow-y-auto pb-24">
-                    {groups.length > 0 ? (
-                        groups.map(group => (
-                            <section key={group.dateISO}>
-                                <SectionHeader group={group} />
-                                <div className="px-4">
-                                    {group.transactions.map(item => (
-                                        <TransactionItem
-                                            key={item.id}
-                                            {...item}
-                                            onPress={() => handlePressItem(item)}
-                                            onLongPress={() => onLongPressItem(item.id)}
-                                            isSelected={selectedIds.has(item.id)}
-                                            isSelectionMode={isSelectionMode}
-                                        />
-                                    ))}
-                                </div>
-                            </section>
-                        ))
-                    ) : (
-                        ListEmpty
-                    )}
-                </div>
-
+                
+                {/* Botão de Sinal */}
                 <button
-                    title={isSelectionMode ? "Excluir selecionados" : "Adicionar transação"}
-                    onClick={isSelectionMode ? handleDeleteSelected : handleAddTransaction}
-                    className={`fixed bottom-6 right-6 p-4 rounded-full shadow-lg text-white transition-colors
-                            ${isSelectionMode ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                  type="button"
+                  onClick={toggleSign}
+                  className={`
+                    w-14 h-11 rounded-lg border mb-2 font-semibold text-sm transition-colors
+                    ${isNegative 
+                      ? 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200' 
+                      : 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200'
+                    }
+                  `}
                 >
-                    {isSelectionMode ? <Trash size={30} /> : <Plus size={30} />}
+                  {isNegative ? '-' : '+'}
                 </button>
+                
+               
+              </div>
             </div>
-        </MainContainer>
-    );
+            {/* --- FIM DO GRUPO --- */}
+
+            <SimpleButton
+              title={isSaving ? 'Salvando...' : 'Salvar Dados'}
+              type="submit"
+              disabled={isSaving}
+              className="bg-blue-600 text-white hover:bg-blue-700"
+            />
+          </>
+        )}
+      </form>
+
+      <Divider />
+
+      {/* --- Personalização (Links) --- */}
+      <div className="w-full">
+        <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Personalização</h2>
+        <NavLink
+          title="Gerenciar Categorias"
+          description="Adicione, edite ou remova categorias de transação."
+          icon={<Database size={22} className="text-gray-600" />}
+          to="/settings/categories"
+        />
+        <NavLink
+          title="Gerenciar Formas de Pagamento"
+          description="Adicione, edite ou remova formas de pagamento."
+          icon={<Wallet size={22} className="text-gray-600" />}
+          to="/settings/payment-methods"
+        />
+      </div>
+
+      <Divider />
+
+      {/* --- Suporte (Link) --- */}
+      <div className="w-full">
+        <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Suporte</h2>
+        <NavLink
+          title="Ajuda e FAQ"
+          description="Tire suas dúvidas sobre o uso do aplicativo."
+          icon={<HelpCircle size={22} className="text-gray-600" />}
+          to="/settings/help"
+        />
+      </div>
+
+      <Divider />
+
+      {/* --- Backup (Botões de Ação) --- */}
+      <div className="w-full">
+        <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Backup e Restauração</h2>
+        <ActionButton
+          title="Exportar Dados"
+          description="Salva um arquivo (.json) com todos os seus dados."
+          icon={<UploadCloud size={22} className="text-green-600" />}
+          onPress={handleExportData}
+        />
+
+        {/* Input de arquivo oculto para importação */}
+        <input
+          type="file"
+          accept=".json,application/json"
+          ref={fileInputRef}
+          onChange={handleFileSelected}
+          className="hidden"
+        />
+        <ActionButton
+          title="Importar (Restaurar) Dados"
+          description="Substitui os dados atuais por um arquivo de backup."
+          icon={<DownloadCloud size={22} className="text-yellow-600" />}
+          onPress={handleImportClick}
+        />
+        <ActionButton
+          title="Resetar Aplicativo"
+          description="Apaga todos os dados e restaura o padrão de fábrica."
+          icon={<RefreshCw size={22} className="text-red-600" />}
+          onPress={handleResetApp}
+        />
+      </div>
+    </MainContainer>
+  );
 };

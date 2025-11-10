@@ -1,3 +1,4 @@
+// src/hooks/useSettings.ts
 import { useState, useCallback, useEffect } from 'react';
 import { Alert } from 'react-native';
 import * as DB from '../services/database';
@@ -12,6 +13,7 @@ export const useSettings = () => {
 
   const [companyName, setCompanyName] = useState('');
   const [initialBalanceInput, setInitialBalanceInput] = useState('');
+  const [initialBalanceSign, setInitialBalanceSign] = useState<'positive' | 'negative'>('positive');
 
   const [originalConfig, setOriginalConfig] = useState<UserConfig | null>(null);
 
@@ -22,7 +24,11 @@ export const useSettings = () => {
       const config = await DB.fetchOrCreateUserConfig();
       setOriginalConfig(config);
       setCompanyName(config.company_name || '');
-      setInitialBalanceInput(formatNumberToBRLInput(config.initial_balance));
+  
+      setInitialBalanceSign(config.initial_balance < 0 ? 'negative' : 'positive');
+
+      setInitialBalanceInput(formatNumberToBRLInput(Math.abs(config.initial_balance)));
+
     } catch (e) {
       setError(e as Error);
     } finally {
@@ -46,10 +52,14 @@ export const useSettings = () => {
       if (isNaN(balanceValue)) {
         throw new Error('Valor do Saldo Inicial inválido.');
       }
+      
+      const finalValue = initialBalanceSign === 'negative' 
+        ? -Math.abs(balanceValue) 
+        : Math.abs(balanceValue);
 
       const newConfig: Omit<UserConfig, 'id'> = {
         company_name: companyName.trim() || null,
-        initial_balance: balanceValue,
+        initial_balance: finalValue,
       };
 
       await DB.saveOrUpdateUserConfig(newConfig);
@@ -62,7 +72,7 @@ export const useSettings = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [companyName, initialBalanceInput, loadData]);
+  }, [companyName, initialBalanceInput, initialBalanceSign, loadData]);
 
   return {
     isLoading,
@@ -72,6 +82,8 @@ export const useSettings = () => {
     setCompanyName,
     initialBalanceInput,
     setInitialBalanceInput: handleBalanceInputChange,
+    initialBalanceSign,
+    setInitialBalanceSign,
     handleSave,
     reload: loadData,
   };

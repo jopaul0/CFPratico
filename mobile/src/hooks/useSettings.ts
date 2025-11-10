@@ -1,42 +1,35 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Alert } from 'react-native';
 import * as DB from '../services/database';
-import type { UserConfig } from '../services/database';
+import type { UserConfig } from '../types/Database';
 import { formatBRLToNumber, formatNumberToBRLInput, formatBRLInputMask } from '../utils/Value';
-
+import { useUserConfig } from './useUserConfig';
 
 export const useSettings = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const { 
+    config, 
+    isLoading: isConfigLoading, 
+    error: configError, 
+    reload: reloadConfig 
+  } = useUserConfig();
+  
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
+  
   const [companyName, setCompanyName] = useState('');
   const [initialBalanceInput, setInitialBalanceInput] = useState('');
-
-  const [originalConfig, setOriginalConfig] = useState<UserConfig | null>(null);
-
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const config = await DB.fetchOrCreateUserConfig();
-      setOriginalConfig(config);
-      setCompanyName(config.company_name || '');
-      setInitialBalanceInput(formatNumberToBRLInput(config.initial_balance));
-    } catch (e) {
-      setError(e as Error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (config) {
+      setCompanyName(config.company_name || '');
+      setInitialBalanceInput(formatNumberToBRLInput(config.initial_balance));
+      setCompanyLogo(config.company_logo || null);
+    }
+  }, [config]);
 
   const handleBalanceInputChange = useCallback((text: string) => {
-      const maskedValue = formatBRLInputMask(text);
-      setInitialBalanceInput(maskedValue);
+    const maskedValue = formatBRLInputMask(text);
+    setInitialBalanceInput(maskedValue);
   }, []);
 
   const handleSave = useCallback(async () => {
@@ -50,29 +43,33 @@ export const useSettings = () => {
       const newConfig: Omit<UserConfig, 'id'> = {
         company_name: companyName.trim() || null,
         initial_balance: balanceValue,
+        company_logo: companyLogo,
       };
 
       await DB.saveOrUpdateUserConfig(newConfig);
-      await loadData(); 
+      reloadConfig();
       Alert.alert('Sucesso', 'Configurações salvas!');
 
     } catch (e: any) {
-      setError(e);
+      console.error("Erro ao salvar settings:", e);
       Alert.alert('Erro ao Salvar', e.message);
     } finally {
       setIsSaving(false);
     }
-  }, [companyName, initialBalanceInput, loadData]);
+  }, [companyName, initialBalanceInput, companyLogo, reloadConfig]);
+
 
   return {
-    isLoading,
+    isLoading: isConfigLoading,
     isSaving,
-    error,
+    error: configError,
     companyName,
     setCompanyName,
     initialBalanceInput,
     setInitialBalanceInput: handleBalanceInputChange,
+    companyLogo,
+    setCompanyLogo,
     handleSave,
-    reload: loadData,
+    reload: reloadConfig,
   };
 };

@@ -1,8 +1,6 @@
-// src/services/database/initialize.ts
 import { dbPromise } from './connection';
-import type { SQLiteDatabase } from 'expo-sqlite'; // Importar o tipo
+import type { SQLiteDatabase } from 'expo-sqlite';
 
-// ... (DB_CREATE_SCRIPTS permanece o mesmo)
 const DB_CREATE_SCRIPTS = [
     `CREATE TABLE IF NOT EXISTS category (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -16,7 +14,8 @@ const DB_CREATE_SCRIPTS = [
     `CREATE TABLE IF NOT EXISTS user_config (
       id INTEGER PRIMARY KEY,
       company_name TEXT,
-      initial_balance REAL NOT NULL DEFAULT 0.00
+      initial_balance REAL NOT NULL DEFAULT 0.00,
+      company_logo TEXT DEFAULT NULL
   );`,
     `CREATE TABLE IF NOT EXISTS "transaction" (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -83,8 +82,8 @@ const _seedDefaults = async (db: SQLiteDatabase) => {
     console.log("Inserindo dados padrão...");
     
     await db.runAsync(
-      'INSERT INTO user_config (id, company_name, initial_balance) VALUES (1, ?, ?);',
-      [null, 0.00]
+      'INSERT INTO user_config (id, company_name, initial_balance, company_logo) VALUES (1, ?, ?, ?);',
+      [null, 0.00, null]
     );
 
     for (const cat of DEFAULT_CATEGORIES) {
@@ -103,12 +102,12 @@ const _seedDefaults = async (db: SQLiteDatabase) => {
     await db.runAsync(
       `INSERT INTO "transaction" (date, description, value, type, condition, installments, payment_method_id, category_id)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
-      [ today, 'Venda de software (Exemplo)', 1500.00, 'revenue', 'paid', 1, 1, 1 ] // Venda
+      [ today, 'Venda de software (Exemplo)', 1500.00, 'revenue', 'paid', 1, 1, 1 ]
     );
     await db.runAsync(
       `INSERT INTO "transaction" (date, description, value, type, condition, installments, payment_method_id, category_id)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
-      [ today, 'Pagamento fornecedor de internet (Exemplo)', -350.50, 'expense', 'paid', 1, 7, 4 ] // Fornecedor
+      [ today, 'Pagamento fornecedor de internet (Exemplo)', -350.50, 'expense', 'paid', 1, 7, 4 ]
     );
     console.log("Dados padrão inseridos.");
 };
@@ -139,23 +138,16 @@ export const resetDatabaseToDefaults = async (): Promise<void> => {
   console.warn("INICIANDO RESET TOTAL DO BANCO DE DADOS...");
   try {
     await db.withTransactionAsync(async () => {
-      // 1. Limpa todas as tabelas de dados
-      // Ordem importa por causa das chaves estrangeiras!
+
       await db.runAsync('DELETE FROM "transaction";');
       await db.runAsync('DELETE FROM "category";');
       await db.runAsync('DELETE FROM "payment_method";');
       await db.runAsync('DELETE FROM "user_config";');
-      
-      // --- (CORREÇÃO ADICIONADA) ---
-      // 2. Reseta os contadores de AUTOINCREMENT
-      // (Necessário para que os dados semeados em _seedDefaults tenham os IDs corretos: 1, 2, 3...)
+   
       await db.runAsync("DELETE FROM sqlite_sequence WHERE name = 'transaction';");
       await db.runAsync("DELETE FROM sqlite_sequence WHERE name = 'category';");
       await db.runAsync("DELETE FROM sqlite_sequence WHERE name = 'payment_method';");
-      // (user_config não precisa, pois o ID 1 é fixo)
-      // --- (FIM DA CORREÇÃO) ---
-
-      // 3. Re-semeia os dados padrão (agora com IDs garantidos começando em 1)
+ 
       await _seedDefaults(db);
     });
     console.warn("RESET DO BANCO DE DADOS CONCLUÍDO.");

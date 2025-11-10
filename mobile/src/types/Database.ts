@@ -1,8 +1,5 @@
-// src/services/database/types.ts
-
-// --- Tipos Base ---
 export type TransactionType = 'revenue' | 'expense';
-export type TransactionCondition = 'paid' | 'pending'; // Você decide quais são
+export type TransactionCondition = 'paid' | 'pending';
 
 export interface Category {
   id: number;
@@ -16,14 +13,15 @@ export interface PaymentMethod {
 }
 
 export interface UserConfig {
-  id: 1; // A linha de config será sempre '1'
+  id: 1;
   company_name: string | null;
   initial_balance: number;
+  company_logo: string | null;
 }
 
 export interface Transaction {
   id: number;
-  date: string; // Salvar como string ISO (new Date().toISOString())
+  date: string;
   description: string | null;
   value: number;
   type: TransactionType;
@@ -32,8 +30,6 @@ export interface Transaction {
   payment_method_id: number;
   category_id: number;
 }
-
-// --- Tipos para CRUD ---
 
 /**
  * Dados necessários para CRIAR uma nova transação.

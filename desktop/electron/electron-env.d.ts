@@ -27,5 +27,6 @@ interface Window {
     off: (channel: string, ...args: any[]) => import('electron').IpcRenderer;
     send: (channel: string, ...args: any[]) => void;
     invoke: (channel: string, ...args: any[]) => Promise<any>;
+    openExternal: (url: string) => void;
   }
 }

@@ -1,5 +1,4 @@
-// src/screens/SettingsScreen.tsx
-import React, { useRef, useCallback } from 'react'; // Adicionado useCallback
+import React, { useRef, useCallback } from 'react';
 
 import * as DB from '../services/database';
 import { useRefresh } from '../contexts/RefreshContext';
@@ -13,8 +12,11 @@ import { NavLink } from '../components/NavLink';
 import { ActionButton } from '../components/ActionButton';
 
 import { useSettings } from '../hooks/useSettings';
-import { Database, Wallet, UploadCloud, DownloadCloud, RefreshCw, HelpCircle, Image as ImageIcon } from 'lucide-react'; // Ícones
+import { Database, Wallet, UploadCloud, DownloadCloud, RefreshCw, HelpCircle, Image as ImageIcon } from 'lucide-react';
 import { useModal } from '../contexts/ModalContext';
+
+
+const MAX_LOGO_SIZE_BYTES = 500 * 1024; 
 
 export const SettingsScreen: React.FC = () => {
   const { triggerReload } = useRefresh();
@@ -25,13 +27,16 @@ export const SettingsScreen: React.FC = () => {
     setCompanyName,
     initialBalanceInput,
     setInitialBalanceInput,
-    companyLogo,
-    setCompanyLogo,
+    initialBalanceSign,
+    setInitialBalanceSign,
+    companyLogo,    
+    setCompanyLogo, 
     handleSave,
   } = useSettings();
   const { alert, confirm } = useModal();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const onSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,21 +49,32 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
-  const handleOpenLogoPicker = useCallback(async () => {
-    try {
-      const result = await window.ipcRenderer.invoke('open-logo-picker');
 
-      if (result.success) {
-        setCompanyLogo(result.dataUrl);
-      } else if (result.error) {
-        await alert('Erro ao carregar logo', result.error, 'error');
-      }  
-    } catch (e: any) {
-      console.error("Erro ao invocar 'open-logo-picker':", e);
-      await alert('Erro', 'Ocorreu uma falha ao abrir o seletor de arquivos.', 'error');
+  const handleLogoFileSelected = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        await alert('Erro', 'Por favor, selecione um arquivo de imagem (PNG, JPG, etc).', 'error');
+        return;
     }
-  }, [alert, setCompanyLogo]);
+    if (file.size > MAX_LOGO_SIZE_BYTES) {
+        await alert('Erro', `A imagem é muito grande. O limite é ${MAX_LOGO_SIZE_BYTES / 1024}KB.`, 'error');
+        return;
+    }
 
+    const reader = new FileReader();
+    reader.onload = () => {
+        setCompanyLogo(reader.result as string);
+    };
+    reader.onerror = (error) => {
+        console.error("Erro ao ler arquivo de logo:", error);
+        alert('Erro', 'Não foi possível ler o arquivo da logo.', 'error');
+    };
+    reader.readAsDataURL(file);
+
+  }, [alert, setCompanyLogo]);
+  
   const handleExportData = async () => {
     try {
       const jsonString = await exportDataAsJson();
@@ -124,6 +140,11 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
+  const toggleSign = () => {
+    setInitialBalanceSign(prev => (prev === 'positive' ? 'negative' : 'positive'));
+  };
+
+  const isNegative = initialBalanceSign === 'negative';
 
   return (
     <MainContainer>
@@ -153,7 +174,7 @@ export const SettingsScreen: React.FC = () => {
                   <SimpleButton
                     title="Alterar Logo"
                     type="button"
-                    onPress={handleOpenLogoPicker}
+                    onPress={() => logoInputRef.current?.click()}
                   />
                   {companyLogo && (
                     <SimpleButton
@@ -165,7 +186,14 @@ export const SettingsScreen: React.FC = () => {
                   )}
                 </div>
               </div>
-              {/* Input de logo oculto REMOVIDO */}
+              {/* Input de logo oculto */}
+              <input
+                type="file"
+                accept="image/png, image/jpeg, image/webp"
+                ref={logoInputRef}
+                onChange={handleLogoFileSelected}
+                className="hidden"
+              />
             </div>
             {/* --- FIM DA SEÇÃO DA LOGO --- */}
 
@@ -175,13 +203,45 @@ export const SettingsScreen: React.FC = () => {
               value={companyName}
               onChangeText={setCompanyName}
             />
-            <InputGroup
-              label="Saldo Inicial"
-              placeholder="0,00"
-              keyboardType="numeric"
-              value={initialBalanceInput}
-              onChangeText={setInitialBalanceInput}
-            />
+
+            {/* --- GRUPO DE SALDO INICIAL ATUALIZADO --- */}
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Saldo Inicial
+              </label>
+              <div className="flex items-center gap-2">
+
+                 {/* Input (agora dentro do flex) */}
+                <div className="flex-1">
+                  <InputGroup
+                    label=""
+                    placeholder="0,00"
+                    keyboardType="numeric"
+                    value={initialBalanceInput}
+                    onChangeText={setInitialBalanceInput}
+                  />
+                </div>
+                
+                {/* Botão de Sinal */}
+                <button
+                  type="button"
+                  onClick={toggleSign}
+                  className={`
+                    w-14 h-11 rounded-lg border mb-2 font-semibold text-sm transition-colors
+                    ${isNegative 
+                      ? 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200' 
+                      : 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200'
+                    }
+                  `}
+                >
+                  {isNegative ? '-' : '+'}
+                </button>
+                
+               
+              </div>
+            </div>
+            {/* --- FIM DO GRUPO --- */}
+
             <SimpleButton
               title={isSaving ? 'Salvando...' : 'Salvar Dados'}
               type="submit"
@@ -193,9 +253,6 @@ export const SettingsScreen: React.FC = () => {
       </form>
 
       <Divider />
-
-      {/* --- Personalização (Links) --- */}
-      {/* ... (sem alterações) ... */}
       <div className="w-full">
         <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Personalização</h2>
         <NavLink
@@ -214,8 +271,6 @@ export const SettingsScreen: React.FC = () => {
 
       <Divider />
 
-      {/* --- Suporte (Link) --- */}
-      {/* ... (sem alterações) ... */}
       <div className="w-full">
         <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Suporte</h2>
         <NavLink
@@ -228,8 +283,6 @@ export const SettingsScreen: React.FC = () => {
 
       <Divider />
       
-      {/* --- Backup (Botões de Ação) --- */}
-      {/* ... (sem alterações, exceto o input de backup que já existia) ... */}
       <div className="w-full">
         <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Backup e Restauração</h2>
         <ActionButton

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import * as DB from '../services/database';
 import type { UserConfig } from '../types/Database';
@@ -14,8 +13,11 @@ export const useUserConfig = () => {
     setIsLoading(true);
     setError(null);
     try {
+
       const userConfig = await DB.fetchOrCreateUserConfig();
       setConfig(userConfig);
+
+      
     } catch (e: any) {
       console.error("Erro ao carregar UserConfig:", e);
       setError(e);

@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { LayoutDashboard, List, Settings, X } from 'lucide-react';
 import { Divider } from './Divider';
+import { useUserConfig } from '../hooks/useUserConfig';
 import icon from '../assets/icon.png';
 
 interface LinkItemProps {
@@ -18,8 +19,7 @@ const LinkItem: React.FC<LinkItemProps> = ({ to, label, icon, onClick }) => {
       end
       onClick={onClick}
       className={({ isActive }) =>
-        `flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 transition-all hover:bg-gray-200 ${
-          isActive ? 'bg-gray-200 font-semibold' : ''
+        `flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 transition-all hover:bg-gray-200 ${isActive ? 'bg-gray-200 font-semibold' : ''
         }`
       }
     >
@@ -35,6 +35,11 @@ interface CustomDrawerProps {
 }
 
 export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) => {
+  const { config } = useUserConfig();
+
+  const logoSrc = config?.company_logo || icon;
+  const companyName = config?.company_name || 'CF Prático';
+
   return (
     <div
       className={`
@@ -45,11 +50,19 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) =
       `}
     >
       {/* Topo do Drawer */}
-      <div className="flex items-center justify-between p-2 mb-4">
-        <div className="flex items-center gap-3">
-          <img src={icon} width={60} alt="icon" />
-          <span className="text-xl font-bold text-gray-800">CF Prático</span>
+      <div className="flex items-center justify-between p-2 mb-1">
+        <div className="flex flex-col items-center gap-3 w-full">
+          <div className="w-20 h-20 rounded-md overflow-hidden flex-shrink-0">
+            <img
+              src={logoSrc}
+              className="w-full h-full object-contain"
+              alt="Logo"
+            />
+          </div>
+          <span className="text-xl font-bold text-gray-800">{companyName}</span>
         </div>
+
+        {/* Botão de Fechar (só no mobile) */}
         <button
           onClick={onClose}
           className="p-1 text-gray-600 hover:bg-gray-200 rounded-full md:hidden"
@@ -57,8 +70,10 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) =
         >
           <X size={22} />
         </button>
-        
+
       </div>
+
+      <Divider />
 
       {/* Itens de Navegação */}
       <nav className="flex flex-col gap-1">

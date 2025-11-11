@@ -1,4 +1,4 @@
-
+// src/hooks/useReportExporter.ts
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
 
@@ -24,10 +24,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       return isoDate;
     }
   };
-
-  /**
-   * Gera um arquivo Excel (.xlsx) e dispara o download no navegador.
-   */
   const handleExportExcel = async () => {
     if (data.filteredTransactions.length === 0) {
       await alert("Nenhum dado", "Não há transações no período selecionado para exportar.");
@@ -61,7 +57,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
 
-      // Dispara o download no navegador
       XLSX.writeFile(wb, "relatorio_cfpratico.xlsx");
 
     } catch (e: any) {
@@ -71,9 +66,9 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     }
   };
 
+
   /**
    * Gera o HTML base para os relatórios PDF.
-   * (Esta função é 99% idêntica à do mobile)
    */
   const createPdfHtml = () => {
     const {
@@ -91,7 +86,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
         saldoAnterior += tx.value;
       }
     }
-
     let runningBalance = saldoAnterior;
     const transactionRows = filteredTransactions
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -112,7 +106,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
             </tr>
           `;
       }).join('');
-
+    
     const generateCategoryTable = (title: string, items: AggregatedData[], colorClass: 'receita' | 'despesa') => {
       if (items.length === 0) return `<h3>${title}</h3><p>Nenhum dado no período.</p>`;
       const rows = items.map(item => `
@@ -143,23 +137,25 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
           </div>
       </div>`;
 
-    // NOTA: Para a logo funcionar na web, ela deve estar na pasta 'public'
-    // ou ser importada como um módulo (ex: import logoUrl from '...').
-    // Estou usando um caminho relativo '/onvale.png' (assumindo que está em 'public')
-    const logoHtml = `<img src="/onvale.png" class="logo" />`;
+
+    const logoHtml = userConfig?.company_logo
+      ? `<img src="${userConfig.company_logo}" class="logo" />`
+      : `<img src="/icon.png" class="logo" />`; 
+
     const companyName = userConfig?.company_name || 'CFPratico';
     const reportPeriod = `<p class="period"><b>Período do Relatório:</b> ${formatShortDate(startDate)} a ${formatShortDate(endDate)}</p>`;
 
-    // (O HTML/CSS é o mesmo do seu app mobile)
     return `
       <html>
         <head>
           <style>
             body { font-family: sans-serif; margin: 25px; width: auto; }
             .header { display: flex; flex-direction: row; align-items: center; border-bottom: 2px solid #555; padding-bottom: 10px; }
-            .logo { width: 50px; height: auto; margin-right: 15px; }
+            /* Adicionado max-height e object-fit para logos grandes */
+            .logo { width: 50px; height: auto; max-height: 50px; object-fit: contain; margin-right: 15px; } 
             h1 { font-size: 22px; color: #333; margin: 0; }
             h2 { font-size: 18px; color: #555; margin-top: 25px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+            /* ... (resto do CSS igual) ... */
             h3 { font-size: 16px; color: #444; margin-top: 20px; margin-bottom: 10px; }
             p { font-size: 13px; }
             .period { font-size: 13px; color: #333; margin-top: 5px; }
@@ -218,9 +214,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     `;
   };
 
-  /**
-   * Gera um PDF usando a função de impressão do navegador.
-   */
+  // ... (handleExportPdf permanece igual) ...
   const handleExportPdf = async () => {
     if (data.filteredTransactions.length === 0 && (data.userConfig?.initial_balance ?? 0) === 0) {
       await alert("Nenhum dado", "Não há dados no período selecionado para exportar.");
@@ -230,30 +224,23 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     setIsExporting(true);
     try {
       const html = createPdfHtml();
-
-      // Abre uma nova janela/aba apenas com o HTML
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
         throw new Error('Não foi possível abrir a janela de impressão. Verifique se os pop-ups estão bloqueados.');
       }
-
       printWindow.document.write(html);
       printWindow.document.close();
-
-      // Espera o conteúdo carregar e chama a impressão
       printWindow.onload = () => {
-        printWindow.focus(); // Necessário para alguns navegadores
+        printWindow.focus(); 
         printWindow.print();
-        // A janela de impressão pode não fechar automaticamente
-        // printWindow.close(); 
       };
-
     } catch (e: any) {
       await alert("Erro ao exportar", "Ocorreu um erro ao transformar em PDF.", "error");
     } finally {
       setIsExporting(false);
     }
   };
+
 
   return {
     isExporting,

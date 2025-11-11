@@ -1,8 +1,6 @@
-// src/services/database/db.ts
 import Dexie, { type Table } from 'dexie';
 import type { Category, PaymentMethod, UserConfig, Transaction } from '../../types/Database';
 
-// Listas de dados padrão (copiadas do seu initialize.ts)
 const DEFAULT_CATEGORIES = [
     { name: "Venda", icon: "Receipt" },
     { name: "Prestação de Serviço", icon: "Receipt" },
@@ -67,7 +65,8 @@ export class AppDatabase extends Dexie {
     await this.userConfig.put({
       id: 1,
       company_name: null,
-      initial_balance: 0.00
+      initial_balance: 0.00,
+      company_logo: null
     });
 
     // --- CORREÇÃO: Usar 'this' e 'as any' ---

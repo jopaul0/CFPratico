@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { LayoutDashboard, List, Settings, X } from 'lucide-react';
 import { Divider } from './Divider';
-
+import { useUserConfig } from '../hooks/useUserConfig';
 
 interface LinkItemProps {
   to: string;
@@ -33,7 +34,13 @@ interface CustomDrawerProps {
   onClose: () => void;
 }
 
+
 export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) => {
+  const { config } = useUserConfig();
+
+  const logoSrc = config?.company_logo || '/icon.png';
+  const companyName = config?.company_name || 'CF Prático';
+
   return (
     <div
       className={`
@@ -44,13 +51,25 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) =
       `}
     >
       {/* Topo do Drawer */}
-      <div className="flex items-center justify-between p-2 mb-4">
-        <div className="flex items-center gap-3">
-          {/* Usando um ícone placeholder, você pode trocar pela sua logo */}
-          <img src="/icon.png" width={60} alt="icon" />
-          <span className="text-xl font-bold text-gray-800">CF Prático</span>
+      <div className="flex items-center justify-between p-2 mb-1">
+        <div className="flex flex-col items-center gap-3">
+
+          {/* --- LOGO ATUALIZADA --- */}
+          <div className="w-20 h-20 rounded-md overflow-hidden flex-shrink-0">
+            <img
+              src={logoSrc}
+              className="w-full h-full object-contain"
+              alt="Logo"
+            />
+          </div>
+          {/* --- FIM DA ATUALIZAÇÃO --- */}
+
+          <span className="text-xl font-bold text-gray-800">{companyName}</span>
         </div>
-        {/* 5. Botão de Fechar (só no mobile) */}
+
+
+
+        {/* Botão de Fechar (só no mobile) */}
         <button
           onClick={onClose}
           className="p-1 text-gray-600 hover:bg-gray-200 rounded-full md:hidden"
@@ -61,7 +80,10 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) =
 
       </div>
 
+      <Divider />
+
       {/* Itens de Navegação */}
+      {/* ... (sem alterações) ... */}
       <nav className="flex flex-col gap-1">
         <LinkItem to="/" label="Resumo" icon={<LayoutDashboard size={20} />} onClick={onClose} />
         <LinkItem to="/statement" label="Movimentação" icon={<List size={20} />} onClick={onClose} />
@@ -69,6 +91,7 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) =
       </nav>
 
       {/* Rodapé do Drawer */}
+      {/* ... (sem alterações) ... */}
       <div className="mt-auto p-2">
         <span className="text-xs text-gray-500 block">
           Disponibilizado por:

@@ -1,13 +1,8 @@
-// src/services/dataSync.ts
 import { dbPromise } from './database/connection';
-// 1. Importar o tipo UserConfig
 import type { Category, PaymentMethod, Transaction, UserConfig } from '../types/Database';
-
-// Importa as funções de CRUD
 import { fetchCategories } from './database/crud/Category';
 import { fetchPaymentMethods } from './database/crud/PaymentMethods';
 import { fetchAllRawTransactions } from './database/crud/Transaction';
-// 2. Importar a função do UserConfig
 import { fetchOrCreateUserConfig } from './database/crud/UserConfig';
 
 
@@ -18,7 +13,7 @@ interface BackupData {
   categories: Category[];
   paymentMethods: PaymentMethod[];
   transactions: Transaction[];
-  userConfig: UserConfig; // 3. Adicionar userConfig à interface
+  userConfig: UserConfig; 
 }
 
 /**
@@ -26,19 +21,18 @@ interface BackupData {
  */
 export const exportDataAsJson = async (): Promise<string> => {
   try {
-    // 4. Buscar o userConfig junto com os outros dados
     const [categories, paymentMethods, transactions, userConfig] = await Promise.all([
       fetchCategories(),
       fetchPaymentMethods(),
       fetchAllRawTransactions(),
-      fetchOrCreateUserConfig() // Adicionado
+      fetchOrCreateUserConfig() 
     ]);
 
     const backupData: BackupData = {
       categories,
       paymentMethods,
       transactions,
-      userConfig, // 5. Adicionar o userConfig ao objeto de backup
+      userConfig,
     };
 
     return JSON.stringify(backupData, null, 2);
@@ -56,7 +50,6 @@ export const importDataFromJson = async (jsonString: string): Promise<void> => {
   let data: BackupData;
   try {
     data = JSON.parse(jsonString);
-    // 6. Validar se o userConfig está presente no JSON
     if (!data.categories || !data.paymentMethods || !data.transactions || !data.userConfig) {
       throw new Error("Arquivo JSON inválido ou mal formatado.");
     }
@@ -71,20 +64,21 @@ export const importDataFromJson = async (jsonString: string): Promise<void> => {
     await db.withTransactionAsync(async () => {
       console.log("Iniciando transação de importação...");
 
-      // 1. Limpar dados existentes
       await db.runAsync('DELETE FROM "transaction";');
       await db.runAsync('DELETE FROM "category";');
       await db.runAsync('DELETE FROM "payment_method";');
-      await db.runAsync('DELETE FROM "user_config";'); // 7. Limpar a tabela userConfig
+      await db.runAsync('DELETE FROM "user_config";');
 
-      // 8. Restaurar o UserConfig (usando ID 1 fixo)
       await db.runAsync(
-        'INSERT OR REPLACE INTO user_config (id, company_name, initial_balance) VALUES (1, ?, ?);',
-        [data.userConfig.company_name, data.userConfig.initial_balance]
+        'INSERT OR REPLACE INTO user_config (id, company_name, initial_balance, company_logo) VALUES (1, ?, ?, ?);',
+        [
+          data.userConfig.company_name, 
+          data.userConfig.initial_balance,
+          data.userConfig.company_logo
+        ]
       );
 
-      // 2. Re-mapear e Inserir Categorias
-      const categoryIdMap = new Map<number, number>(); // <OldID, NewID>
+      const categoryIdMap = new Map<number, number>();
       for (const cat of data.categories) {
         const result = await db.runAsync(
           'INSERT INTO category (name, icon_name) VALUES (?, ?);',
@@ -93,8 +87,7 @@ export const importDataFromJson = async (jsonString: string): Promise<void> => {
         categoryIdMap.set(cat.id, result.lastInsertRowId);
       }
 
-      // 3. Re-mapear e Inserir Métodos de Pagamento
-      const paymentMethodIdMap = new Map<number, number>(); // <OldID, NewID>
+      const paymentMethodIdMap = new Map<number, number>();
       for (const pm of data.paymentMethods) {
         const result = await db.runAsync(
           'INSERT INTO payment_method (name) VALUES (?);',
@@ -103,7 +96,6 @@ export const importDataFromJson = async (jsonString: string): Promise<void> => {
         paymentMethodIdMap.set(pm.id, result.lastInsertRowId);
       }
 
-      // 4. Re-mapear e Inserir Transações
       for (const tx of data.transactions) {
         const newCatId = categoryIdMap.get(tx.category_id) || null;
         const newPmId = paymentMethodIdMap.get(tx.payment_method_id) || null;

@@ -8,7 +8,8 @@ export const saveOrUpdateUserConfig = async (config: Omit<UserConfig, 'id'>): Pr
     await db.userConfig.put({
       id: CONFIG_ID,
       company_name: config.company_name,
-      initial_balance: config.initial_balance
+      initial_balance: config.initial_balance,
+      company_logo: config.company_logo
     });
   } catch (error: any) {
     console.error('Erro ao salvar config do usuário:', error);
@@ -25,7 +26,8 @@ export const fetchOrCreateUserConfig = async (): Promise<UserConfig> => {
     }
     const defaultConfig: Omit<UserConfig, 'id'> = {
       company_name: null,
-      initial_balance: 0.00
+      initial_balance: 0.00,
+      company_logo: null
     };
     await saveOrUpdateUserConfig(defaultConfig);
     

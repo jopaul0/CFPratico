@@ -3,10 +3,11 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { DrawerContentScrollView, DrawerContentComponentProps } from '@react-navigation/drawer';
 import { LayoutDashboard, List, Settings, ChevronRight, type LucideIcon } from 'lucide-react-native';
 import { Divider } from './Divider';
+import { useUserConfig } from '../hooks/useUserConfig';
 
 interface DrawerNavLinkProps {
   label: string;
-  icon: LucideIcon;
+  icon: LucideIcon; 
   onPress: () => void;
   isActive: boolean;
 }
@@ -33,10 +34,14 @@ const DrawerNavLink: React.FC<DrawerNavLinkProps> = ({ label, icon, onPress, isA
 };
 
 
-
 export const CustomDrawer: React.FC<DrawerContentComponentProps> = (props) => {
   const { state, navigation } = props;
+  
+  const { config } = useUserConfig();
 
+  const logoUri = config?.company_logo;
+  const companyName = config?.company_name || 'CF Prático';
+  
   const activeRouteName = state.routes[state.index].name;
 
   const navigateToOnVale = () => {
@@ -47,15 +52,27 @@ export const CustomDrawer: React.FC<DrawerContentComponentProps> = (props) => {
   return (
     <View className="flex-1 bg-white">
       <DrawerContentScrollView {...props} contentContainerStyle={{ paddingTop: 0 }}>
-        <View className="p-5 border-b border-gray-100 mb-4 mt-4">
-          <Image
-            source={require('../assets/icon.png')}
-            resizeMode="contain"
-            style={{ width: 70, height: 70 }}
-          />
-          <Text className="text-xl font-bold text-gray-800 mt-2">CF Prático</Text>
+        {/* TOPO DO DRAWER: Logo e Título */}
+        <View className="p-5 border-b border-gray-100 mb-4 items-center mt-4">
+          
+          {/* --- LOGO ATUALIZADA --- */}
+          <View 
+            className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 border border-gray-200"
+            style={{ elevation: 2 }}
+          >
+            <Image
+              source={logoUri ? { uri: logoUri } : require('../assets/icon.png')} 
+              resizeMode="contain"
+              className="w-full h-full"
+            />
+          </View>
+          {/* --- FIM DA ATUALIZAÇÃO --- */}
+          
+          <Text className="text-xl font-bold text-gray-800 mt-3">{companyName}</Text>
           <Text className="text-sm text-gray-500">Menu Principal</Text>
         </View>
+
+        {/* Lista de Navegação Personalizada (sem alterações) */}
         <View className="gap-2">
           <DrawerNavLink
             label="Resumo"

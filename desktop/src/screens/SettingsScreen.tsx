@@ -1,6 +1,8 @@
-import React, { useRef } from 'react';
+// src/screens/SettingsScreen.tsx
+import React, { useRef, useCallback } from 'react'; // Adicionado useCallback
 
 import * as DB from '../services/database';
+import { useRefresh } from '../contexts/RefreshContext';
 import { exportDataAsJson, importDataFromJson } from '../services/dataSync';
 
 import { MainContainer } from '../components/MainContainer';
@@ -11,10 +13,11 @@ import { NavLink } from '../components/NavLink';
 import { ActionButton } from '../components/ActionButton';
 
 import { useSettings } from '../hooks/useSettings';
-import { Database, Wallet, UploadCloud, DownloadCloud, RefreshCw, HelpCircle } from 'lucide-react';
+import { Database, Wallet, UploadCloud, DownloadCloud, RefreshCw, HelpCircle, Image as ImageIcon } from 'lucide-react'; // Ícones
 import { useModal } from '../contexts/ModalContext';
 
 export const SettingsScreen: React.FC = () => {
+  const { triggerReload } = useRefresh();
   const {
     isLoading,
     isSaving,
@@ -22,6 +25,8 @@ export const SettingsScreen: React.FC = () => {
     setCompanyName,
     initialBalanceInput,
     setInitialBalanceInput,
+    companyLogo,
+    setCompanyLogo,
     handleSave,
   } = useSettings();
   const { alert, confirm } = useModal();
@@ -33,10 +38,26 @@ export const SettingsScreen: React.FC = () => {
     try {
       await handleSave();
       await alert('Sucesso!', 'Configurações salvas!', 'success');
+      triggerReload();
     } catch (e: any) {
       await alert('Erro', e.message, 'error');
     }
   };
+
+  const handleOpenLogoPicker = useCallback(async () => {
+    try {
+      const result = await window.ipcRenderer.invoke('open-logo-picker');
+
+      if (result.success) {
+        setCompanyLogo(result.dataUrl);
+      } else if (result.error) {
+        await alert('Erro ao carregar logo', result.error, 'error');
+      }  
+    } catch (e: any) {
+      console.error("Erro ao invocar 'open-logo-picker':", e);
+      await alert('Erro', 'Ocorreu uma falha ao abrir o seletor de arquivos.', 'error');
+    }
+  }, [alert, setCompanyLogo]);
 
   const handleExportData = async () => {
     try {
@@ -76,10 +97,8 @@ export const SettingsScreen: React.FC = () => {
     try {
       const jsonString = await file.text();
       await importDataFromJson(jsonString);
-
       await alert('Sucesso!', 'Dados restaurados. O aplicativo será reiniciado.', 'success');
       window.location.reload();
-
     } catch (e: any) {
       await alert('Erro ao Importar', e?.message ?? e, 'error');
     } finally {
@@ -97,15 +116,14 @@ export const SettingsScreen: React.FC = () => {
     if (userConfirmed) {
       try {
         await DB.resetDatabaseToDefaults();
-
         await alert('Aplicativo Resetado', 'Os dados foram restaurados ao padrão. O aplicativo será reiniciado.', 'success');
         window.location.reload();
-
       } catch (e: any) {
         await alert('Erro no Reset', e?.message ?? e, 'error');
       }
     }
   };
+
 
   return (
     <MainContainer>
@@ -116,6 +134,41 @@ export const SettingsScreen: React.FC = () => {
           <p>Carregando...</p>
         ) : (
           <>
+            {/* --- SEÇÃO DA LOGO (NOVO) --- */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Logo da Empresa
+              </label>
+              <div className="flex items-center gap-4">
+                {/* Preview */}
+                <div className="w-20 h-20 rounded-lg border border-gray-300 bg-gray-50 flex items-center justify-center overflow-hidden">
+                  {companyLogo ? (
+                    <img src={companyLogo} alt="Logo Preview" className="w-full h-full object-contain" />
+                  ) : (
+                    <ImageIcon size={32} className="text-gray-400" />
+                  )}
+                </div>
+                {/* Botões */}
+                <div className="flex flex-col gap-2">
+                  <SimpleButton
+                    title="Alterar Logo"
+                    type="button"
+                    onPress={handleOpenLogoPicker}
+                  />
+                  {companyLogo && (
+                    <SimpleButton
+                      title="Remover"
+                      type="button"
+                      onPress={() => setCompanyLogo(null)}
+                      className="bg-red-50 text-red-700 hover:bg-red-100"
+                    />
+                  )}
+                </div>
+              </div>
+              {/* Input de logo oculto REMOVIDO */}
+            </div>
+            {/* --- FIM DA SEÇÃO DA LOGO --- */}
+
             <InputGroup
               label="Nome da Empresa"
               placeholder="Minha Empresa LTDA"
@@ -141,6 +194,8 @@ export const SettingsScreen: React.FC = () => {
 
       <Divider />
 
+      {/* --- Personalização (Links) --- */}
+      {/* ... (sem alterações) ... */}
       <div className="w-full">
         <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Personalização</h2>
         <NavLink
@@ -159,6 +214,8 @@ export const SettingsScreen: React.FC = () => {
 
       <Divider />
 
+      {/* --- Suporte (Link) --- */}
+      {/* ... (sem alterações) ... */}
       <div className="w-full">
         <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Suporte</h2>
         <NavLink
@@ -170,7 +227,9 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       <Divider />
-
+      
+      {/* --- Backup (Botões de Ação) --- */}
+      {/* ... (sem alterações, exceto o input de backup que já existia) ... */}
       <div className="w-full">
         <h2 className="text-xl font-bold text-gray-800 mb-4 mt-4">Backup e Restauração</h2>
         <ActionButton
@@ -179,7 +238,6 @@ export const SettingsScreen: React.FC = () => {
           icon={<UploadCloud size={22} className="text-green-600" />}
           onPress={handleExportData}
         />
-
         <input
           type="file"
           accept=".json,application/json"

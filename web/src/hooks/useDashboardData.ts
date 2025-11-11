@@ -1,10 +1,9 @@
-// src/hooks/useDashboardData.ts
 import { useMemo, useState, useCallback, useEffect } from 'react';
 import * as DB from '../services/database';
-import { 
-    TransactionWithNames, 
-    Category, 
-    UserConfig, 
+import {
+    TransactionWithNames,
+    Category,
+    UserConfig,
     Transaction
 } from '../types/Database';
 import type { FilterConfig, Option } from '../types/Filters';
@@ -12,6 +11,7 @@ import { categoryToSlug } from '../utils/Categories';
 import { formatDateToString } from '../utils/Date';
 import type { Tx } from '../types/Transactions';
 import { useRefresh } from '../contexts/RefreshContext';
+import { useUserConfig } from './useUserConfig';
 
 export interface SummaryData {
     totalRevenue: number;
@@ -38,7 +38,7 @@ export interface DashboardData {
     byCategoryExpense: AggregatedData[];
     byDate: AggregatedDataByDate[];
     recentTransactions: Tx[];
-    filteredTransactions: TransactionWithNames[]; 
+    filteredTransactions: TransactionWithNames[];
     rawTransactions: Transaction[];
     userConfig: UserConfig | null;
     startDate: string;
@@ -63,13 +63,15 @@ const adaptDbTransactionToTx = (dbTx: TransactionWithNames): Tx => {
 };
 
 export const useDashboardData = () => {
+    const { config: userConfig, isLoading: isConfigLoading } = useUserConfig();
+
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
-    
+
     const [rawTransactions, setRawTransactions] = useState<Transaction[]>([]);
     const [dbFilteredTransactions, setDbFilteredTransactions] = useState<TransactionWithNames[]>([]);
     const [rawCategories, setRawCategories] = useState<Category[]>([]);
-    const [userConfig, setUserConfig] = useState<UserConfig | null>(null);
+
     const [currentBalance, setCurrentBalance] = useState(0);
 
     const { refreshTrigger } = useRefresh();
@@ -103,43 +105,42 @@ export const useDashboardData = () => {
     }, [rawCategories]);
 
     const loadData = useCallback(async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-          const [allTxs, categories, config] = await Promise.all([
-              DB.fetchAllRawTransactions(),
-              DB.fetchCategories(),
-              DB.fetchOrCreateUserConfig(),
-          ]);
-          setRawTransactions(allTxs);
-          setRawCategories(categories);
-          setUserConfig(config);
+        if (!userConfig) return;
+        setIsLoading(true);
+        setError(null);
+        try {
+            const [allTxs, categories] = await Promise.all([
+                DB.fetchAllRawTransactions(),
+                DB.fetchCategories()
+            ]);
+            setRawTransactions(allTxs);
+            setRawCategories(categories);
 
-          const initialBalance = config?.initial_balance ?? 0;
-          const totalFromTransactions = allTxs.reduce((sum, tx) => sum + tx.value, 0);
-          setCurrentBalance(initialBalance + totalFromTransactions);
-          
-          const categoryId = categories.find(c => categoryToSlug(c.name) === category)?.id;
-          
-          const filterOptions: DB.FetchTransactionsFilters = {
-              startDate: startDate,
-              endDate: endDate,
-              type: movementType === 'all' ? undefined : movementType,
-              categoryId: category === 'all' ? undefined : categoryId,
-          };
-          
-          const transactions = await DB.fetchTransactions(filterOptions);
-          setDbFilteredTransactions(transactions);
+            const initialBalance = userConfig?.initial_balance ?? 0;
+            const totalFromTransactions = allTxs.reduce((sum, tx) => sum + tx.value, 0);
+            setCurrentBalance(initialBalance + totalFromTransactions);
 
-      } catch (e) {
-          setError(e as Error);
-      } finally {
-          setIsLoading(false);
-      }
-    }, [startDate, endDate, movementType, category, refreshTrigger]);
-    
+            const categoryId = categories.find(c => categoryToSlug(c.name) === category)?.id;
+
+            const filterOptions: DB.FetchTransactionsFilters = {
+                startDate: startDate,
+                endDate: endDate,
+                type: movementType === 'all' ? undefined : movementType,
+                categoryId: category === 'all' ? undefined : categoryId,
+            };
+
+            const transactions = await DB.fetchTransactions(filterOptions);
+            setDbFilteredTransactions(transactions);
+
+        } catch (e) {
+            setError(e as Error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [startDate, endDate, movementType, category, refreshTrigger, userConfig]);
+
     useEffect(() => {
-      loadData();
+        loadData();
     }, [loadData]);
 
 
@@ -149,7 +150,7 @@ export const useDashboardData = () => {
         const catExpenseMap = new Map<string, { total: number; count: number; iconName: string }>();
         const dateMap = new Map<string, { totalRevenue: number; totalExpense: number }>();
 
-        for (const tx of dbFilteredTransactions) { 
+        for (const tx of dbFilteredTransactions) {
             const value = tx.value;
             const categoryName = tx.category_name || 'Sem Categoria';
             const iconName = tx.category_icon_name || 'DollarSign';
@@ -182,12 +183,12 @@ export const useDashboardData = () => {
         const byDate = Array.from(dateMap.entries())
             .map(([date, data]) => ({ date, totalRevenue: data.totalRevenue, totalExpense: Math.abs(data.totalExpense) }))
             .sort((a, b) => a.date.localeCompare(b.date));
-        
+
         const sortedTxs = [...dbFilteredTransactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         const recentTransactions = sortedTxs
-            .slice(0, 5) 
+            .slice(0, 5)
             .map(adaptDbTransactionToTx);
-        
+
         return {
             summary,
             byCategoryRevenue,
@@ -241,7 +242,7 @@ export const useDashboardData = () => {
     ];
 
     return {
-        isLoading,
+        isLoading: isLoading || isConfigLoading,
         error,
         filtersConfig,
         handleClearAll,

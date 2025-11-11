@@ -6,8 +6,6 @@ import { parseStringToDate } from '../utils/Date';
 import { useDashboardData, AggregatedData } from './useDashboardData';
 import { useModal } from '../contexts/ModalContext';
 
-import logoImage from '../assets/onvale.png';
-
 type ReportData = ReturnType<typeof useDashboardData>;
 
 interface UseReportExporterProps {
@@ -147,7 +145,9 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
           </div>
       </div>`;
 
-    const logoHtml = `<img src="${logoImage}" class="logo" />`;
+    const logoHtml = userConfig?.company_logo
+      ? `<img src="${userConfig.company_logo}" class="logo" />`
+      : `<img src="/onvale.png" class="logo" />`;
     const companyName = userConfig?.company_name || 'CFPratico';
     const reportPeriod = `<p class="period"><b>Período do Relatório:</b> ${formatShortDate(startDate)} a ${formatShortDate(endDate)}</p>`;
 

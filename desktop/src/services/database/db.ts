@@ -53,7 +53,8 @@ export class AppDatabase extends Dexie {
     await this.userConfig.put({
       id: 1,
       company_name: null,
-      initial_balance: 0.00
+      initial_balance: 0.00,
+      company_logo: null
     });
 
     await this.categories.bulkAdd(

@@ -5,7 +5,7 @@ interface DividerProps {
   className?: string;
 }
 
-export const Divider: React.FC<DividerProps> = ({ className = 'my-4' }) => {
+export const Divider: React.FC<DividerProps> = ({ className = 'my-1' }) => {
   return (
     <div
       className={`w-full h-px bg-gray-300 rounded-full ${className}`}

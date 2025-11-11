@@ -145,17 +145,17 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     const companyName = userConfig?.company_name || 'CFPratico';
     const reportPeriod = `<p class="period"><b>Período do Relatório:</b> ${formatShortDate(startDate)} a ${formatShortDate(endDate)}</p>`;
 
+    const onvaleLogoSrc = "/onvale.png"; 
+
     return `
       <html>
         <head>
           <style>
             body { font-family: sans-serif; margin: 25px; width: auto; }
             .header { display: flex; flex-direction: row; align-items: center; border-bottom: 2px solid #555; padding-bottom: 10px; }
-            /* Adicionado max-height e object-fit para logos grandes */
             .logo { width: 50px; height: auto; max-height: 50px; object-fit: contain; margin-right: 15px; } 
             h1 { font-size: 22px; color: #333; margin: 0; }
             h2 { font-size: 18px; color: #555; margin-top: 25px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-            /* ... (resto do CSS igual) ... */
             h3 { font-size: 16px; color: #444; margin-top: 20px; margin-bottom: 10px; }
             p { font-size: 13px; }
             .period { font-size: 13px; color: #333; margin-top: 5px; }
@@ -177,13 +177,47 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
             .category-table td:nth-child(3), .category-table th:nth-child(3) { text-align: right; }
             .split-tables { display: flex; flex-direction: row; justify-content: space-between; gap: 20px; }
             .table-wrapper { width: 48%; vertical-align: top; }
+            
+            /* --- INÍCIO: ESTILOS DO RODAPÉ --- */
+            .print-footer {
+                position: fixed;
+                bottom: 10px; /* Margem inferior */
+                left: 25px; /* Alinhado com as margens do body */
+                right: 25px;
+                display: none; /* Escondido na tela, visível no print */
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                color: #888;
+                border-top: 1px solid #eee;
+                padding-top: 5px;
+            }
+            .footer-logo {
+                width: 20px;
+                height: auto;
+                margin-right: 8px;
+            }
+            /* --- FIM: ESTILOS DO RODAPÉ --- */
+
             @media print {
+              body { padding-bottom: 40px; } /* Garante espaço para o rodapé */
               .split-tables { display: block; }
               .table-wrapper { width: 100%; page-break-inside: avoid; }
+              
+              /* --- INÍCIO: MOSTRAR RODAPÉ NO PRINT --- */
+              .print-footer {
+                  display: flex !important; /* Força a exibição no print */
+              }
+              /* --- FIM: MOSTRAR RODAPÉ NO PRINT --- */
             }
           </style>
         </head>
         <body>
+          <div class="print-footer">
+            <img src="${onvaleLogoSrc}" class="footer-logo" />
+            <span>Disponibilizado por OnVale Contabilidade</span>
+          </div>
           <div class="header">${logoHtml}<h1>Relatório Financeiro — ${companyName}</h1></div>
           ${reportPeriod}
           <h2>Extrato de Movimentações</h2>
@@ -214,7 +248,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     `;
   };
 
-  // ... (handleExportPdf permanece igual) ...
   const handleExportPdf = async () => {
     if (data.filteredTransactions.length === 0 && (data.userConfig?.initial_balance ?? 0) === 0) {
       await alert("Nenhum dado", "Não há dados no período selecionado para exportar.");

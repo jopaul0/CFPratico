@@ -1,3 +1,4 @@
+// src/hooks/useReportExporter.ts
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
 
@@ -24,6 +25,11 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     }
   };
 
+  /**
+   * Alteração 2: Exportar Excel para Desktop (Electron)
+   * Esta função usa 'window.ipcRenderer.invoke' para salvar o Excel,
+   * que é o correto para a versão desktop.
+   */
   const handleExportExcel = async () => {
     if (data.filteredTransactions.length === 0) {
       await alert("Nenhum dado", "Não há transações no período selecionado para exportar.");
@@ -62,10 +68,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       // Envia o buffer para o processo main (Electron) cuidar de salvar
       const result = await window.ipcRenderer.invoke('export-excel', buffer);
 
-      // REMOVA A LINHA ABAIXO:
-      // XLSX.writeFile(wb, "relatorio_cfpratico.xlsx");
-
-      // Você pode (opcionalmente) tratar o 'result' aqui
       if (!result.success && !result.canceled) {
         throw new Error(result.error || "Falha ao salvar arquivo.");
       }
@@ -77,6 +79,10 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     }
   };
 
+  /**
+   * Alteração 1: Rodapé no PDF (OnVale)
+   * Esta função gera o HTML do PDF, agora com o rodapé e estilos de impressão.
+   */
   const createPdfHtml = () => {
     const {
       summary, filteredTransactions, rawTransactions, userConfig,
@@ -93,7 +99,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
         saldoAnterior += tx.value;
       }
     }
-
     let runningBalance = saldoAnterior;
     const transactionRows = filteredTransactions
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -114,7 +119,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
             </tr>
           `;
       }).join('');
-
+    
     const generateCategoryTable = (title: string, items: AggregatedData[], colorClass: 'receita' | 'despesa') => {
       if (items.length === 0) return `<h3>${title}</h3><p>Nenhum dado no período.</p>`;
       const rows = items.map(item => `
@@ -145,11 +150,16 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
           </div>
       </div>`;
 
+    // Correção do typo: /onvale.png -> /icon.png
     const logoHtml = userConfig?.company_logo
       ? `<img src="${userConfig.company_logo}" class="logo" />`
-      : `<img src="/onvale.png" class="logo" />`;
+      : `<img src="/icon.png" class="logo" />`; 
+
     const companyName = userConfig?.company_name || 'CFPratico';
     const reportPeriod = `<p class="period"><b>Período do Relatório:</b> ${formatShortDate(startDate)} a ${formatShortDate(endDate)}</p>`;
+
+    // Caminho para o logo do rodapé (deve estar na pasta /public)
+    const onvaleLogoSrc = "/onvale.png"; 
 
     return `
       <html>
@@ -157,7 +167,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
           <style>
             body { font-family: sans-serif; margin: 25px; width: auto; }
             .header { display: flex; flex-direction: row; align-items: center; border-bottom: 2px solid #555; padding-bottom: 10px; }
-            .logo { width: 50px; height: auto; margin-right: 15px; }
+            .logo { width: 50px; height: auto; max-height: 50px; object-fit: contain; margin-right: 15px; } 
             h1 { font-size: 22px; color: #333; margin: 0; }
             h2 { font-size: 18px; color: #555; margin-top: 25px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
             h3 { font-size: 16px; color: #444; margin-top: 20px; margin-bottom: 10px; }
@@ -181,13 +191,47 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
             .category-table td:nth-child(3), .category-table th:nth-child(3) { text-align: right; }
             .split-tables { display: flex; flex-direction: row; justify-content: space-between; gap: 20px; }
             .table-wrapper { width: 48%; vertical-align: top; }
+            
+            /* --- INÍCIO: ESTILOS DO RODAPÉ (Alteração 1) --- */
+            .print-footer {
+                position: fixed;
+                bottom: 10px; /* Margem inferior */
+                left: 25px; /* Alinhado com as margens do body */
+                right: 25px;
+                display: none; /* Escondido na tela, visível no print */
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                color: #888;
+                border-top: 1px solid #eee;
+                padding-top: 5px;
+            }
+            .footer-logo {
+                width: 20px;
+                height: auto;
+                margin-right: 8px;
+            }
+            /* --- FIM: ESTILOS DO RODAPÉ --- */
+
             @media print {
+              body { padding-bottom: 40px; } /* Garante espaço para o rodapé */
               .split-tables { display: block; }
               .table-wrapper { width: 100%; page-break-inside: avoid; }
+              
+              /* --- INÍCIO: MOSTRAR RODAPÉ NO PRINT (Alteração 1) --- */
+              .print-footer {
+                  display: flex !important; /* Força a exibição no print */
+              }
+              /* --- FIM: MOSTRAR RODAPÉ NO PRINT --- */
             }
           </style>
         </head>
         <body>
+          <div class="print-footer">
+            <img src="${onvaleLogoSrc}" class="footer-logo" />
+            <span>Disponibilizado por OnVale Contabilidade</span>
+          </div>
           <div class="header">${logoHtml}<h1>Relatório Financeiro — ${companyName}</h1></div>
           ${reportPeriod}
           <h2>Extrato de Movimentações</h2>

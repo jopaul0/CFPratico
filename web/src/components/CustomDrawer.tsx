@@ -52,9 +52,8 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) =
     >
       {/* Topo do Drawer */}
       <div className="flex items-center justify-between p-2 mb-1">
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-3 w-full">
 
-          {/* --- LOGO ATUALIZADA --- */}
           <div className="w-20 h-20 rounded-md overflow-hidden flex-shrink-0">
             <img
               src={logoSrc}
@@ -62,7 +61,6 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({ isOpen, onClose }) =
               alt="Logo"
             />
           </div>
-          {/* --- FIM DA ATUALIZAÇÃO --- */}
 
           <span className="text-xl font-bold text-gray-800">{companyName}</span>
         </div>

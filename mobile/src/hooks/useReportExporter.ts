@@ -24,11 +24,14 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
   const formatShortDate = (isoDate: string) => {
     try {
+      // Garante que a data 'YYYY-MM-DD' seja tratada como local
       return parseStringToDate(isoDate).toLocaleDateString('pt-BR');
     } catch (e) {
       return isoDate;
     }
   };
+
+  // (Função saveToDownloadsAndroid mantida, sem alterações)
   const saveToDownloadsAndroid = async (
     filename: string, 
     base64Content: string, 
@@ -77,26 +80,45 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
   };
   
   /**
-   * Carrega o logo FALLBACK (onvale.png) como base64.
+   * Carrega o logo FALLBACK do CABEÇALHO (onvale.png) como base64.
    */
   const getFallbackLogoBase64 = async (): Promise<string | null> => {
     try {
       const asset = Asset.fromModule(require('../assets/onvale.png')); 
       await asset.downloadAsync();
 
-      if (Platform.OS === 'web') {
-      }
-
       const uri = asset.localUri ?? asset.uri;
       const logoFile = new File(uri); 
       const base64 = await logoFile.base64(); 
-      return base64;
+      return `data:${asset.type || 'image/png'};base64,${base64}`;
     } catch (e) {
       console.error("Erro ao carregar logo 'onvale.png' para exportar:", e);
       return null;
     }
   };
 
+  /**
+   * Carrega o logo do RODAPÉ (onvalecontabilidade.png) como base64.
+   */
+  const getOnValeFooterLogoBase64 = async (): Promise<string | null> => {
+    try {
+      const asset = Asset.fromModule(require('../assets/onvale.png')); 
+      await asset.downloadAsync();
+  
+      const uri = asset.localUri ?? asset.uri;
+      const logoFile = new File(uri); 
+      const base64 = await logoFile.base64(); 
+      return `data:${asset.type || 'image/png'};base64,${base64}`;
+    } catch (e) {
+      console.error("Erro ao carregar logo 'onvale.png' para o rodapé:", e);
+      return null;
+    }
+  };
+
+  /**
+   * Alteração 2: Exportar Excel (Mobile)
+   * ATUALIZADO: Agora gera duas planilhas (Contmatic e Relatorio).
+   */
   const handleExportExcel = async () => {
     if (data.filteredTransactions.length === 0) {
       Alert.alert("Nenhum dado", "Não há transações no período selecionado para exportar.");
@@ -104,11 +126,46 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     }
     setIsExporting(true);
     try {
-      const header = [
+      // --- DADOS BASE ---
+      // Ordena as transações por data
+      const sortedTxs = [...data.filteredTransactions].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+
+      // --- PLANILHA 1: CONTMATIC (Novo formato) ---
+      const header_contmatic = [
+        "Lançamento", "Data", "Débito", "Crédito", "Valor", 
+        "Histórico Padrão", "Complemento", "CCDB", "CCCR", "CNPJ"
+      ];
+
+      const aoa_contmatic = sortedTxs.map((tx, index) => {
+        return [
+          index + 1,                     // Lançamento (1, 2, 3...)
+          formatShortDate(tx.date),      // Data
+          "",                            // Débito (em branco)
+          "",                            // Crédito (em branco)
+          tx.value,                      // Valor (assinado)
+          1,                             // Histórico Padrão (sempre 1)
+          tx.description || '',          // Complemento
+          "",                            // CCDB (em branco)
+          "",                            // CCCR (em branco)
+          ""                             // CNPJ (em branco)
+        ];
+      });
+
+      const ws_contmatic = XLSX.utils.aoa_to_sheet([header_contmatic, ...aoa_contmatic]);
+      ws_contmatic['!cols'] = [
+        { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 },
+        { wch: 18 }, { wch: 40 }, { wch: 10 }, { wch: 10 }, { wch: 15 },
+      ];
+
+      const header_relatorio = [
         "Data", "Descrição", "Categoria", "Forma de Pagamento",
         "Condição", "Parcelas", "Tipo", "Valor"
       ];
-      const aoa = data.filteredTransactions.map(tx => {
+
+      // Usamos sortedTxs aqui também
+      const aoa_relatorio = sortedTxs.map(tx => {
         const condicao = tx.condition === 'paid' ? 'À Vista' : 'Parcelado';
         const parcelas = tx.condition === 'paid' ? 1 : tx.installments;
         return [
@@ -119,17 +176,23 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
           tx.value
         ];
       });
-      const ws = XLSX.utils.aoa_to_sheet([header, ...aoa]);
-      ws['!cols'] = [
+
+      const ws_relatorio = XLSX.utils.aoa_to_sheet([header_relatorio, ...aoa_relatorio]);
+      ws_relatorio['!cols'] = [
         { wch: 10 }, { wch: 35 }, { wch: 20 }, { wch: 20 },
         { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 },
       ];
+
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
+      XLSX.utils.book_append_sheet(wb, ws_contmatic, "Contmatic");
+      XLSX.utils.book_append_sheet(wb, ws_relatorio, "Relatorio");
+      
       const base64 = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
       const filename = 'relatorio_cfpratico.xlsx';
       const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      
       await saveToDownloadsAndroid(filename, base64, mimeType);
+      
       const cacheFile = new File(Paths.cache, filename); 
       cacheFile.write(base64, { encoding: 'base64' }); 
       await Sharing.shareAsync(cacheFile.uri, {
@@ -137,6 +200,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
         dialogTitle: 'Exportar para Excel',
         UTI: 'com.microsoft.excel.xlsx'
       });
+
     } catch (e: any) {
       Alert.alert("Erro ao Exportar", `Não foi possível gerar o arquivo Excel: ${e.message}`);
     } finally {
@@ -146,13 +210,15 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
   /**
    * Gera o HTML base para os relatórios PDF.
+   * (Esta função permanece a mesma da etapa anterior, já com o rodapé)
    */
-  const createPdfHtml = (logoBase64: string | null) => {
+  const createPdfHtml = (headerLogoBase64: string | null, footerLogoBase64: string | null) => {
     const {
       summary, filteredTransactions, rawTransactions, userConfig,
       startDate, endDate, byCategoryRevenue, byCategoryExpense
     } = data;
 
+    // (Lógica de cálculo de saldo não muda)
     const initialBalance = userConfig?.initial_balance || 0;
     const filterStartDate = parseStringToDate(startDate);
     let saldoAnterior = initialBalance;
@@ -183,6 +249,8 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
             </tr>
           `;
       }).join('');
+    
+    // (Lógica generateCategoryTable não muda)
     const generateCategoryTable = (title: string, items: AggregatedData[], colorClass: 'receita' | 'despesa') => {
       if (items.length === 0) return `<h3>${title}</h3><p>Nenhum dado no período.</p>`;
       const rows = items.map(item => `
@@ -213,12 +281,16 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
           </div>
       </div>`;
 
-    const logoHtml = logoBase64
-      ? `<img src="${logoBase64.startsWith('data:') ? logoBase64 : `data:image/png;base64,${logoBase64}`}" class="logo" />`
+    // Usa o logo do cabeçalho
+    const logoHtml = headerLogoBase64
+      ? `<img src="${headerLogoBase64.startsWith('data:') ? headerLogoBase64 : `data:image/png;base64,${headerLogoBase64}`}" class="logo" />`
       : '';
 
     const companyName = userConfig?.company_name || 'CFPratico';
     const reportPeriod = `<p class="period"><b>Período do Relatório:</b> ${formatShortDate(startDate)} a ${formatShortDate(endDate)}</p>`;
+    
+    // Usa o logo do rodapé
+    const onvaleLogoSrc = footerLogoBase64 || '';
 
     return `
       <html>
@@ -226,9 +298,8 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
           <style>
             body { font-family: sans-serif; margin: 25px; width: auto; }
             .header { display: flex; flex-direction: row; align-items: center; border-bottom: 2px solid #555; padding-bottom: 10px; }
-            .logo { width: 50px; height: auto; max-height: 50px; object-fit: contain; margin-right: 15px; }
+            .logo { width: 50px; height: auto; max-height: 50px; object-fit: contain; margin-right: 15px; } 
             h1 { font-size: 22px; color: #333; margin: 0; }
-            /* ... (resto do CSS) ... */
             h2 { font-size: 18px; color: #555; margin-top: 25px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
             h3 { font-size: 16px; color: #444; margin-top: 20px; margin-bottom: 10px; }
             p { font-size: 13px; }
@@ -251,13 +322,44 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
             .category-table td:nth-child(3), .category-table th:nth-child(3) { text-align: right; }
             .split-tables { display: flex; flex-direction: row; justify-content: space-between; gap: 20px; }
             .table-wrapper { width: 48%; vertical-align: top; }
+
+            .print-footer {
+                position: fixed;
+                bottom: 10px;
+                left: 25px;
+                right: 25px;
+                display: none;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                color: #888;
+                border-top: 1px solid #eee;
+                padding-top: 5px;
+            }
+            .footer-logo {
+                width: 20px;
+                height: auto;
+                margin-right: 8px;
+            }
+
             @media print {
+              body { padding-bottom: 40px; }
               .split-tables { display: block; }
               .table-wrapper { width: 100%; page-break-inside: avoid; }
+              
+              .print-footer {
+                  display: flex !important;
+              }
             }
           </style>
         </head>
         <body>
+          <div class="print-footer">
+            <img src="${onvaleLogoSrc}" class="footer-logo" />
+            <span>Disponibilizado por OnVale Contabilidade</span>
+          </div>
+
           <div class="header">${logoHtml}<h1>Relatório Financeiro — ${companyName}</h1></div>
           ${reportPeriod}
           <h2>Extrato de Movimentações</h2>
@@ -290,6 +392,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
   /**
    * Gera um PDF.
+   * (Esta função permanece a mesma da etapa anterior)
    */
   const handleExportPdf = async () => {
     if (data.filteredTransactions.length === 0 && (data.userConfig?.initial_balance ?? 0) === 0) {
@@ -299,13 +402,18 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
     setIsExporting(true);
     try {
-      let logoBase64 = data.userConfig?.company_logo || null;
-      
-      if (!logoBase64) {
-        logoBase64 = await getFallbackLogoBase64();
+      // 1. Carrega logo do HEADER
+      let headerLogoBase64 = data.userConfig?.company_logo || null;
+      if (!headerLogoBase64) {
+        headerLogoBase64 = await getFallbackLogoBase64(); 
       }
 
-      const html = createPdfHtml(logoBase64);
+      // 2. Carrega logo do FOOTER
+      const footerLogoBase64 = await getOnValeFooterLogoBase64(); 
+
+      // 3. Passa AMBOS para o HTML
+      const html = createPdfHtml(headerLogoBase64, footerLogoBase64);
+      
       const { uri: tempUri } = await Print.printToFileAsync({
         html,
         margins: { top: 80, bottom: 80, left: 60, right: 60 }
@@ -320,7 +428,9 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       }
       tempFile.move(shareableFile); 
       const base64Content = shareableFile.base64Sync(); 
+      
       await saveToDownloadsAndroid(pdfFilename, base64Content, mimeType);
+      
       await Sharing.shareAsync(shareableFile.uri, {
         mimeType: mimeType,
         dialogTitle: 'Exportar Relatório PDF'
@@ -332,6 +442,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       setIsExporting(false);
     }
   };
+  // --- (FIM DA ALTERAÇÃO 1 - Mobile) ---
 
   return {
     isExporting,

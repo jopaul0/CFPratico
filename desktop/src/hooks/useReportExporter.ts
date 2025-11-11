@@ -1,4 +1,3 @@
-// src/hooks/useReportExporter.ts
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
 
@@ -19,6 +18,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
   const formatShortDate = (isoDate: string) => {
     try {
+      // Garante que a data 'YYYY-MM-DD' seja tratada como local
       return parseStringToDate(isoDate).toLocaleDateString('pt-BR');
     } catch (e) {
       return isoDate;
@@ -27,8 +27,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
   /**
    * Alteração 2: Exportar Excel para Desktop (Electron)
-   * Esta função usa 'window.ipcRenderer.invoke' para salvar o Excel,
-   * que é o correto para a versão desktop.
+   * ATUALIZADO: Agora gera duas planilhas (Contmatic e Relatorio).
    */
   const handleExportExcel = async () => {
     if (data.filteredTransactions.length === 0) {
@@ -38,12 +37,48 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
     setIsExporting(true);
     try {
-      const header = [
+      // --- DADOS BASE ---
+      // Ordena as transações por data, importante para o Lançamento
+      const sortedTxs = [...data.filteredTransactions].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+
+      // --- PLANILHA 1: CONTMATIC (Novo formato) ---
+      const header_contmatic = [
+        "Lançamento", "Data", "Débito", "Crédito", "Valor", 
+        "Histórico Padrão", "Complemento", "CCDB", "CCCR", "CNPJ"
+      ];
+
+      const aoa_contmatic = sortedTxs.map((tx, index) => {
+        return [
+          index + 1,                     // Lançamento (1, 2, 3...)
+          formatShortDate(tx.date),      // Data
+          "",                            // Débito (em branco)
+          "",                            // Crédito (em branco)
+          tx.value,                      // Valor (assinado, ex: -50.00 ou 150.00)
+          1,                             // Histórico Padrão (sempre 1)
+          tx.description || '',          // Complemento
+          "",                            // CCDB (em branco)
+          "",                            // CCCR (em branco)
+          ""                             // CNPJ (em branco)
+        ];
+      });
+
+      const ws_contmatic = XLSX.utils.aoa_to_sheet([header_contmatic, ...aoa_contmatic]);
+      ws_contmatic['!cols'] = [
+        { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 },
+        { wch: 18 }, { wch: 40 }, { wch: 10 }, { wch: 10 }, { wch: 15 },
+      ];
+
+
+      // --- PLANILHA 2: RELATORIO (Formato antigo) ---
+      const header_relatorio = [
         "Data", "Descrição", "Categoria", "Forma de Pagamento",
         "Condição", "Parcelas", "Tipo", "Valor"
       ];
 
-      const aoa = data.filteredTransactions.map(tx => {
+      // Usamos sortedTxs aqui também para consistência
+      const aoa_relatorio = sortedTxs.map(tx => {
         const condicao = tx.condition === 'paid' ? 'À Vista' : 'Parcelado';
         const parcelas = tx.condition === 'paid' ? 1 : tx.installments;
         return [
@@ -55,13 +90,16 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
         ];
       });
 
-      const ws = XLSX.utils.aoa_to_sheet([header, ...aoa]);
-      ws['!cols'] = [
+      const ws_relatorio = XLSX.utils.aoa_to_sheet([header_relatorio, ...aoa_relatorio]);
+      ws_relatorio['!cols'] = [
         { wch: 10 }, { wch: 35 }, { wch: 20 }, { wch: 20 },
         { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 },
       ];
+
+      // --- CRIAÇÃO DO WORKBOOK ---
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
+      XLSX.utils.book_append_sheet(wb, ws_contmatic, "Contmatic");
+      XLSX.utils.book_append_sheet(wb, ws_relatorio, "Relatorio");
 
       const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
 
@@ -81,7 +119,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
   /**
    * Alteração 1: Rodapé no PDF (OnVale)
-   * Esta função gera o HTML do PDF, agora com o rodapé e estilos de impressão.
+   * (Esta função permanece a mesma da etapa anterior)
    */
   const createPdfHtml = () => {
     const {
@@ -150,7 +188,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
           </div>
       </div>`;
 
-    // Correção do typo: /onvale.png -> /icon.png
     const logoHtml = userConfig?.company_logo
       ? `<img src="${userConfig.company_logo}" class="logo" />`
       : `<img src="/icon.png" class="logo" />`; 
@@ -158,7 +195,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     const companyName = userConfig?.company_name || 'CFPratico';
     const reportPeriod = `<p class="period"><b>Período do Relatório:</b> ${formatShortDate(startDate)} a ${formatShortDate(endDate)}</p>`;
 
-    // Caminho para o logo do rodapé (deve estar na pasta /public)
     const onvaleLogoSrc = "/onvale.png"; 
 
     return `
@@ -192,13 +228,12 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
             .split-tables { display: flex; flex-direction: row; justify-content: space-between; gap: 20px; }
             .table-wrapper { width: 48%; vertical-align: top; }
             
-            /* --- INÍCIO: ESTILOS DO RODAPÉ (Alteração 1) --- */
             .print-footer {
                 position: fixed;
-                bottom: 10px; /* Margem inferior */
-                left: 25px; /* Alinhado com as margens do body */
+                bottom: 10px;
+                left: 25px;
                 right: 25px;
-                display: none; /* Escondido na tela, visível no print */
+                display: none;
                 flex-direction: row;
                 align-items: center;
                 justify-content: center;
@@ -212,18 +247,15 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
                 height: auto;
                 margin-right: 8px;
             }
-            /* --- FIM: ESTILOS DO RODAPÉ --- */
 
             @media print {
-              body { padding-bottom: 40px; } /* Garante espaço para o rodapé */
+              body { padding-bottom: 40px; }
               .split-tables { display: block; }
               .table-wrapper { width: 100%; page-break-inside: avoid; }
               
-              /* --- INÍCIO: MOSTRAR RODAPÉ NO PRINT (Alteração 1) --- */
               .print-footer {
-                  display: flex !important; /* Força a exibição no print */
+                  display: flex !important;
               }
-              /* --- FIM: MOSTRAR RODAPÉ NO PRINT --- */
             }
           </style>
         </head>
@@ -232,6 +264,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
             <img src="${onvaleLogoSrc}" class="footer-logo" />
             <span>Disponibilizado por OnVale Contabilidade</span>
           </div>
+
           <div class="header">${logoHtml}<h1>Relatório Financeiro — ${companyName}</h1></div>
           ${reportPeriod}
           <h2>Extrato de Movimentações</h2>

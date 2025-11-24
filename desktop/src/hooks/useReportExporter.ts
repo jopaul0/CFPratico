@@ -6,6 +6,9 @@ import { parseStringToDate } from '../utils/Date';
 import { useDashboardData, AggregatedData } from './useDashboardData';
 import { useModal } from '../contexts/ModalContext';
 
+import appIcon from '../assets/icon.png'; 
+import onvaleLogoAsset from '../assets/onvale.png';
+
 type ReportData = ReturnType<typeof useDashboardData>;
 
 interface UseReportExporterProps {
@@ -18,17 +21,12 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
   const formatShortDate = (isoDate: string) => {
     try {
-      // Garante que a data 'YYYY-MM-DD' seja tratada como local
       return parseStringToDate(isoDate).toLocaleDateString('pt-BR');
     } catch (e) {
       return isoDate;
     }
   };
 
-  /**
-   * Alteração 2: Exportar Excel para Desktop (Electron)
-   * ATUALIZADO: Agora gera duas planilhas (Contmatic e Relatorio).
-   */
   const handleExportExcel = async () => {
     if (data.filteredTransactions.length === 0) {
       await alert("Nenhum dado", "Não há transações no período selecionado para exportar.");
@@ -37,13 +35,10 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
     setIsExporting(true);
     try {
-      // --- DADOS BASE ---
-      // Ordena as transações por data, importante para o Lançamento
       const sortedTxs = [...data.filteredTransactions].sort(
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
       );
 
-      // --- PLANILHA 1: CONTMATIC (Novo formato) ---
       const header_contmatic = [
         "Lançamento", "Data", "Débito", "Crédito", "Valor", 
         "Histórico Padrão", "Complemento", "CCDB", "CCCR", "CNPJ"
@@ -71,13 +66,11 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       ];
 
 
-      // --- PLANILHA 2: RELATORIO (Formato antigo) ---
       const header_relatorio = [
         "Data", "Descrição", "Categoria", "Forma de Pagamento",
         "Condição", "Parcelas", "Tipo", "Valor"
       ];
 
-      // Usamos sortedTxs aqui também para consistência
       const aoa_relatorio = sortedTxs.map(tx => {
         const condicao = tx.condition === 'paid' ? 'À Vista' : 'Parcelado';
         const parcelas = tx.condition === 'paid' ? 1 : tx.installments;
@@ -96,14 +89,12 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
         { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 12 },
       ];
 
-      // --- CRIAÇÃO DO WORKBOOK ---
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws_contmatic, "Contmatic");
       XLSX.utils.book_append_sheet(wb, ws_relatorio, "Relatorio");
 
       const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' });
 
-      // Envia o buffer para o processo main (Electron) cuidar de salvar
       const result = await window.ipcRenderer.invoke('export-excel', buffer);
 
       if (!result.success && !result.canceled) {
@@ -117,10 +108,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     }
   };
 
-  /**
-   * Alteração 1: Rodapé no PDF (OnVale)
-   * (Esta função permanece a mesma da etapa anterior)
-   */
   const createPdfHtml = () => {
     const {
       summary, filteredTransactions, rawTransactions, userConfig,
@@ -190,12 +177,12 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
     const logoHtml = userConfig?.company_logo
       ? `<img src="${userConfig.company_logo}" class="logo" />`
-      : `<img src="/icon.png" class="logo" />`; 
+      : `<img src="${appIcon}" class="logo" />`; 
 
     const companyName = userConfig?.company_name || 'CFPratico';
     const reportPeriod = `<p class="period"><b>Período do Relatório:</b> ${formatShortDate(startDate)} a ${formatShortDate(endDate)}</p>`;
 
-    const onvaleLogoSrc = "/onvale.png"; 
+    const onvaleLogoSrc = onvaleLogoAsset; 
 
     return `
       <html>

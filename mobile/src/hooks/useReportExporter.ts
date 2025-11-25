@@ -31,7 +31,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     }
   };
 
-  // (Função saveToDownloadsAndroid mantida, sem alterações)
   const saveToDownloadsAndroid = async (
     filename: string, 
     base64Content: string, 
@@ -80,11 +79,11 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
   };
   
   /**
-   * Carrega o logo FALLBACK do CABEÇALHO (onvale.png) como base64.
+   * Carrega o logo FALLBACK do CABEÇALHO (icon.png) como base64.
    */
   const getFallbackLogoBase64 = async (): Promise<string | null> => {
     try {
-      const asset = Asset.fromModule(require('../assets/onvale.png')); 
+      const asset = Asset.fromModule(require('../assets/icon.png')); 
       await asset.downloadAsync();
 
       const uri = asset.localUri ?? asset.uri;
@@ -92,7 +91,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       const base64 = await logoFile.base64(); 
       return `data:${asset.type || 'image/png'};base64,${base64}`;
     } catch (e) {
-      console.error("Erro ao carregar logo 'onvale.png' para exportar:", e);
+      console.error("Erro ao carregar logo 'icon.png' para exportar:", e);
       return null;
     }
   };
@@ -115,10 +114,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     }
   };
 
-  /**
-   * Alteração 2: Exportar Excel (Mobile)
-   * ATUALIZADO: Agora gera duas planilhas (Contmatic e Relatorio).
-   */
   const handleExportExcel = async () => {
     if (data.filteredTransactions.length === 0) {
       Alert.alert("Nenhum dado", "Não há transações no período selecionado para exportar.");
@@ -126,13 +121,11 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     }
     setIsExporting(true);
     try {
-      // --- DADOS BASE ---
-      // Ordena as transações por data
+
       const sortedTxs = [...data.filteredTransactions].sort(
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
       );
 
-      // --- PLANILHA 1: CONTMATIC (Novo formato) ---
       const header_contmatic = [
         "Lançamento", "Data", "Débito", "Crédito", "Valor", 
         "Histórico Padrão", "Complemento", "CCDB", "CCCR", "CNPJ"
@@ -164,7 +157,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
         "Condição", "Parcelas", "Tipo", "Valor"
       ];
 
-      // Usamos sortedTxs aqui também
       const aoa_relatorio = sortedTxs.map(tx => {
         const condicao = tx.condition === 'paid' ? 'À Vista' : 'Parcelado';
         const parcelas = tx.condition === 'paid' ? 1 : tx.installments;
@@ -218,7 +210,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       startDate, endDate, byCategoryRevenue, byCategoryExpense
     } = data;
 
-    // (Lógica de cálculo de saldo não muda)
     const initialBalance = userConfig?.initial_balance || 0;
     const filterStartDate = parseStringToDate(startDate);
     let saldoAnterior = initialBalance;
@@ -249,8 +240,7 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
             </tr>
           `;
       }).join('');
-    
-    // (Lógica generateCategoryTable não muda)
+
     const generateCategoryTable = (title: string, items: AggregatedData[], colorClass: 'receita' | 'despesa') => {
       if (items.length === 0) return `<h3>${title}</h3><p>Nenhum dado no período.</p>`;
       const rows = items.map(item => `
@@ -281,7 +271,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
           </div>
       </div>`;
 
-    // Usa o logo do cabeçalho
     const logoHtml = headerLogoBase64
       ? `<img src="${headerLogoBase64.startsWith('data:') ? headerLogoBase64 : `data:image/png;base64,${headerLogoBase64}`}" class="logo" />`
       : '';
@@ -289,7 +278,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
     const companyName = userConfig?.company_name || 'CFPratico';
     const reportPeriod = `<p class="period"><b>Período do Relatório:</b> ${formatShortDate(startDate)} a ${formatShortDate(endDate)}</p>`;
     
-    // Usa o logo do rodapé
     const onvaleLogoSrc = footerLogoBase64 || '';
 
     return `
@@ -402,16 +390,13 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
 
     setIsExporting(true);
     try {
-      // 1. Carrega logo do HEADER
       let headerLogoBase64 = data.userConfig?.company_logo || null;
       if (!headerLogoBase64) {
         headerLogoBase64 = await getFallbackLogoBase64(); 
       }
 
-      // 2. Carrega logo do FOOTER
       const footerLogoBase64 = await getOnValeFooterLogoBase64(); 
 
-      // 3. Passa AMBOS para o HTML
       const html = createPdfHtml(headerLogoBase64, footerLogoBase64);
       
       const { uri: tempUri } = await Print.printToFileAsync({
@@ -442,7 +427,6 @@ export const useReportExporter = ({ data }: UseReportExporterProps) => {
       setIsExporting(false);
     }
   };
-  // --- (FIM DA ALTERAÇÃO 1 - Mobile) ---
 
   return {
     isExporting,

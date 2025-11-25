@@ -1,4 +1,3 @@
-// src/screens/DashboardScreen.tsx
 import React, { useCallback } from 'react';
 import { View, Text, ActivityIndicator, RefreshControl } from 'react-native';
 
@@ -44,7 +43,6 @@ export const DashboardScreen: React.FC = () => {
         reload
     } = dashboardData;
 
-    // 4. Hook de Exportação (sem alteração)
     const {
         isExporting,
         handleExportExcel,
@@ -53,7 +51,6 @@ export const DashboardScreen: React.FC = () => {
         data: dashboardData
     });
 
-    // 5. Handlers de Navegação (sem alteração)
     const handleViewAll = () => {
         navigation.getParent<DrawerNavigationProp<DrawerParamList>>()?.navigate('Statement');
     };
@@ -65,7 +62,6 @@ export const DashboardScreen: React.FC = () => {
     }, [navigation]);
 
 
-    // --- 6. Renderização do Conteúdo ---
     const renderContent = () => {
         if (isLoading && !recentTransactions.length) {
             return <ActivityIndicator size="large" className="mt-16" />;
